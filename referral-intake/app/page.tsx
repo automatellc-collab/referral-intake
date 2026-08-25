@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Stethoscope } from "@phosphor-icons/react/dist/ssr";
+import Link from "next/link";
+import { Microphone, Stethoscope } from "@phosphor-icons/react/dist/ssr";
 import { Disclaimer } from "@/components/Disclaimer";
 import { ReferralForm } from "@/components/ReferralForm";
 import { SummaryPanel } from "@/components/SummaryPanel";
@@ -135,6 +136,17 @@ export default function Home() {
           uncertain item flagged for review before it reaches the chart.
         </p>
       </header>
+
+      <p style={{ marginBottom: 20 }}>
+        <Link
+          href="/encounter"
+          className="chip-btn"
+          style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6 }}
+        >
+          <Microphone weight="bold" size={13} />
+          Try live encounter recording
+        </Link>
+      </p>
 
       <div className="board">
         <ReferralForm
