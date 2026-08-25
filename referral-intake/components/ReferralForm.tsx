@@ -4,7 +4,7 @@ import { useState } from "react";
 import { CircleNotch, CloudArrowUp, FileImage, FilePdf, MagicWand, X } from "@phosphor-icons/react/dist/ssr";
 import { SAMPLES, type Sample } from "@/lib/samples";
 import { OTHER_SPECIALTY, SPECIALTIES } from "@/lib/specialties";
-import { MAX_ATTACHMENTS, MAX_ATTACHMENT_BYTES, type Attachment } from "@/lib/attachments";
+import { MAX_ATTACHMENTS, MAX_TOTAL_ATTACHMENT_BYTES, type Attachment } from "@/lib/attachments";
 
 interface ReferralFormProps {
   referralText: string;
@@ -149,7 +149,8 @@ export function ReferralForm({
           </span>
           <span className="dropzone-title">Drop files or click to browse</span>
           <span className="dropzone-hint">
-            PDF, PNG, JPEG, WEBP, GIF — up to {MAX_ATTACHMENTS} files, {formatBytes(MAX_ATTACHMENT_BYTES)} each
+            PDF, PNG, JPEG, WEBP, GIF — up to {MAX_ATTACHMENTS} files, {formatBytes(MAX_TOTAL_ATTACHMENT_BYTES)}{" "}
+            combined
           </span>
           <input
             type="file"

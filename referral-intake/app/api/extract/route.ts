@@ -1,11 +1,10 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { extractSummary } from "@/lib/extract";
-import { isAllowedAttachmentType, MAX_ATTACHMENTS, type Attachment } from "@/lib/attachments";
+import { isAllowedAttachmentType, MAX_ATTACHMENTS, MAX_TOTAL_ATTACHMENT_BYTES, type Attachment } from "@/lib/attachments";
 
 const MAX_REFERRAL_LENGTH = 20_000;
 const MAX_SPECIALTY_LENGTH = 100;
-const MAX_ATTACHMENT_BASE64_LENGTH = 27_000_000; // ~20MB decoded
 
 interface RawAttachment {
   filename?: unknown;
@@ -75,6 +74,7 @@ function parseAttachments(raw: unknown): { attachments: Attachment[] } | { error
   }
 
   const attachments: Attachment[] = [];
+  let totalRawBytes = 0;
   for (const item of raw as RawAttachment[]) {
     const { filename, mediaType, base64 } = item ?? {};
     if (typeof filename !== "string" || !filename.trim()) {
@@ -86,11 +86,16 @@ function parseAttachments(raw: unknown): { attachments: Attachment[] } | { error
     if (typeof base64 !== "string" || base64.length === 0) {
       return { error: `Attachment "${filename}" is missing file data.` };
     }
-    if (base64.length > MAX_ATTACHMENT_BASE64_LENGTH) {
-      return { error: `Attachment "${filename}" is too large.` };
-    }
+    totalRawBytes += (base64.length * 3) / 4;
     attachments.push({ filename, mediaType, base64 });
   }
+
+  if (totalRawBytes > MAX_TOTAL_ATTACHMENT_BYTES) {
+    return {
+      error: `Attachments combined must stay under ${(MAX_TOTAL_ATTACHMENT_BYTES / (1024 * 1024)).toFixed(0)}MB — try fewer or smaller files.`,
+    };
+  }
+
   return { attachments };
 }
 

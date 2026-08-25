@@ -165,12 +165,12 @@ describe("POST /api/extract", () => {
     expect(body.error).toMatch(/missing file data/i);
   });
 
-  test("returns 400 when an attachment exceeds the size limit", async () => {
-    // Arrange
+  test("returns 400 when a single attachment exceeds the combined size budget", async () => {
+    // Arrange — 3MB raw budget is ~4.19M base64 chars; comfortably exceed it
     const request = makeRequest({
       referralText: "text",
       specialty: "Cardiology",
-      attachments: [{ filename: "huge.png", mediaType: "image/png", base64: "a".repeat(27_000_001) }],
+      attachments: [{ filename: "huge.png", mediaType: "image/png", base64: "a".repeat(4_200_000) }],
     });
 
     // Act
@@ -179,7 +179,27 @@ describe("POST /api/extract", () => {
 
     // Assert
     expect(response.status).toBe(400);
-    expect(body.error).toMatch(/too large/i);
+    expect(body.error).toMatch(/combined/i);
+  });
+
+  test("returns 400 when multiple attachments individually fit but combined exceed the budget", async () => {
+    // Arrange — two files, each under any per-file cap, but summing past the 3MB combined budget
+    const request = makeRequest({
+      referralText: "text",
+      specialty: "Gynecologic Oncology",
+      attachments: [
+        { filename: "Mcpipkin.pdf", mediaType: "application/pdf", base64: "a".repeat(2_500_000) },
+        { filename: "Mcpipkin2.pdf", mediaType: "application/pdf", base64: "a".repeat(2_500_000) },
+      ],
+    });
+
+    // Act
+    const response = await POST(request);
+    const body = await response.json();
+
+    // Assert
+    expect(response.status).toBe(400);
+    expect(body.error).toMatch(/combined/i);
   });
 
   test("returns 400 when the attachment count exceeds the maximum", async () => {

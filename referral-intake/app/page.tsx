@@ -9,13 +9,20 @@ import { SummaryPanel } from "@/components/SummaryPanel";
 import type { NoteSummary } from "@/lib/schema";
 import type { Sample } from "@/lib/samples";
 import { withViewTransition } from "@/lib/viewTransition";
+import { parseJsonResponse } from "@/lib/parseJsonResponse";
 import {
   fileToAttachment,
   isAllowedAttachmentType,
   MAX_ATTACHMENTS,
-  MAX_ATTACHMENT_BYTES,
+  MAX_TOTAL_ATTACHMENT_BYTES,
   type Attachment,
 } from "@/lib/attachments";
+
+interface ExtractResponse {
+  summary?: NoteSummary;
+  specialty?: string;
+  error?: string;
+}
 
 export default function Home() {
   const [referralText, setReferralText] = useState("");
@@ -37,7 +44,7 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ referralText, specialty, attachments }),
       });
-      const body = await response.json();
+      const body = await parseJsonResponse<ExtractResponse>(response);
       if (!response.ok) {
         throw new Error(body.error ?? "Extraction failed.");
       }
@@ -64,9 +71,12 @@ export default function Home() {
       return;
     }
 
-    const oversized = incoming.find((f) => f.size > MAX_ATTACHMENT_BYTES);
-    if (oversized) {
-      setAttachmentError(`"${oversized.name}" exceeds the ${(MAX_ATTACHMENT_BYTES / (1024 * 1024)).toFixed(0)}MB limit.`);
+    const existingBytes = attachments.reduce((sum, a) => sum + (a.sizeBytes ?? 0), 0);
+    const incomingBytes = incoming.reduce((sum, f) => sum + f.size, 0);
+    if (existingBytes + incomingBytes > MAX_TOTAL_ATTACHMENT_BYTES) {
+      setAttachmentError(
+        `Attachments combined must stay under ${(MAX_TOTAL_ATTACHMENT_BYTES / (1024 * 1024)).toFixed(0)}MB (a server limit, not just this app's) — try fewer or smaller files.`,
+      );
       return;
     }
 

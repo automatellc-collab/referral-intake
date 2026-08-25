@@ -6,6 +6,12 @@ import { ArrowLeft, Microphone, WarningCircle } from "@phosphor-icons/react/dist
 import { RecordingControl } from "@/components/RecordingControl";
 import { EncounterNotePanel } from "@/components/EncounterNotePanel";
 import type { EncounterNote } from "@/lib/encounterSchema";
+import { parseJsonResponse } from "@/lib/parseJsonResponse";
+
+interface EncounterNoteResponse {
+  note?: EncounterNote;
+  error?: string;
+}
 
 export default function EncounterPage() {
   const [note, setNote] = useState<EncounterNote | null>(null);
@@ -21,7 +27,7 @@ export default function EncounterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ transcript }),
       });
-      const body = await response.json();
+      const body = await parseJsonResponse<EncounterNoteResponse>(response);
       if (!response.ok) {
         throw new Error(body.error ?? "Note generation failed.");
       }
