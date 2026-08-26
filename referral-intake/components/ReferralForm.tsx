@@ -12,13 +12,14 @@ interface ReferralFormProps {
   isOtherSpecialty: boolean;
   attachments: Attachment[];
   isLoading: boolean;
+  isUploadingAttachments: boolean;
   attachmentError: string | null;
   onTextChange: (text: string) => void;
   onSpecialtyChange: (specialty: string) => void;
   onOtherSpecialtyToggle: (isOther: boolean) => void;
   onLoadSample: (sample: Sample) => void;
   onAddFiles: (files: FileList) => void;
-  onRemoveAttachment: (filename: string) => void;
+  onRemoveAttachment: (url: string) => void;
   onExtract: () => void;
   onClear: () => void;
 }
@@ -41,6 +42,7 @@ export function ReferralForm({
   isOtherSpecialty,
   attachments,
   isLoading,
+  isUploadingAttachments,
   attachmentError,
   onTextChange,
   onSpecialtyChange,
@@ -53,8 +55,12 @@ export function ReferralForm({
 }: ReferralFormProps) {
   const [isDragging, setIsDragging] = useState(false);
 
-  const canExtract = specialty.trim().length > 0 && (referralText.trim().length > 0 || attachments.length > 0) && !isLoading;
-  const canAddMore = attachments.length < MAX_ATTACHMENTS && !isLoading;
+  const canExtract =
+    specialty.trim().length > 0 &&
+    (referralText.trim().length > 0 || attachments.length > 0) &&
+    !isLoading &&
+    !isUploadingAttachments;
+  const canAddMore = attachments.length < MAX_ATTACHMENTS && !isLoading && !isUploadingAttachments;
 
   return (
     <section className="panel">
@@ -147,7 +153,7 @@ export function ReferralForm({
           <span className="icon">
             <CloudArrowUp weight="light" size={26} />
           </span>
-          <span className="dropzone-title">Drop files or click to browse</span>
+          <span className="dropzone-title">{isUploadingAttachments ? "Uploading…" : "Drop files or click to browse"}</span>
           <span className="dropzone-hint">
             PDF, PNG, JPEG, WEBP, GIF — up to {MAX_ATTACHMENTS} files, {formatBytes(MAX_TOTAL_ATTACHMENT_BYTES)}{" "}
             combined
@@ -168,7 +174,7 @@ export function ReferralForm({
         {attachments.length > 0 && (
           <div className="chip-list" style={{ marginTop: 10 }}>
             {attachments.map((attachment) => (
-              <span className="data-chip removable" key={attachment.filename}>
+              <span className="data-chip removable" key={attachment.url}>
                 <span className="icon">
                   <AttachmentIcon mediaType={attachment.mediaType} />
                 </span>
@@ -177,7 +183,7 @@ export function ReferralForm({
                   type="button"
                   className="chip-remove"
                   aria-label={`Remove ${attachment.filename}`}
-                  onClick={() => onRemoveAttachment(attachment.filename)}
+                  onClick={() => onRemoveAttachment(attachment.url)}
                   disabled={isLoading}
                 >
                   <X weight="bold" size={11} />
@@ -203,8 +209,9 @@ export function ReferralForm({
 
         <div className="arch-note">
           <strong>How this works:</strong> the referral text and any attached documents are sent to Claude, which
-          extracts them into a consult-note-style summary for the selected specialty. Nothing is stored — each
-          request is stateless.
+          extracts them into a consult-note-style summary for the selected specialty. Referral text is never stored;
+          attached documents upload directly to private, encrypted storage and are deleted immediately after your
+          summary is generated.
         </div>
       </div>
     </section>

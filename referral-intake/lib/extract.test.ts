@@ -1,5 +1,5 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
-import type { Attachment } from "./attachments";
+import type { ExtractAttachment } from "./extract";
 
 vi.mock("server-only", () => ({}));
 
@@ -50,7 +50,7 @@ describe("extractSummary", () => {
   test("converts a PDF attachment into a document content block", async () => {
     // Arrange
     parseMock.mockResolvedValue({ parsed_output: {} });
-    const attachments: Attachment[] = [{ filename: "report.pdf", mediaType: "application/pdf", base64: "aGVsbG8=" }];
+    const attachments: ExtractAttachment[] = [{ filename: "report.pdf", mediaType: "application/pdf", base64: "aGVsbG8=" }];
 
     // Act
     await extractSummary("Neurology", "cover text", attachments);
@@ -67,7 +67,7 @@ describe("extractSummary", () => {
   test("converts an image attachment into an image content block", async () => {
     // Arrange
     parseMock.mockResolvedValue({ parsed_output: {} });
-    const attachments: Attachment[] = [{ filename: "scan.png", mediaType: "image/png", base64: "aGVsbG8=" }];
+    const attachments: ExtractAttachment[] = [{ filename: "scan.png", mediaType: "image/png", base64: "aGVsbG8=" }];
 
     // Act
     await extractSummary("Radiology", "cover text", attachments);
@@ -84,7 +84,7 @@ describe("extractSummary", () => {
   test("mentions attached filenames in the instruction text when attachments are present", async () => {
     // Arrange
     parseMock.mockResolvedValue({ parsed_output: {} });
-    const attachments: Attachment[] = [{ filename: "labs.png", mediaType: "image/png", base64: "aGVsbG8=" }];
+    const attachments: ExtractAttachment[] = [{ filename: "labs.png", mediaType: "image/png", base64: "aGVsbG8=" }];
 
     // Act
     await extractSummary("Endocrinology", "cover text", attachments);

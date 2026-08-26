@@ -1,9 +1,18 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
 
 const extractSummaryMock = vi.fn();
+const headMock = vi.fn();
+const getMock = vi.fn();
+const delMock = vi.fn();
 
 vi.mock("@/lib/extract", () => ({
   extractSummary: extractSummaryMock,
+}));
+
+vi.mock("@vercel/blob", () => ({
+  head: headMock,
+  get: getMock,
+  del: delMock,
 }));
 
 const { POST } = await import("./route");
@@ -16,14 +25,25 @@ function makeRequest(body: unknown): Request {
   });
 }
 
+const OWNED_HOST = "https://7p93e8lptahblpnx.private.blob.vercel-storage.com";
 const validAttachment = {
   filename: "report.pdf",
   mediaType: "application/pdf",
-  base64: "aGVsbG8=",
+  url: `${OWNED_HOST}/attachments/report.pdf`,
 };
+
+function streamOf(text: string): ReadableStream<Uint8Array> {
+  return new Response(text).body as ReadableStream<Uint8Array>;
+}
 
 beforeEach(() => {
   extractSummaryMock.mockReset();
+  headMock.mockReset();
+  getMock.mockReset();
+  delMock.mockReset();
+  delMock.mockResolvedValue(undefined);
+  headMock.mockResolvedValue({ size: 11 });
+  getMock.mockResolvedValue({ statusCode: 200, stream: streamOf("hello world"), blob: { size: 11 } });
 });
 
 describe("POST /api/extract", () => {
@@ -119,7 +139,7 @@ describe("POST /api/extract", () => {
     const request = makeRequest({
       referralText: "text",
       specialty: "Cardiology",
-      attachments: [{ filename: "notes.docx", mediaType: "application/msword", base64: "aGVsbG8=" }],
+      attachments: [{ filename: "notes.docx", mediaType: "application/msword", url: `${OWNED_HOST}/notes.docx` }],
     });
 
     // Act
@@ -136,7 +156,7 @@ describe("POST /api/extract", () => {
     const request = makeRequest({
       referralText: "text",
       specialty: "Cardiology",
-      attachments: [{ mediaType: "application/pdf", base64: "aGVsbG8=" }],
+      attachments: [{ mediaType: "application/pdf", url: `${OWNED_HOST}/a.pdf` }],
     });
 
     // Act
@@ -148,12 +168,12 @@ describe("POST /api/extract", () => {
     expect(body.error).toMatch(/needs a filename/i);
   });
 
-  test("returns 400 when an attachment is missing file data", async () => {
+  test("returns 400 when an attachment's url does not belong to our blob store", async () => {
     // Arrange
     const request = makeRequest({
       referralText: "text",
       specialty: "Cardiology",
-      attachments: [{ filename: "scan.png", mediaType: "image/png", base64: "" }],
+      attachments: [{ filename: "scan.png", mediaType: "image/png", url: "https://evil.example.com/scan.png" }],
     });
 
     // Act
@@ -162,16 +182,13 @@ describe("POST /api/extract", () => {
 
     // Assert
     expect(response.status).toBe(400);
-    expect(body.error).toMatch(/missing file data/i);
+    expect(body.error).toMatch(/invalid or expired upload reference/i);
   });
 
-  test("returns 400 when a single attachment exceeds the combined size budget", async () => {
-    // Arrange — 3MB raw budget is ~4.19M base64 chars; comfortably exceed it
-    const request = makeRequest({
-      referralText: "text",
-      specialty: "Cardiology",
-      attachments: [{ filename: "huge.png", mediaType: "image/png", base64: "a".repeat(4_200_000) }],
-    });
+  test("returns 400 and cleans up when a single attachment exceeds the combined size budget", async () => {
+    // Arrange — 20MB combined budget
+    headMock.mockResolvedValue({ size: 21 * 1024 * 1024 });
+    const request = makeRequest({ referralText: "text", specialty: "Cardiology", attachments: [validAttachment] });
 
     // Act
     const response = await POST(request);
@@ -180,16 +197,18 @@ describe("POST /api/extract", () => {
     // Assert
     expect(response.status).toBe(400);
     expect(body.error).toMatch(/combined/i);
+    expect(delMock).toHaveBeenCalledWith([validAttachment.url]);
   });
 
   test("returns 400 when multiple attachments individually fit but combined exceed the budget", async () => {
-    // Arrange — two files, each under any per-file cap, but summing past the 3MB combined budget
+    // Arrange — two files, each under any per-file cap, but summing past the 20MB combined budget
+    headMock.mockResolvedValue({ size: 11 * 1024 * 1024 });
     const request = makeRequest({
       referralText: "text",
       specialty: "Gynecologic Oncology",
       attachments: [
-        { filename: "Mcpipkin.pdf", mediaType: "application/pdf", base64: "a".repeat(2_500_000) },
-        { filename: "Mcpipkin2.pdf", mediaType: "application/pdf", base64: "a".repeat(2_500_000) },
+        { filename: "Mcpipkin.pdf", mediaType: "application/pdf", url: `${OWNED_HOST}/Mcpipkin.pdf` },
+        { filename: "Mcpipkin2.pdf", mediaType: "application/pdf", url: `${OWNED_HOST}/Mcpipkin2.pdf` },
       ],
     });
 
@@ -217,7 +236,21 @@ describe("POST /api/extract", () => {
     expect(response.status).toBe(400);
   });
 
-  test("accepts a request with only attachments and no cover text", async () => {
+  test("returns 400 when an attachment cannot be found in blob storage", async () => {
+    // Arrange
+    headMock.mockRejectedValue(new Error("not found"));
+    const request = makeRequest({ referralText: "text", specialty: "Cardiology", attachments: [validAttachment] });
+
+    // Act
+    const response = await POST(request);
+    const body = await response.json();
+
+    // Assert
+    expect(response.status).toBe(400);
+    expect(body.error).toMatch(/could not be found/i);
+  });
+
+  test("accepts a request with only attachments and no cover text, fetching and base64-encoding them", async () => {
     // Arrange
     extractSummaryMock.mockResolvedValue({ ok: true });
     const request = makeRequest({ referralText: "", specialty: "Radiology", attachments: [validAttachment] });
@@ -227,6 +260,33 @@ describe("POST /api/extract", () => {
 
     // Assert
     expect(response.status).toBe(200);
+    expect(extractSummaryMock).toHaveBeenCalledWith("Radiology", "", [
+      { filename: "report.pdf", mediaType: "application/pdf", base64: Buffer.from("hello world").toString("base64") },
+    ]);
+  });
+
+  test("deletes the attachment blobs after a successful extraction", async () => {
+    // Arrange
+    extractSummaryMock.mockResolvedValue({ ok: true });
+    const request = makeRequest({ referralText: "text", specialty: "Radiology", attachments: [validAttachment] });
+
+    // Act
+    await POST(request);
+
+    // Assert
+    expect(delMock).toHaveBeenCalledWith([validAttachment.url]);
+  });
+
+  test("keeps the attachment blobs in place when extraction itself fails, so a retry doesn't need re-upload", async () => {
+    // Arrange
+    extractSummaryMock.mockRejectedValue(new Error("unexpected"));
+    const request = makeRequest({ referralText: "text", specialty: "Radiology", attachments: [validAttachment] });
+
+    // Act
+    await POST(request);
+
+    // Assert
+    expect(delMock).not.toHaveBeenCalled();
   });
 
   test("returns 200 with the summary and trimmed specialty on success", async () => {

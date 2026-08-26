@@ -1,5 +1,20 @@
-import { afterEach, describe, expect, test, vi } from "vitest";
-import { fileToAttachment, isAllowedAttachmentType, ALLOWED_ATTACHMENT_TYPES, MAX_ATTACHMENTS } from "./attachments";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+
+const uploadMock = vi.fn();
+
+vi.mock("@vercel/blob/client", () => ({
+  upload: uploadMock,
+}));
+
+const {
+  ALLOWED_ATTACHMENT_TYPES,
+  MAX_ATTACHMENTS,
+  MAX_TOTAL_ATTACHMENT_BYTES,
+  isAllowedAttachmentType,
+  isOwnedBlobUrl,
+  uploadAttachment,
+  deleteAttachment,
+} = await import("./attachments");
 
 describe("isAllowedAttachmentType", () => {
   test.each(ALLOWED_ATTACHMENT_TYPES)("returns true for allowed type %s", (mediaType) => {
@@ -30,52 +45,109 @@ describe("isAllowedAttachmentType", () => {
   });
 });
 
-describe("fileToAttachment", () => {
-  test("resolves with filename, mediaType, and base64-encoded content", async () => {
+describe("isOwnedBlobUrl", () => {
+  test("returns true for a URL on our private blob store's domain", () => {
     // Arrange
-    const file = new File(["hello world"], "referral.pdf", { type: "application/pdf" });
+    const url = "https://7p93e8lptahblpnx.private.blob.vercel-storage.com/attachments/abc-report.pdf";
 
-    // Act
-    const attachment = await fileToAttachment(file);
-
-    // Assert
-    expect(attachment.filename).toBe("referral.pdf");
-    expect(attachment.mediaType).toBe("application/pdf");
-    expect(atob(attachment.base64)).toBe("hello world");
+    // Act / Assert
+    expect(isOwnedBlobUrl(url)).toBe(true);
   });
 
-  test("strips the data URL prefix from the base64 payload", async () => {
+  test("returns false for a URL on a different host", () => {
     // Arrange
-    const file = new File(["x"], "note.png", { type: "image/png" });
+    const url = "https://evil.example.com/attachments/abc-report.pdf";
 
-    // Act
-    const attachment = await fileToAttachment(file);
-
-    // Assert
-    expect(attachment.base64.startsWith("data:")).toBe(false);
+    // Act / Assert
+    expect(isOwnedBlobUrl(url)).toBe(false);
   });
 
-  test("rejects with a descriptive error when the file cannot be read", async () => {
-    // Arrange
-    const OriginalFileReader = globalThis.FileReader;
-    class FailingFileReader extends OriginalFileReader {
-      readAsDataURL() {
-        this.onerror?.(new ProgressEvent("error") as never);
-      }
-    }
-    vi.stubGlobal("FileReader", FailingFileReader);
-    const file = new File(["x"], "corrupt.pdf", { type: "application/pdf" });
-
-    // Act
-    const act = fileToAttachment(file);
-
-    // Assert
-    await expect(act).rejects.toThrow(/could not read file "corrupt\.pdf"/i);
+  test("returns false for an unparseable URL", () => {
+    // Arrange / Act / Assert
+    expect(isOwnedBlobUrl("not a url")).toBe(false);
   });
 });
 
-afterEach(() => {
-  vi.unstubAllGlobals();
+describe("uploadAttachment", () => {
+  beforeEach(() => {
+    uploadMock.mockReset();
+  });
+
+  test("uploads the file to the private handleUploadUrl route and returns an Attachment", async () => {
+    // Arrange
+    uploadMock.mockResolvedValue({
+      url: "https://7p93e8lptahblpnx.private.blob.vercel-storage.com/attachments/xyz-report.pdf",
+      pathname: "attachments/xyz-report.pdf",
+    });
+    const file = new File(["hello world"], "report.pdf", { type: "application/pdf" });
+
+    // Act
+    const attachment = await uploadAttachment(file);
+
+    // Assert
+    expect(uploadMock).toHaveBeenCalledWith(
+      expect.stringMatching(/^attachments\/.+-report\.pdf$/),
+      file,
+      expect.objectContaining({ access: "private", handleUploadUrl: "/api/attachments/upload-url" }),
+    );
+    expect(attachment).toEqual({
+      filename: "report.pdf",
+      mediaType: "application/pdf",
+      url: "https://7p93e8lptahblpnx.private.blob.vercel-storage.com/attachments/xyz-report.pdf",
+      pathname: "attachments/xyz-report.pdf",
+      sizeBytes: file.size,
+    });
+  });
+
+  test("sanitizes slashes, spaces, and other unsafe characters out of the uploaded pathname", async () => {
+    // Arrange
+    uploadMock.mockResolvedValue({ url: "https://x.private.blob.vercel-storage.com/a", pathname: "a" });
+    const file = new File(["x"], "weird name?.pdf", { type: "application/pdf" });
+
+    // Act
+    await uploadAttachment(file);
+
+    // Assert
+    const [pathname] = uploadMock.mock.calls[0];
+    expect(pathname.startsWith("attachments/")).toBe(true);
+    expect(pathname.endsWith("-weird_name_.pdf")).toBe(true);
+    expect(pathname).not.toMatch(/[\s?]/);
+  });
+});
+
+describe("deleteAttachment", () => {
+  beforeEach(() => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ ok: true }))));
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test("posts the blob URL to the delete route", async () => {
+    // Arrange
+    const url = "https://x.private.blob.vercel-storage.com/attachments/a.pdf";
+
+    // Act
+    await deleteAttachment(url);
+
+    // Assert
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/attachments/delete",
+      expect.objectContaining({ method: "POST", body: JSON.stringify({ url }) }),
+    );
+  });
+
+  test("never throws when the request fails", async () => {
+    // Arrange
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network down")));
+
+    // Act
+    const act = deleteAttachment("https://x.private.blob.vercel-storage.com/attachments/a.pdf");
+
+    // Assert
+    await expect(act).resolves.toBeUndefined();
+  });
 });
 
 describe("constants", () => {
@@ -83,5 +155,11 @@ describe("constants", () => {
     // Arrange / Act / Assert
     expect(MAX_ATTACHMENTS).toBeGreaterThan(0);
     expect(Number.isInteger(MAX_ATTACHMENTS)).toBe(true);
+  });
+
+  test("MAX_TOTAL_ATTACHMENT_BYTES is a positive integer", () => {
+    // Arrange / Act / Assert
+    expect(MAX_TOTAL_ATTACHMENT_BYTES).toBeGreaterThan(0);
+    expect(Number.isInteger(MAX_TOTAL_ATTACHMENT_BYTES)).toBe(true);
   });
 });

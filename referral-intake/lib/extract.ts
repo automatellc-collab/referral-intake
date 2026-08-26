@@ -3,9 +3,21 @@ import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { NoteSummarySchema } from "@/lib/schema";
-import type { Attachment } from "@/lib/attachments";
+import type { AttachmentMediaType } from "@/lib/attachments";
 
 const MODEL = "claude-opus-5";
+
+/**
+ * A document's actual bytes, ready to send to Claude. Distinct from
+ * lib/attachments.ts's `Attachment`, which is a reference to a file the
+ * browser already uploaded to Blob storage — the API route resolves one into
+ * the other before calling extractSummary.
+ */
+export interface ExtractAttachment {
+  filename: string;
+  mediaType: AttachmentMediaType;
+  base64: string;
+}
 
 function systemPromptFor(specialty: string): string {
   return `You are a clinical intake assistant that drafts specialist pre-chart summaries for a ${specialty} practice. Given a raw referral packet (letter, imaging/lab reports, PCP notes — often combined, sometimes as attached PDFs or images), extract the fields in the schema into a consult-note-style structure so the specialist can review and continue directly into their own documentation.
@@ -25,7 +37,7 @@ Rules:
 export async function extractSummary(
   specialty: string,
   referralText: string,
-  attachments: Attachment[] = [],
+  attachments: ExtractAttachment[] = [],
 ): Promise<unknown> {
   const client = new Anthropic();
 
@@ -58,7 +70,7 @@ export async function extractSummary(
   return response.parsed_output;
 }
 
-function attachmentToContentBlock(attachment: Attachment): Anthropic.ContentBlockParam {
+function attachmentToContentBlock(attachment: ExtractAttachment): Anthropic.ContentBlockParam {
   if (attachment.mediaType === "application/pdf") {
     return {
       type: "document",

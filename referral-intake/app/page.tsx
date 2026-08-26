@@ -11,10 +11,11 @@ import type { Sample } from "@/lib/samples";
 import { withViewTransition } from "@/lib/viewTransition";
 import { parseJsonResponse } from "@/lib/parseJsonResponse";
 import {
-  fileToAttachment,
+  deleteAttachment,
   isAllowedAttachmentType,
   MAX_ATTACHMENTS,
   MAX_TOTAL_ATTACHMENT_BYTES,
+  uploadAttachment,
   type Attachment,
 } from "@/lib/attachments";
 
@@ -30,6 +31,7 @@ export default function Home() {
   const [isOtherSpecialty, setIsOtherSpecialty] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
+  const [isUploadingAttachments, setIsUploadingAttachments] = useState(false);
   const [summary, setSummary] = useState<NoteSummary | null>(null);
   const [summarySpecialty, setSummarySpecialty] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -42,7 +44,11 @@ export default function Home() {
       const response = await fetch("/api/extract", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ referralText, specialty, attachments }),
+        body: JSON.stringify({
+          referralText,
+          specialty,
+          attachments: attachments.map((a) => ({ filename: a.filename, mediaType: a.mediaType, url: a.url })),
+        }),
       });
       const body = await parseJsonResponse<ExtractResponse>(response);
       if (!response.ok) {
@@ -51,9 +57,14 @@ export default function Home() {
       withViewTransition(() => {
         setSummary(body.summary as NoteSummary);
         setSummarySpecialty(body.specialty as string);
+        // The server deletes attachments once it has successfully read them —
+        // clear them here too so a spent attachment can't be resubmitted.
+        setAttachments([]);
         setIsLoading(false);
       });
     } catch (err: unknown) {
+      // On failure the server keeps the attachments in place (in case the failure was
+      // transient, like a rate limit) so they're left in state here too for a free retry.
       withViewTransition(() => {
         setError(err instanceof Error ? err.message : "Extraction failed.");
         setSummary(null);
@@ -71,36 +82,41 @@ export default function Home() {
       return;
     }
 
-    const existingBytes = attachments.reduce((sum, a) => sum + (a.sizeBytes ?? 0), 0);
-    const incomingBytes = incoming.reduce((sum, f) => sum + f.size, 0);
-    if (existingBytes + incomingBytes > MAX_TOTAL_ATTACHMENT_BYTES) {
-      setAttachmentError(
-        `Attachments combined must stay under ${(MAX_TOTAL_ATTACHMENT_BYTES / (1024 * 1024)).toFixed(0)}MB (a server limit, not just this app's) — try fewer or smaller files.`,
-      );
-      return;
-    }
-
     const unsupported = incoming.find((f) => !isAllowedAttachmentType(f.type));
     if (unsupported) {
       setAttachmentError(`"${unsupported.name}" is an unsupported file type. Use PDF, PNG, JPEG, WEBP, or GIF.`);
       return;
     }
 
+    const existingBytes = attachments.reduce((sum, a) => sum + a.sizeBytes, 0);
+    const incomingBytes = incoming.reduce((sum, f) => sum + f.size, 0);
+    if (existingBytes + incomingBytes > MAX_TOTAL_ATTACHMENT_BYTES) {
+      setAttachmentError(
+        `Attachments combined must stay under ${(MAX_TOTAL_ATTACHMENT_BYTES / (1024 * 1024)).toFixed(0)}MB — try fewer or smaller files.`,
+      );
+      return;
+    }
+
+    setIsUploadingAttachments(true);
     try {
-      const newAttachments = await Promise.all(incoming.map(fileToAttachment));
+      const newAttachments = await Promise.all(incoming.map(uploadAttachment));
       setAttachments((prev) => [...prev, ...newAttachments]);
       setSummary(null);
       setError(null);
     } catch (err: unknown) {
-      setAttachmentError(err instanceof Error ? err.message : "Could not read the selected file(s).");
+      setAttachmentError(err instanceof Error ? err.message : "Could not upload the selected file(s).");
+    } finally {
+      setIsUploadingAttachments(false);
     }
   }
 
-  function handleRemoveAttachment(filename: string) {
-    setAttachments((prev) => prev.filter((a) => a.filename !== filename));
+  function handleRemoveAttachment(url: string) {
+    setAttachments((prev) => prev.filter((a) => a.url !== url));
+    void deleteAttachment(url);
   }
 
   function handleLoadSample(sample: Sample) {
+    attachments.forEach((a) => void deleteAttachment(a.url));
     setReferralText(sample.text);
     setSpecialty(sample.specialty);
     setIsOtherSpecialty(false);
@@ -117,6 +133,7 @@ export default function Home() {
   }
 
   function handleClear() {
+    attachments.forEach((a) => void deleteAttachment(a.url));
     setReferralText("");
     setSpecialty("");
     setIsOtherSpecialty(false);
@@ -165,6 +182,7 @@ export default function Home() {
           isOtherSpecialty={isOtherSpecialty}
           attachments={attachments}
           isLoading={isLoading}
+          isUploadingAttachments={isUploadingAttachments}
           attachmentError={attachmentError}
           onTextChange={setReferralText}
           onSpecialtyChange={handleSpecialtyChange}

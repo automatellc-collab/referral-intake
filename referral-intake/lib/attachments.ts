@@ -1,16 +1,18 @@
+import { upload } from "@vercel/blob/client";
+
 export type AttachmentMediaType = "application/pdf" | "image/png" | "image/jpeg" | "image/webp" | "image/gif";
 
 export interface Attachment {
   filename: string;
   mediaType: AttachmentMediaType;
-  base64: string;
+  url: string;
+  pathname: string;
   /**
-   * Original file size in bytes, before base64 encoding. Populated client-side
-   * for the pre-upload combined-size check; optional because the server
-   * re-derives an authoritative figure from the actual base64 payload length
-   * rather than trusting this value.
+   * Size in bytes as reported by the browser at upload time. Used for the
+   * pre-upload combined-size check; the server re-derives an authoritative
+   * figure from Vercel Blob's own metadata rather than trusting this value.
    */
-  sizeBytes?: number;
+  sizeBytes: number;
 }
 
 export const ALLOWED_ATTACHMENT_TYPES: AttachmentMediaType[] = [
@@ -23,27 +25,63 @@ export const ALLOWED_ATTACHMENT_TYPES: AttachmentMediaType[] = [
 
 export const MAX_ATTACHMENTS = 5;
 
-// Vercel Functions hard-cap the request body at 4.5MB (not configurable —
-// https://vercel.com/docs/functions/limitations#request-body-size). Attachments
-// are sent as base64 (~1.33x the raw byte size) inside that same JSON body
-// alongside the referral text, so the real, binding constraint is the combined
-// raw size of every attachment in one request — not any single file's size.
-// 3MB raw stays safely under the 4.5MB cap after base64 inflation.
-export const MAX_TOTAL_ATTACHMENT_BYTES = 3 * 1024 * 1024;
+// Attachments upload directly from the browser to Vercel Blob storage, bypassing
+// the 4.5MB request body limit that applies to Vercel Functions. The real
+// constraint left is Claude's own 32MB total request size cap (which also covers
+// referral text) — 20MB raw stays safely under that once base64-encoded (~26.7MB).
+export const MAX_TOTAL_ATTACHMENT_BYTES = 20 * 1024 * 1024;
+
+const PRIVATE_BLOB_HOST_SUFFIX = ".private.blob.vercel-storage.com";
 
 export function isAllowedAttachmentType(mediaType: string): mediaType is AttachmentMediaType {
   return (ALLOWED_ATTACHMENT_TYPES as string[]).includes(mediaType);
 }
 
-export function fileToAttachment(file: File): Promise<Attachment> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error(`Could not read file "${file.name}".`));
-    reader.onload = () => {
-      const result = reader.result as string;
-      const base64 = result.slice(result.indexOf(",") + 1);
-      resolve({ filename: file.name, mediaType: file.type as AttachmentMediaType, base64, sizeBytes: file.size });
-    };
-    reader.readAsDataURL(file);
+/**
+ * True when a URL points at this app's own private Vercel Blob store — the only
+ * kind of attachment URL the server should ever fetch or delete on a client's say-so.
+ */
+export function isOwnedBlobUrl(url: string): boolean {
+  try {
+    return new URL(url).hostname.endsWith(PRIVATE_BLOB_HOST_SUFFIX);
+  } catch {
+    return false;
+  }
+}
+
+function sanitizeFilename(filename: string): string {
+  return filename.replace(/[^a-zA-Z0-9._-]/g, "_");
+}
+
+/**
+ * Best-effort cleanup for a blob the user no longer needs (removed before
+ * extracting, or a new sample/clear replaced it). Never throws — a failed
+ * delete just leaves an orphaned blob rather than breaking the UI.
+ */
+export async function deleteAttachment(url: string): Promise<void> {
+  try {
+    await fetch("/api/attachments/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url }),
+    });
+  } catch {
+    // Best-effort cleanup; ignore network failures.
+  }
+}
+
+export async function uploadAttachment(file: File): Promise<Attachment> {
+  const pathname = `attachments/${crypto.randomUUID()}-${sanitizeFilename(file.name)}`;
+  const blob = await upload(pathname, file, {
+    access: "private",
+    handleUploadUrl: "/api/attachments/upload-url",
+    contentType: file.type,
   });
+  return {
+    filename: file.name,
+    mediaType: file.type as AttachmentMediaType,
+    url: blob.url,
+    pathname: blob.pathname,
+    sizeBytes: file.size,
+  };
 }

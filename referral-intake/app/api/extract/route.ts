@@ -1,7 +1,8 @@
+import { del, get, head } from "@vercel/blob";
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
-import { extractSummary } from "@/lib/extract";
-import { isAllowedAttachmentType, MAX_ATTACHMENTS, MAX_TOTAL_ATTACHMENT_BYTES, type Attachment } from "@/lib/attachments";
+import { extractSummary, type ExtractAttachment } from "@/lib/extract";
+import { isAllowedAttachmentType, isOwnedBlobUrl, MAX_ATTACHMENTS, MAX_TOTAL_ATTACHMENT_BYTES } from "@/lib/attachments";
 
 const MAX_REFERRAL_LENGTH = 20_000;
 const MAX_SPECIALTY_LENGTH = 100;
@@ -9,7 +10,13 @@ const MAX_SPECIALTY_LENGTH = 100;
 interface RawAttachment {
   filename?: unknown;
   mediaType?: unknown;
-  base64?: unknown;
+  url?: unknown;
+}
+
+interface AttachmentRef {
+  filename: string;
+  mediaType: string;
+  url: string;
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -45,58 +52,106 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  const attachmentsResult = parseAttachments(rawAttachments);
-  if ("error" in attachmentsResult) {
-    return NextResponse.json({ error: attachmentsResult.error }, { status: 400 });
+  const refsResult = parseAttachmentRefs(rawAttachments);
+  if ("error" in refsResult) {
+    return NextResponse.json({ error: refsResult.error }, { status: 400 });
   }
-  const attachments = attachmentsResult.attachments;
+  const refs = refsResult.refs;
 
-  if (referralText.trim().length === 0 && attachments.length === 0) {
+  if (referralText.trim().length === 0 && refs.length === 0) {
     return NextResponse.json(
       { error: "Provide referral text, at least one attachment, or both." },
       { status: 400 },
     );
   }
 
+  const attachmentsResult = await resolveAttachments(refs);
+  if ("error" in attachmentsResult) {
+    // The attachments themselves are unusable as-is (missing or over budget) — nothing
+    // to gain by keeping them around for a retry, so clean up now.
+    await deleteBlobs(refs.map((ref) => ref.url));
+    return NextResponse.json({ error: attachmentsResult.error }, { status: 400 });
+  }
+
   try {
-    const summary = await extractSummary(specialty.trim(), referralText, attachments);
+    const summary = await extractSummary(specialty.trim(), referralText, attachmentsResult.attachments);
+    await deleteBlobs(refs.map((ref) => ref.url));
     return NextResponse.json({ summary, specialty: specialty.trim() });
   } catch (error: unknown) {
+    // Leave the blobs in place: a rate limit or API hiccup is usually transient, and this
+    // lets the client retry the same referral without re-uploading its attachments.
     return NextResponse.json({ error: describeError(error) }, { status: statusForError(error) });
   }
 }
 
-function parseAttachments(raw: unknown): { attachments: Attachment[] } | { error: string } {
-  if (raw === undefined) return { attachments: [] };
+async function deleteBlobs(urls: string[]): Promise<void> {
+  if (urls.length === 0) return;
+  await del(urls).catch(() => {
+    // Best-effort cleanup; a failed delete just leaves an orphaned blob.
+  });
+}
+
+function parseAttachmentRefs(raw: unknown): { refs: AttachmentRef[] } | { error: string } {
+  if (raw === undefined) return { refs: [] };
   if (!Array.isArray(raw)) return { error: "attachments must be an array." };
   if (raw.length > MAX_ATTACHMENTS) {
     return { error: `A maximum of ${MAX_ATTACHMENTS} attachments is supported.` };
   }
 
-  const attachments: Attachment[] = [];
-  let totalRawBytes = 0;
+  const refs: AttachmentRef[] = [];
   for (const item of raw as RawAttachment[]) {
-    const { filename, mediaType, base64 } = item ?? {};
+    const { filename, mediaType, url } = item ?? {};
     if (typeof filename !== "string" || !filename.trim()) {
       return { error: "Each attachment needs a filename." };
     }
     if (typeof mediaType !== "string" || !isAllowedAttachmentType(mediaType)) {
       return { error: `Attachment "${filename}" has an unsupported file type. Use PDF, PNG, JPEG, WEBP, or GIF.` };
     }
-    if (typeof base64 !== "string" || base64.length === 0) {
-      return { error: `Attachment "${filename}" is missing file data.` };
+    if (typeof url !== "string" || !isOwnedBlobUrl(url)) {
+      return { error: `Attachment "${filename}" has an invalid or expired upload reference.` };
     }
-    totalRawBytes += (base64.length * 3) / 4;
-    attachments.push({ filename, mediaType, base64 });
+    refs.push({ filename, mediaType, url });
+  }
+  return { refs };
+}
+
+async function resolveAttachments(
+  refs: AttachmentRef[],
+): Promise<{ attachments: ExtractAttachment[] } | { error: string }> {
+  if (refs.length === 0) return { attachments: [] };
+
+  let sizes: number[];
+  try {
+    sizes = await Promise.all(refs.map((ref) => head(ref.url).then((meta) => meta.size)));
+  } catch {
+    return { error: "One or more attachments could not be found. Please re-attach them and try again." };
   }
 
-  if (totalRawBytes > MAX_TOTAL_ATTACHMENT_BYTES) {
+  const totalBytes = sizes.reduce((sum, size) => sum + size, 0);
+  if (totalBytes > MAX_TOTAL_ATTACHMENT_BYTES) {
     return {
       error: `Attachments combined must stay under ${(MAX_TOTAL_ATTACHMENT_BYTES / (1024 * 1024)).toFixed(0)}MB — try fewer or smaller files.`,
     };
   }
 
-  return { attachments };
+  try {
+    const attachments = await Promise.all(
+      refs.map(async (ref) => {
+        const result = await get(ref.url, { access: "private" });
+        if (!result || result.statusCode !== 200) {
+          throw new Error(`Attachment "${ref.filename}" could not be retrieved.`);
+        }
+        return {
+          filename: ref.filename,
+          mediaType: ref.mediaType as ExtractAttachment["mediaType"],
+          base64: Buffer.from(await new Response(result.stream).arrayBuffer()).toString("base64"),
+        };
+      }),
+    );
+    return { attachments };
+  } catch {
+    return { error: "One or more attachments could not be retrieved. Please re-attach them and try again." };
+  }
 }
 
 function statusForError(error: unknown): number {
