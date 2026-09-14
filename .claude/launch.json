@@ -21,6 +21,13 @@
       "runtimeArgs": ["run", "dev", "--", "-p", "3210"],
       "cwd": "${workspaceFolder}/referral-intake",
       "port": 3210
+    },
+    {
+      "name": "ORB Trading Dashboard",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "-p", "3300"],
+      "cwd": "${workspaceFolder}/orb-trading-dashboard",
+      "port": 3300
     }
   ]
 }

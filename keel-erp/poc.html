@@ -1,0 +1,608 @@
+<title>Keel</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500..700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#F3F5F4; --surface:#FFFFFF; --surface-2:#E9EDEC;
+    --ink:#10202B; --ink-soft:#48595F; --ink-faint:#7E8E90;
+    --accent:#0E7C86; --accent-strong:#0B5F67; --accent-soft:#D8ECEA;
+    --gold:#B97A1E; --gold-soft:#F4E6CE;
+    --border:#D8DEDC;
+    --success:#22824F; --success-soft:#DCEFE2;
+    --danger:#B93A34; --danger-soft:#F6DEDC;
+    --font-display:'Fraunces',Georgia,'Times New Roman',serif;
+    --font-body:'IBM Plex Sans',-apple-system,'Segoe UI',sans-serif;
+    --font-mono:'IBM Plex Mono','SF Mono',Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0D1A21; --surface:#122229; --surface-2:#17292F;
+      --ink:#E7EEEC; --ink-soft:#A7BAB7; --ink-faint:#6C8280;
+      --accent:#2FB6BA; --accent-strong:#5AD3D5; --accent-soft:#153539;
+      --gold:#E0A64C; --gold-soft:#2E2410;
+      --border:#233A40;
+      --success:#3FBE7E; --success-soft:#12301F;
+      --danger:#E8695F; --danger-soft:#3A1613;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0D1A21; --surface:#122229; --surface-2:#17292F;
+    --ink:#E7EEEC; --ink-soft:#A7BAB7; --ink-faint:#6C8280;
+    --accent:#2FB6BA; --accent-strong:#5AD3D5; --accent-soft:#153539;
+    --gold:#E0A64C; --gold-soft:#2E2410;
+    --border:#233A40;
+    --success:#3FBE7E; --success-soft:#12301F;
+    --danger:#E8695F; --danger-soft:#3A1613;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);line-height:1.5;-webkit-font-smoothing:antialiased;}
+  .app{max-width:1180px;margin:0 auto;padding:28px 24px 80px;}
+  h1,h2,h3{font-family:var(--font-display);font-weight:600;text-wrap:balance;margin:0;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap;}
+  .brand{display:flex;align-items:baseline;gap:10px;}
+  .brand .mark{font-family:var(--font-display);font-size:1.7rem;font-weight:700;letter-spacing:-0.01em;}
+  .brand .tag{font-size:.8rem;color:var(--ink-faint);font-family:var(--font-mono);}
+  .btn{font-family:var(--font-body);font-size:.85rem;font-weight:600;border-radius:7px;padding:9px 14px;border:1px solid var(--border);background:var(--surface);color:var(--ink);cursor:pointer;transition:border-color .15s,transform .05s;}
+  .btn:hover{border-color:var(--accent);}
+  .btn:active{transform:translateY(1px);}
+  .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .btn.primary:hover{background:var(--accent-strong);border-color:var(--accent-strong);}
+  .btn.ghost{background:transparent;}
+  .btn:disabled{opacity:.45;cursor:not-allowed;}
+  .btn.small{padding:5px 10px;font-size:.78rem;}
+
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:24px;overflow-x:auto;}
+  .tab{font-family:var(--font-body);font-size:.88rem;font-weight:600;color:var(--ink-faint);background:none;border:none;border-bottom:2px solid transparent;padding:10px 14px;cursor:pointer;white-space:nowrap;}
+  .tab:hover{color:var(--ink);}
+  .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+  .tab:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
+
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:22px;}
+  .kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
+  .kpi .label{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);font-weight:600;}
+  .kpi .value{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:1.5rem;font-weight:600;margin-top:4px;}
+  .kpi .sub{font-size:.75rem;color:var(--ink-faint);margin-top:2px;}
+  .kpi.gold .value{color:var(--gold);}
+
+  .grid2{display:grid;grid-template-columns:1.3fr 1fr;gap:20px;align-items:start;}
+  @media (max-width:840px){.grid2{grid-template-columns:1fr;}}
+
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+  .panel-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .panel-head h3{font-size:1.05rem;}
+  .panel-body{padding:16px 18px;}
+  .panel-note{font-size:.78rem;color:var(--ink-faint);padding:0 18px 14px;}
+
+  table{width:100%;border-collapse:collapse;font-size:.88rem;}
+  .table-wrap{overflow-x:auto;}
+  th{text-align:left;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);padding:8px 12px;border-bottom:1px solid var(--border);}
+  td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top;}
+  tr:last-child td{border-bottom:none;}
+  .num{font-family:var(--font-mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap;}
+  tr.total td{font-weight:700;border-top:2px solid var(--ink-soft);background:var(--surface-2);}
+
+  .pill{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:600;padding:2px 9px;border-radius:99px;font-family:var(--font-mono);}
+  .pill.auto{background:var(--accent-soft);color:var(--accent-strong);}
+  .pill.manual{background:var(--gold-soft);color:var(--gold);}
+  .pill.draft{background:var(--surface-2);color:var(--ink-soft);}
+  .pill.done{background:var(--success-soft);color:var(--success);}
+
+  .feed-item{padding:10px 0;border-bottom:1px solid var(--border);}
+  .feed-item:last-child{border-bottom:none;}
+  .feed-item .row1{display:flex;justify-content:space-between;gap:10px;font-size:.85rem;}
+  .feed-item .memo{color:var(--ink);}
+  .feed-item .amt{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap;}
+  .feed-item .meta{font-size:.72rem;color:var(--ink-faint);margin-top:2px;display:flex;gap:8px;align-items:center;}
+
+  form{display:flex;flex-direction:column;gap:12px;}
+  label{font-size:.75rem;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:4px;}
+  input,select{width:100%;font-family:var(--font-body);font-size:.88rem;padding:8px 10px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--ink);}
+  input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent);}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .radio-row{display:flex;gap:14px;font-size:.85rem;align-items:center;}
+  .radio-row label{margin:0;display:flex;align-items:center;gap:5px;font-weight:500;color:var(--ink);}
+  .radio-row input{width:auto;}
+  .helper{font-size:.75rem;color:var(--ink-faint);}
+  .balance-check{font-family:var(--font-mono);font-size:.8rem;padding:8px 10px;border-radius:7px;background:var(--surface-2);}
+  .balance-check.ok{background:var(--success-soft);color:var(--success);}
+  .balance-check.bad{background:var(--danger-soft);color:var(--danger);}
+  .je-lines{margin-top:6px;}
+  .je-line-row{display:grid;grid-template-columns:1.4fr 1fr 1fr auto;gap:8px;align-items:center;}
+  .posted-box{background:var(--surface-2);border-radius:8px;padding:10px 12px;margin-top:8px;font-size:.8rem;}
+  .posted-box .je-title{font-weight:600;color:var(--ink-soft);font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;}
+  .card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;}
+  .card-head .who{font-weight:600;font-size:.92rem;}
+  .card-head .sub{font-size:.75rem;color:var(--ink-faint);}
+  .empty{color:var(--ink-faint);font-size:.85rem;padding:20px;text-align:center;}
+  .section-title{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);font-weight:700;margin:0 0 10px;}
+</style>
+
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <span class="mark">Keel</span>
+      <span class="tag">live ledger — POC</span>
+    </div>
+    <button class="btn ghost small" id="resetBtn">Reset demo data</button>
+  </div>
+
+  <nav class="tabs" id="tabs"></nav>
+  <div id="content"></div>
+</div>
+
+<script>
+const ACCOUNTS = [
+  {code:'1000', name:'Cash', type:'Asset', normal:'debit'},
+  {code:'1100', name:'Accounts Receivable', type:'Asset', normal:'debit'},
+  {code:'1200', name:'Inventory', type:'Asset', normal:'debit'},
+  {code:'2000', name:'Accounts Payable', type:'Liability', normal:'credit'},
+  {code:'3000', name:"Owner's Equity", type:'Equity', normal:'credit'},
+  {code:'4000', name:'Sales Revenue', type:'Revenue', normal:'credit'},
+  {code:'5000', name:'Cost of Goods Sold', type:'Expense', normal:'debit'},
+];
+
+function seedState(){
+  const today = new Date().toISOString().slice(0,10);
+  return {
+    accounts: ACCOUNTS,
+    items: [
+      {sku:'SKU-100', name:'Steel Bracket 4in', qty:300, cost:50, price:89},
+      {sku:'SKU-200', name:'Hex Bolt Kit (100ct)', qty:200, cost:25, price:54},
+    ],
+    journal: [
+      {id:1, date:today, memo:'Opening balance', source:'Opening Balance',
+        lines:[{code:'1000',debit:50000,credit:0},{code:'1200',debit:20000,credit:0},{code:'3000',debit:0,credit:70000}]},
+    ],
+    salesOrders: [],
+    purchaseOrders: [],
+    nextIds: {journal:2, so:1, po:1},
+  };
+}
+
+const STORAGE_KEY = 'keel-poc-state-v1';
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return seedState();
+}
+function saveState(s){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }catch(e){} }
+
+let state = loadState();
+let activeTab = 'dashboard';
+let journalForm = { memo:'', date: new Date().toISOString().slice(0,10), lines:[{code:'1000',debit:'',credit:''},{code:'4000',debit:'',credit:''}] };
+let saleForm = { customer:'', sku: ACCOUNTS.length ? '' : '', qty:1, price:null, terms:'invoice' };
+let poForm = { vendor:'', sku:'', qty:1, cost:null };
+
+function fmt(n){
+  const v = Math.round((n + Number.EPSILON) * 100) / 100;
+  return v.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function money(n){ return '$' + fmt(n); }
+
+function balanceOf(state, code){
+  const acct = state.accounts.find(a=>a.code===code);
+  let debit=0, credit=0;
+  for(const je of state.journal){
+    for(const line of je.lines){
+      if(line.code===code){ debit += line.debit||0; credit += line.credit||0; }
+    }
+  }
+  return acct.normal==='debit' ? debit-credit : credit-debit;
+}
+
+function addJournalEntry(state, entry){
+  const je = {id: state.nextIds.journal, ...entry};
+  return {
+    ...state,
+    journal: [...state.journal, je],
+    nextIds: {...state.nextIds, journal: state.nextIds.journal+1},
+  };
+}
+
+function updateItem(state, sku, patch){
+  return {...state, items: state.items.map(it => it.sku===sku ? {...it, ...patch} : it)};
+}
+
+function createSalesOrder(state, {customer, sku, qty, price, terms, date}){
+  const so = {id: state.nextIds.so, date, customer, sku, qty, price, terms, status:'draft', postedLines:null};
+  return {...state, salesOrders:[...state.salesOrders, so], nextIds:{...state.nextIds, so: state.nextIds.so+1}};
+}
+
+function fulfillSalesOrder(state, soId){
+  const so = state.salesOrders.find(s=>s.id===soId);
+  const item = state.items.find(i=>i.sku===so.sku);
+  const revenue = so.qty * so.price;
+  const cogs = so.qty * item.cost;
+  const cashOrAR = so.terms==='cash' ? '1000' : '1100';
+  const revLines = [{code:cashOrAR, debit:revenue, credit:0},{code:'4000', debit:0, credit:revenue}];
+  const cogsLines = [{code:'5000', debit:cogs, credit:0},{code:'1200', debit:0, credit:cogs}];
+  let next = addJournalEntry(state, {date: so.date, memo:`Sale to ${so.customer} — ${item.name} x${so.qty}`, source:`Auto · SO-${String(soId).padStart(3,'0')}`, lines:revLines});
+  next = addJournalEntry(next, {date: so.date, memo:`COGS — ${item.name} x${so.qty}`, source:`Auto · SO-${String(soId).padStart(3,'0')}`, lines:cogsLines});
+  next = updateItem(next, so.sku, {qty: item.qty - so.qty});
+  next = {...next, salesOrders: next.salesOrders.map(s=>s.id===soId?{...s, status:'fulfilled', postedLines:[...revLines,...cogsLines]}:s)};
+  return next;
+}
+
+function createPurchaseOrder(state, {vendor, sku, qty, cost, date}){
+  const po = {id: state.nextIds.po, date, vendor, sku, qty, cost, status:'draft', postedLines:null};
+  return {...state, purchaseOrders:[...state.purchaseOrders, po], nextIds:{...state.nextIds, po: state.nextIds.po+1}};
+}
+
+function receivePurchaseOrder(state, poId){
+  const po = state.purchaseOrders.find(p=>p.id===poId);
+  const item = state.items.find(i=>i.sku===po.sku);
+  const total = po.qty * po.cost;
+  const newQty = item.qty + po.qty;
+  const newCost = ((item.qty*item.cost) + (po.qty*po.cost)) / newQty;
+  const lines = [{code:'1200', debit:total, credit:0},{code:'2000', debit:0, credit:total}];
+  let next = addJournalEntry(state, {date: po.date, memo:`Receive PO from ${po.vendor} — ${item.name} x${po.qty}`, source:`Auto · PO-${String(poId).padStart(3,'0')}`, lines});
+  next = updateItem(next, po.sku, {qty:newQty, cost:newCost});
+  next = {...next, purchaseOrders: next.purchaseOrders.map(p=>p.id===poId?{...p, status:'received', postedLines:lines}:p)};
+  return next;
+}
+
+function inventoryValue(state){
+  return state.items.reduce((sum,it)=>sum+it.qty*it.cost,0);
+}
+function totalRevenue(state){
+  let t=0;
+  for(const je of state.journal) for(const l of je.lines) if(l.code==='4000') t+=l.credit;
+  return t;
+}
+function totalCOGS(state){
+  let t=0;
+  for(const je of state.journal) for(const l of je.lines) if(l.code==='5000') t+=l.debit;
+  return t;
+}
+
+function el(html){ const t=document.createElement('template'); t.innerHTML=html.trim(); return t.content.firstElementChild; }
+
+function renderTabs(){
+  const tabs = [['dashboard','Dashboard'],['coa','Chart of Accounts'],['journal','Journal'],['sales','Sales'],['purchasing','Purchasing'],['inventory','Inventory']];
+  const nav = document.getElementById('tabs');
+  nav.innerHTML='';
+  for(const [id,label] of tabs){
+    const b = el(`<button class="tab${activeTab===id?' active':''}" type="button">${label}</button>`);
+    b.addEventListener('click', ()=>{ activeTab=id; render(); });
+    nav.appendChild(b);
+  }
+}
+
+function renderDashboard(){
+  const cash = balanceOf(state,'1000'), ar = balanceOf(state,'1100'), ap = balanceOf(state,'2000');
+  const inv = inventoryValue(state), rev = totalRevenue(state), cogs = totalCOGS(state);
+  const margin = rev>0 ? ((rev-cogs)/rev*100) : 0;
+  const wrap = el(`<div></div>`);
+  wrap.appendChild(el(`
+    <div class="kpis">
+      <div class="kpi"><div class="label">Cash</div><div class="value">${money(cash)}</div></div>
+      <div class="kpi"><div class="label">Receivable</div><div class="value">${money(ar)}</div></div>
+      <div class="kpi"><div class="label">Payable</div><div class="value">${money(ap)}</div></div>
+      <div class="kpi"><div class="label">Inventory value</div><div class="value">${money(inv)}</div></div>
+      <div class="kpi"><div class="label">Revenue (demo)</div><div class="value">${money(rev)}</div></div>
+      <div class="kpi gold"><div class="label">Gross margin</div><div class="value">${margin.toFixed(1)}%</div><div class="sub">Revenue ${money(rev)} − COGS ${money(cogs)}</div></div>
+    </div>
+  `));
+
+  const grid = el(`<div class="grid2"></div>`);
+  const tbPanel = el(`
+    <div class="panel">
+      <div class="panel-head"><h3>Trial balance</h3></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Account</th><th class="num">Debit</th><th class="num">Credit</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <div class="panel-note">Recalculated from every posted entry — this is what "always live" means: there is no separate close process to see the real balance.</div>
+    </div>
+  `);
+  const tbody = tbPanel.querySelector('tbody');
+  let totalD=0, totalC=0;
+  for(const a of state.accounts){
+    const bal = balanceOf(state,a.code);
+    const d = a.normal==='debit' ? Math.max(bal,0) : Math.max(-bal,0);
+    const c = a.normal==='credit' ? Math.max(bal,0) : Math.max(-bal,0);
+    totalD += d; totalC += c;
+    tbody.appendChild(el(`<tr><td>${a.code} · ${a.name}</td><td class="num">${d?money(d):'—'}</td><td class="num">${c?money(c):'—'}</td></tr>`));
+  }
+  tbody.appendChild(el(`<tr class="total"><td>Total</td><td class="num">${money(totalD)}</td><td class="num">${money(totalC)}</td></tr>`));
+  grid.appendChild(tbPanel);
+
+  const feedPanel = el(`<div class="panel"><div class="panel-head"><h3>Recent activity</h3></div><div class="panel-body" id="feedBody"></div></div>`);
+  const feedBody = feedPanel.querySelector('#feedBody');
+  const recent = [...state.journal].slice(-8).reverse();
+  if(recent.length===0) feedBody.appendChild(el(`<div class="empty">No entries yet.</div>`));
+  for(const je of recent){
+    const amt = je.lines.reduce((s,l)=>s+l.debit,0);
+    const isAuto = je.source.startsWith('Auto');
+    feedBody.appendChild(el(`
+      <div class="feed-item">
+        <div class="row1"><span class="memo">${je.memo}</span><span class="amt">${money(amt)}</span></div>
+        <div class="meta"><span class="pill ${isAuto?'auto':'manual'}">${isAuto?'auto':je.source.toLowerCase()}</span><span>${je.date}</span></div>
+      </div>
+    `));
+  }
+  grid.appendChild(feedPanel);
+  wrap.appendChild(grid);
+  return wrap;
+}
+
+function renderCOA(){
+  const panel = el(`<div class="panel"><div class="panel-head"><h3>Chart of accounts</h3></div><div class="table-wrap"><table><thead><tr><th>Code</th><th>Account</th><th>Type</th><th>Normal balance</th><th class="num">Balance</th></tr></thead><tbody></tbody></table></div></div>`);
+  const tbody = panel.querySelector('tbody');
+  for(const a of state.accounts){
+    tbody.appendChild(el(`<tr><td class="num" style="text-align:left">${a.code}</td><td>${a.name}</td><td>${a.type}</td><td style="text-transform:capitalize">${a.normal}</td><td class="num">${money(balanceOf(state,a.code))}</td></tr>`));
+  }
+  return panel;
+}
+
+function renderJournal(){
+  const wrap = el(`<div></div>`);
+  const listPanel = el(`<div class="panel" style="margin-bottom:20px"><div class="panel-head"><h3>All entries</h3></div><div class="table-wrap"><table><thead><tr><th>Date</th><th>Memo</th><th>Source</th><th>Lines</th><th class="num">Amount</th></tr></thead><tbody></tbody></table></div></div>`);
+  const tbody = listPanel.querySelector('tbody');
+  for(const je of [...state.journal].reverse()){
+    const amt = je.lines.reduce((s,l)=>s+l.debit,0);
+    const isAuto = je.source.startsWith('Auto');
+    const lineStr = je.lines.map(l=>{
+      const a = state.accounts.find(x=>x.code===l.code);
+      return l.debit ? `Dr ${a.name} ${money(l.debit)}` : `Cr ${a.name} ${money(l.credit)}`;
+    }).join(' · ');
+    tbody.appendChild(el(`<tr><td>${je.date}</td><td>${je.memo}</td><td><span class="pill ${isAuto?'auto':'manual'}">${je.source}</span></td><td style="font-size:.78rem;color:var(--ink-soft)">${lineStr}</td><td class="num">${money(amt)}</td></tr>`));
+  }
+  wrap.appendChild(listPanel);
+
+  const formPanel = el(`<div class="panel"><div class="panel-head"><h3>New manual entry</h3></div><div class="panel-body" id="jf"></div></div>`);
+  wrap.appendChild(formPanel);
+  renderJournalForm(formPanel.querySelector('#jf'));
+  return wrap;
+}
+
+function renderJournalForm(host){
+  host.innerHTML='';
+  const form = el(`<form></form>`);
+  const row1 = el(`<div class="field-row"></div>`);
+  const dateField = el(`<div><label>Date</label><input type="date" value="${journalForm.date}"></div>`);
+  const memoField = el(`<div><label>Memo</label><input type="text" placeholder="e.g. Owner capital contribution" value="${journalForm.memo}"></div>`);
+  dateField.querySelector('input').addEventListener('input', e=>{ journalForm.date = e.target.value; });
+  memoField.querySelector('input').addEventListener('input', e=>{ journalForm.memo = e.target.value; });
+  row1.appendChild(dateField); row1.appendChild(memoField);
+  form.appendChild(row1);
+
+  const linesWrap = el(`<div class="je-lines"><label>Lines</label></div>`);
+  journalForm.lines.forEach((line, idx)=>{
+    const r = el(`
+      <div class="je-line-row" style="margin-bottom:6px">
+        <select></select>
+        <input type="number" step="0.01" min="0" placeholder="Debit" value="${line.debit}">
+        <input type="number" step="0.01" min="0" placeholder="Credit" value="${line.credit}">
+        <button type="button" class="btn small ghost" title="Remove line">✕</button>
+      </div>
+    `);
+    const sel = r.querySelector('select');
+    for(const a of state.accounts){
+      sel.appendChild(el(`<option value="${a.code}" ${a.code===line.code?'selected':''}>${a.code} · ${a.name}</option>`));
+    }
+    sel.addEventListener('change', e=>{ journalForm.lines[idx].code = e.target.value; });
+    const [debitInput, creditInput] = r.querySelectorAll('input');
+    debitInput.addEventListener('input', e=>{ journalForm.lines[idx].debit = e.target.value; renderJournalForm(host); });
+    creditInput.addEventListener('input', e=>{ journalForm.lines[idx].credit = e.target.value; renderJournalForm(host); });
+    r.querySelector('button').addEventListener('click', ()=>{ journalForm.lines = journalForm.lines.filter((_,i)=>i!==idx); renderJournalForm(host); });
+    linesWrap.appendChild(r);
+  });
+  form.appendChild(linesWrap);
+
+  const addLineBtn = el(`<button type="button" class="btn small ghost" style="align-self:flex-start">+ Add line</button>`);
+  addLineBtn.addEventListener('click', ()=>{ journalForm.lines = [...journalForm.lines, {code:'1000',debit:'',credit:''}]; renderJournalForm(host); });
+  form.appendChild(addLineBtn);
+
+  const totalD = journalForm.lines.reduce((s,l)=>s+(parseFloat(l.debit)||0),0);
+  const totalC = journalForm.lines.reduce((s,l)=>s+(parseFloat(l.credit)||0),0);
+  const balanced = totalD>0 && Math.abs(totalD-totalC)<0.005;
+  form.appendChild(el(`<div class="balance-check ${balanced?'ok':'bad'}">Debits ${money(totalD)} · Credits ${money(totalC)} ${balanced?'— balanced':'— must match to post'}</div>`));
+
+  const submit = el(`<button type="submit" class="btn primary" ${balanced?'':'disabled'}>Post entry</button>`);
+  form.appendChild(submit);
+  form.addEventListener('submit', e=>{
+    e.preventDefault();
+    if(!balanced) return;
+    const lines = journalForm.lines.filter(l=>(parseFloat(l.debit)||0)>0||(parseFloat(l.credit)||0)>0)
+      .map(l=>({code:l.code, debit:parseFloat(l.debit)||0, credit:parseFloat(l.credit)||0}));
+    state = addJournalEntry(state, {date: journalForm.date, memo: journalForm.memo || 'Manual entry', source:'Manual', lines});
+    saveState(state);
+    journalForm = { memo:'', date: new Date().toISOString().slice(0,10), lines:[{code:'1000',debit:'',credit:''},{code:'4000',debit:'',credit:''}] };
+    render();
+  });
+  host.appendChild(form);
+}
+
+function renderSales(){
+  const wrap = el(`<div class="grid2"></div>`);
+  const formPanel = el(`<div class="panel"><div class="panel-head"><h3>New sales order</h3></div><div class="panel-body" id="sf"></div></div>`);
+  wrap.appendChild(formPanel);
+  renderSaleForm(formPanel.querySelector('#sf'));
+
+  const listPanel = el(`<div><div class="section-title">Orders</div><div id="soList"></div></div>`);
+  wrap.appendChild(listPanel);
+  const list = listPanel.querySelector('#soList');
+  if(state.salesOrders.length===0) list.appendChild(el(`<div class="empty">No sales orders yet — create one on the left.</div>`));
+  for(const so of [...state.salesOrders].reverse()){
+    const item = state.items.find(i=>i.sku===so.sku);
+    const card = el(`
+      <div class="card">
+        <div class="card-head">
+          <div><div class="who">${so.customer}</div><div class="sub">${item?item.name:so.sku} × ${so.qty} @ ${money(so.price)} · ${so.terms==='cash'?'Cash sale':'On invoice (AR)'}</div></div>
+          <span class="pill ${so.status==='fulfilled'?'done':'draft'}">${so.status}</span>
+        </div>
+      </div>
+    `);
+    if(so.status==='draft'){
+      const btn = el(`<button class="btn primary small">Fulfill &amp; post to ledger</button>`);
+      btn.addEventListener('click', ()=>{ state = fulfillSalesOrder(state, so.id); saveState(state); render(); });
+      card.appendChild(btn);
+    } else {
+      const box = el(`<div class="posted-box"><div class="je-title">Posted journal lines</div></div>`);
+      for(const l of so.postedLines){
+        const a = state.accounts.find(x=>x.code===l.code);
+        box.appendChild(el(`<div>${l.debit? 'Dr':'Cr'} ${a.name} — ${money(l.debit||l.credit)}</div>`));
+      }
+      card.appendChild(box);
+    }
+    list.appendChild(card);
+  }
+  return wrap;
+}
+
+function renderSaleForm(host){
+  host.innerHTML='';
+  const form = el(`<form></form>`);
+  const custField = el(`<div><label>Customer</label><input type="text" placeholder="e.g. Ridge Hardware Co." value="${saleForm.customer}"></div>`);
+  custField.querySelector('input').addEventListener('input', e=>{ saleForm.customer = e.target.value; });
+  form.appendChild(custField);
+
+  const itemField = el(`<div><label>Item</label><select></select></div>`);
+  const sel = itemField.querySelector('select');
+  sel.appendChild(el(`<option value="">Select item…</option>`));
+  for(const it of state.items){ sel.appendChild(el(`<option value="${it.sku}" ${saleForm.sku===it.sku?'selected':''}>${it.sku} · ${it.name} (${it.qty} on hand)</option>`)); }
+  sel.addEventListener('change', e=>{ saleForm.sku=e.target.value; const it=state.items.find(i=>i.sku===e.target.value); saleForm.price = it? it.price : null; renderSaleForm(host); });
+  form.appendChild(itemField);
+
+  const row = el(`<div class="field-row"></div>`);
+  const qtyField = el(`<div><label>Quantity</label><input type="number" min="1" value="${saleForm.qty}"></div>`);
+  qtyField.querySelector('input').addEventListener('input', e=>{ saleForm.qty = parseInt(e.target.value)||1; });
+  const priceField = el(`<div><label>Unit price</label><input type="number" step="0.01" min="0" value="${saleForm.price!=null?saleForm.price:''}"></div>`);
+  priceField.querySelector('input').addEventListener('input', e=>{ saleForm.price = parseFloat(e.target.value)||0; });
+  row.appendChild(qtyField); row.appendChild(priceField);
+  form.appendChild(row);
+
+  const terms = el(`
+    <div><label>Terms</label>
+      <div class="radio-row">
+        <label><input type="radio" name="terms" value="invoice" ${saleForm.terms==='invoice'?'checked':''}> Invoice (AR)</label>
+        <label><input type="radio" name="terms" value="cash" ${saleForm.terms==='cash'?'checked':''}> Cash on sale</label>
+      </div>
+    </div>`);
+  terms.querySelectorAll('input').forEach(r=>r.addEventListener('change', e=>{ saleForm.terms = e.target.value; }));
+  form.appendChild(terms);
+
+  const item = state.items.find(i=>i.sku===saleForm.sku);
+  const overstock = item && saleForm.qty > item.qty;
+  if(overstock) form.appendChild(el(`<div class="balance-check bad">Only ${item.qty} on hand for ${item.name}.</div>`));
+
+  const submit = el(`<button type="submit" class="btn primary" ${(!saleForm.sku||!saleForm.customer||overstock)?'disabled':''}>Create order (draft)</button>`);
+  form.appendChild(submit);
+  form.addEventListener('submit', e=>{
+    e.preventDefault();
+    if(!saleForm.sku||!saleForm.customer||overstock) return;
+    state = createSalesOrder(state, {customer:saleForm.customer, sku:saleForm.sku, qty:saleForm.qty, price:saleForm.price, terms:saleForm.terms, date:new Date().toISOString().slice(0,10)});
+    saveState(state);
+    saleForm = { customer:'', sku:'', qty:1, price:null, terms:'invoice' };
+    render();
+  });
+  host.appendChild(form);
+}
+
+function renderPurchasing(){
+  const wrap = el(`<div class="grid2"></div>`);
+  const formPanel = el(`<div class="panel"><div class="panel-head"><h3>New purchase order</h3></div><div class="panel-body" id="pf"></div></div>`);
+  wrap.appendChild(formPanel);
+  renderPOForm(formPanel.querySelector('#pf'));
+
+  const listPanel = el(`<div><div class="section-title">Orders</div><div id="poList"></div></div>`);
+  wrap.appendChild(listPanel);
+  const list = listPanel.querySelector('#poList');
+  if(state.purchaseOrders.length===0) list.appendChild(el(`<div class="empty">No purchase orders yet — create one on the left.</div>`));
+  for(const po of [...state.purchaseOrders].reverse()){
+    const item = state.items.find(i=>i.sku===po.sku);
+    const card = el(`
+      <div class="card">
+        <div class="card-head">
+          <div><div class="who">${po.vendor}</div><div class="sub">${item?item.name:po.sku} × ${po.qty} @ ${money(po.cost)}</div></div>
+          <span class="pill ${po.status==='received'?'done':'draft'}">${po.status}</span>
+        </div>
+      </div>
+    `);
+    if(po.status==='draft'){
+      const btn = el(`<button class="btn primary small">Receive &amp; post to ledger</button>`);
+      btn.addEventListener('click', ()=>{ state = receivePurchaseOrder(state, po.id); saveState(state); render(); });
+      card.appendChild(btn);
+    } else {
+      const box = el(`<div class="posted-box"><div class="je-title">Posted journal lines</div></div>`);
+      for(const l of po.postedLines){
+        const a = state.accounts.find(x=>x.code===l.code);
+        box.appendChild(el(`<div>${l.debit? 'Dr':'Cr'} ${a.name} — ${money(l.debit||l.credit)}</div>`));
+      }
+      card.appendChild(box);
+    }
+    list.appendChild(card);
+  }
+  return wrap;
+}
+
+function renderPOForm(host){
+  host.innerHTML='';
+  const form = el(`<form></form>`);
+  const vendField = el(`<div><label>Vendor</label><input type="text" placeholder="e.g. Northgate Fasteners" value="${poForm.vendor}"></div>`);
+  vendField.querySelector('input').addEventListener('input', e=>{ poForm.vendor = e.target.value; });
+  form.appendChild(vendField);
+
+  const itemField = el(`<div><label>Item</label><select></select></div>`);
+  const sel = itemField.querySelector('select');
+  sel.appendChild(el(`<option value="">Select item…</option>`));
+  for(const it of state.items){ sel.appendChild(el(`<option value="${it.sku}" ${poForm.sku===it.sku?'selected':''}>${it.sku} · ${it.name} (avg cost ${money(it.cost)})</option>`)); }
+  sel.addEventListener('change', e=>{ poForm.sku=e.target.value; const it=state.items.find(i=>i.sku===e.target.value); poForm.cost = it? it.cost : null; renderPOForm(host); });
+  form.appendChild(itemField);
+
+  const row = el(`<div class="field-row"></div>`);
+  const qtyField = el(`<div><label>Quantity</label><input type="number" min="1" value="${poForm.qty}"></div>`);
+  qtyField.querySelector('input').addEventListener('input', e=>{ poForm.qty = parseInt(e.target.value)||1; });
+  const costField = el(`<div><label>Unit cost</label><input type="number" step="0.01" min="0" value="${poForm.cost!=null?poForm.cost:''}"></div>`);
+  costField.querySelector('input').addEventListener('input', e=>{ poForm.cost = parseFloat(e.target.value)||0; });
+  row.appendChild(qtyField); row.appendChild(costField);
+  form.appendChild(row);
+  form.appendChild(el(`<div class="helper">Receiving updates on-hand quantity and recalculates moving-average cost automatically.</div>`));
+
+  const submit = el(`<button type="submit" class="btn primary" ${(!poForm.sku||!poForm.vendor)?'disabled':''}>Create order (draft)</button>`);
+  form.appendChild(submit);
+  form.addEventListener('submit', e=>{
+    e.preventDefault();
+    if(!poForm.sku||!poForm.vendor) return;
+    state = createPurchaseOrder(state, {vendor:poForm.vendor, sku:poForm.sku, qty:poForm.qty, cost:poForm.cost, date:new Date().toISOString().slice(0,10)});
+    saveState(state);
+    poForm = { vendor:'', sku:'', qty:1, cost:null };
+    render();
+  });
+  host.appendChild(form);
+}
+
+function renderInventory(){
+  const panel = el(`<div class="panel"><div class="panel-head"><h3>Inventory</h3></div><div class="table-wrap"><table><thead><tr><th>SKU</th><th>Name</th><th class="num">Qty on hand</th><th class="num">Avg. unit cost</th><th class="num">Unit price</th><th class="num">Value</th></tr></thead><tbody></tbody></table></div><div class="panel-note">Value here always ties back to the Inventory account balance in the ledger.</div></div>`);
+  const tbody = panel.querySelector('tbody');
+  let totalVal = 0;
+  for(const it of state.items){
+    const val = it.qty*it.cost; totalVal += val;
+    tbody.appendChild(el(`<tr><td>${it.sku}</td><td>${it.name}</td><td class="num">${it.qty}</td><td class="num">${money(it.cost)}</td><td class="num">${money(it.price)}</td><td class="num">${money(val)}</td></tr>`));
+  }
+  tbody.appendChild(el(`<tr class="total"><td colspan="5">Total inventory value</td><td class="num">${money(totalVal)}</td></tr>`));
+  return panel;
+}
+
+function render(){
+  renderTabs();
+  const content = document.getElementById('content');
+  content.innerHTML='';
+  const renderers = {dashboard:renderDashboard, coa:renderCOA, journal:renderJournal, sales:renderSales, purchasing:renderPurchasing, inventory:renderInventory};
+  content.appendChild(renderers[activeTab]());
+}
+
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  if(confirm('Reset all demo data back to the seed scenario?')){
+    state = seedState();
+    saveState(state);
+    render();
+  }
+});
+
+render();
+</script>

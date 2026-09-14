@@ -1,0 +1,347 @@
+<title>Keel Blueprint</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500..700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#F3F5F4; --surface:#FFFFFF; --surface-2:#E9EDEC;
+    --ink:#10202B; --ink-soft:#48595F; --ink-faint:#7E8E90;
+    --accent:#0E7C86; --accent-strong:#0B5F67; --accent-soft:#D8ECEA;
+    --gold:#B97A1E; --gold-soft:#F4E6CE;
+    --border:#D8DEDC; --border-strong:#B9C2C0;
+    --font-display:'Fraunces',Georgia,'Times New Roman',serif;
+    --font-body:'IBM Plex Sans',-apple-system,'Segoe UI',sans-serif;
+    --font-mono:'IBM Plex Mono','SF Mono',Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0D1A21; --surface:#122229; --surface-2:#17292F;
+      --ink:#E7EEEC; --ink-soft:#A7BAB7; --ink-faint:#6C8280;
+      --accent:#2FB6BA; --accent-strong:#5AD3D5; --accent-soft:#153539;
+      --gold:#E0A64C; --gold-soft:#2E2410;
+      --border:#233A40; --border-strong:#2E4750;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0D1A21; --surface:#122229; --surface-2:#17292F;
+    --ink:#E7EEEC; --ink-soft:#A7BAB7; --ink-faint:#6C8280;
+    --accent:#2FB6BA; --accent-strong:#5AD3D5; --accent-soft:#153539;
+    --gold:#E0A64C; --gold-soft:#2E2410;
+    --border:#233A40; --border-strong:#2E4750;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);line-height:1.6;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;text-wrap:balance;margin:0 0 .4em;color:var(--ink);}
+  p{margin:0 0 1em;color:var(--ink-soft);max-width:66ch;}
+  a{color:var(--accent-strong);}
+  .layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:48px;max-width:1180px;margin:0 auto;padding:40px 24px 100px;}
+  @media (max-width:880px){.layout{grid-template-columns:1fr;}}
+
+  .sidenav{position:sticky;top:24px;align-self:start;}
+  .sidenav .mark{font-family:var(--font-display);font-size:1.4rem;font-weight:700;}
+  .sidenav .tag{font-size:.72rem;color:var(--ink-faint);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.05em;margin-top:2px;}
+  .sidenav ul{list-style:none;margin:24px 0 0;padding:0;display:flex;flex-direction:column;gap:2px;}
+  .sidenav a{display:block;font-size:.83rem;font-weight:500;color:var(--ink-soft);text-decoration:none;padding:6px 0;border-left:2px solid transparent;padding-left:12px;}
+  .sidenav a:hover{color:var(--accent-strong);border-left-color:var(--border-strong);}
+  @media (max-width:880px){
+    .sidenav{position:static;}
+    .sidenav ul{flex-direction:row;flex-wrap:wrap;gap:4px 14px;margin-top:14px;}
+    .sidenav a{padding-left:0;border-left:none;border-bottom:2px solid transparent;}
+  }
+
+  main{min-width:0;}
+  .eyebrow{font-family:var(--font-mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent-strong);font-weight:600;}
+  header.hero{margin-bottom:56px;}
+  header.hero h1{font-size:2.6rem;margin-top:.3em;}
+  header.hero .sub{font-size:1.05rem;color:var(--ink-soft);max-width:62ch;}
+
+  .callout{background:var(--accent-soft);border:1px solid var(--border);border-radius:12px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:20px 0 40px;}
+  .callout p{margin:0;color:var(--ink);max-width:50ch;font-size:.92rem;}
+  .callout strong{font-family:var(--font-display);}
+  .btn-link{font-family:var(--font-body);font-weight:600;font-size:.85rem;background:var(--accent);color:#fff;padding:9px 16px;border-radius:7px;text-decoration:none;white-space:nowrap;}
+  .btn-link:hover{background:var(--accent-strong);}
+
+  section{margin-bottom:64px;scroll-margin-top:24px;}
+  section h2{font-size:1.7rem;margin-bottom:.6em;}
+  .section-num{font-family:var(--font-mono);color:var(--ink-faint);font-size:.85rem;margin-right:8px;}
+
+  .timeline{display:flex;flex-direction:column;}
+  .phase{position:relative;padding:0 0 32px 34px;border-left:2px solid var(--border);}
+  .phase:last-child{border-left-color:transparent;padding-bottom:0;}
+  .phase::before{content:attr(data-n);position:absolute;left:-19px;top:0;width:36px;height:36px;border-radius:50%;background:var(--surface);border:2px solid var(--accent);color:var(--accent-strong);font-family:var(--font-mono);font-size:.78rem;font-weight:600;display:flex;align-items:center;justify-content:center;}
+  .phase-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px;}
+  .phase-head h3{font-size:1.2rem;margin:0;}
+  .phase-time{font-family:var(--font-mono);font-size:.75rem;color:var(--ink-faint);background:var(--surface-2);padding:2px 9px;border-radius:99px;}
+  .phase-goal{font-weight:600;color:var(--ink);margin-bottom:8px;font-size:.92rem;}
+  .phase ul{margin:0 0 12px;padding-left:1.1em;color:var(--ink-soft);font-size:.92rem;}
+  .phase li{margin-bottom:3px;}
+  .exit{background:var(--gold-soft);border-radius:8px;padding:9px 13px;font-size:.82rem;color:var(--ink);}
+  .exit b{color:var(--gold);font-family:var(--font-mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:2px;}
+
+  .principles{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-bottom:32px;}
+  .principle{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;}
+  .principle h4{font-size:.98rem;margin-bottom:6px;}
+  .principle p{font-size:.86rem;margin:0;}
+
+  .diagram-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin:24px 0;overflow-x:auto;}
+  .diagram-caption{font-size:.78rem;color:var(--ink-faint);margin-top:10px;font-family:var(--font-mono);}
+
+  .table-wrap{overflow-x:auto;margin:20px 0;border:1px solid var(--border);border-radius:10px;}
+  table{width:100%;border-collapse:collapse;font-size:.87rem;background:var(--surface);}
+  th{text-align:left;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);padding:10px 14px;border-bottom:1px solid var(--border);background:var(--surface-2);}
+  td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--ink-soft);vertical-align:top;}
+  tr:last-child td{border-bottom:none;}
+  td.strong{color:var(--ink);font-weight:600;}
+  code{font-family:var(--font-mono);font-size:.85em;background:var(--surface-2);padding:1px 6px;border-radius:4px;color:var(--ink);}
+
+  .mono-tag{font-family:var(--font-mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;padding:2px 8px;border-radius:99px;background:var(--surface-2);color:var(--ink-soft);}
+
+  footer{border-top:1px solid var(--border);padding-top:24px;margin-top:60px;color:var(--ink-faint);font-size:.82rem;}
+</style>
+
+<div class="layout">
+  <nav class="sidenav">
+    <div class="mark">Keel</div>
+    <div class="tag">Product plan</div>
+    <ul>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#roadmap">Roadmap</a></li>
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#data-model">Data model</a></li>
+      <li><a href="#stack">Tech stack</a></li>
+      <li><a href="#monetization">Monetization</a></li>
+      <li><a href="#demo">Demo</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <header class="hero" id="overview">
+      <span class="eyebrow">Product plan · v0.1</span>
+      <h1>Keel</h1>
+      <p class="sub">An integrated operating core for small distributors and light manufacturers — the part of SAP that actually earns its keep (one ledger every module posts to, live) without the consultants, the modules you'll never touch, or the eighteen-month rollout.</p>
+    </header>
+
+    <div class="callout">
+      <p><strong>The core idea, running.</strong> A working proof of concept where a sales order posts straight to the general ledger — no batch job, no month-end close.</p>
+      <a class="btn-link" href="https://claude.ai/code/artifact/3a018741-e8dc-422c-9254-9113b0ec1ac7" target="_blank" rel="noopener">Open the demo →</a>
+    </div>
+
+    <section id="roadmap">
+      <h2><span class="section-num">01</span>Roadmap</h2>
+      <p>Seven phases, each ending in a real exit criterion rather than a ship date. Target customer for v1: 20–150 employees, $2M–$25M revenue, inventory-heavy — distributors and light manufacturers currently stuck between spreadsheets-plus-QuickBooks and an SAP Business One implementation they can't justify.</p>
+
+      <div class="timeline">
+        <div class="phase" data-n="00">
+          <div class="phase-head"><h3>Foundation &amp; validation</h3><span class="phase-time">Weeks 1–6</span></div>
+          <div class="phase-goal">Prove the wedge before writing the ledger engine.</div>
+          <ul>
+            <li>15–20 discovery interviews with distributors/light manufacturers on QuickBooks + spreadsheets, or an SAP B1 install they've outgrown or resent</li>
+            <li>Two chart-of-accounts templates built from real client trial balances (distribution, light manufacturing)</li>
+            <li>Five willingness-to-pay conversations to pressure-test the pricing hypothesis below</li>
+          </ul>
+          <div class="exit"><b>Exit criteria</b>10 signed LOIs or paid pilot commitments</div>
+        </div>
+
+        <div class="phase" data-n="01">
+          <div class="phase-head"><h3>Core ledger MVP</h3><span class="phase-time">Months 2–4</span></div>
+          <div class="phase-goal">The integrated financial core, live — this is the whole bet.</div>
+          <ul>
+            <li>Double-entry GL engine: event-sourced, append-only journal</li>
+            <li>AP/AR, bank feed reconciliation (Plaid)</li>
+            <li>Real-time financial statements — no batch close</li>
+            <li>Multi-entity, single currency</li>
+          </ul>
+          <div class="exit"><b>Exit criteria</b>3 design-partner customers running live books on Keel</div>
+        </div>
+
+        <div class="phase" data-n="02">
+          <div class="phase-head"><h3>Procurement &amp; inventory</h3><span class="phase-time">Months 4–6</span></div>
+          <div class="phase-goal">Close the loop SAP MM used to own.</div>
+          <ul>
+            <li>PO → receipt → 3-way match → AP invoice</li>
+            <li>Reorder points, moving-average costing</li>
+            <li>Vendor management, single-level approval workflow</li>
+          </ul>
+          <div class="exit"><b>Exit criteria</b>Design partners fully off QuickBooks for inventory</div>
+        </div>
+
+        <div class="phase" data-n="03">
+          <div class="phase-head"><h3>Quote-to-cash</h3><span class="phase-time">Months 6–8</span></div>
+          <div class="phase-goal">Sales flows straight into the ledger, the same way purchasing does.</div>
+          <ul>
+            <li>Quote → sales order → fulfillment → invoice</li>
+            <li>Pricing rules, tax calculation (Avalara or TaxJar)</li>
+            <li>Customer portal for invoice payment</li>
+          </ul>
+          <div class="exit"><b>Exit criteria</b>10 paying customers, $15–20k MRR</div>
+        </div>
+
+        <div class="phase" data-n="04">
+          <div class="phase-head"><h3>Productized onboarding</h3><span class="phase-time">Months 8–10</span></div>
+          <div class="phase-goal">Kill the implementation consultant; keep the thing they were valuable for.</div>
+          <ul>
+            <li>Guided self-serve onboarding wizard built on the CoA templates from Phase 0</li>
+            <li>Flat-fee white-glove tier: $2,500 fixed, 2-week SLA, no hourly billing</li>
+            <li>Vertical-specific report packs (distribution vs. manufacturing)</li>
+          </ul>
+          <div class="exit"><b>Exit criteria</b>Time-to-live-books under 10 business days, no implementation consultant involved</div>
+        </div>
+
+        <div class="phase" data-n="05">
+          <div class="phase-head"><h3>Light manufacturing</h3><span class="phase-time">Months 10–13</span></div>
+          <div class="phase-goal">The moat module — the depth QuickBooks-tier tools can't follow into.</div>
+          <ul>
+            <li>BOMs, work orders, routing</li>
+            <li>Job costing tied to the GL in real time, not at period-end</li>
+            <li>WIP tracking</li>
+          </ul>
+          <div class="exit"><b>Exit criteria</b>5 manufacturing customers running job costing live</div>
+        </div>
+
+        <div class="phase" data-n="06">
+          <div class="phase-head"><h3>Embedded finance &amp; marketplace</h3><span class="phase-time">Month 13+</span></div>
+          <div class="phase-goal">Margin expansion beyond per-seat revenue.</div>
+          <ul>
+            <li>Embedded payments (take rate), payroll partner integration, invoice-financing referral</li>
+            <li>Public API, automation layer, third-party app marketplace with a take rate</li>
+            <li>Second vertical evaluation — professional services or field service</li>
+          </ul>
+          <div class="exit"><b>Exit criteria</b>Non-seat revenue exceeds 20% of total revenue</div>
+        </div>
+
+        <div class="phase" data-n="07">
+          <div class="phase-head"><h3>Downmarket: Keel Lite</h3><span class="phase-time">Month 16+</span></div>
+          <div class="phase-goal">A cheap, self-serve front door for businesses too small for full Keel today — with a growth path into it.</div>
+          <ul>
+            <li>Same ledger engine, radically simplified surface: GL, AP/AR, bank feed, basic invoicing, simple stock counts — no job costing, no multi-entity, no 3-way match</li>
+            <li>One-click industry presets (retail, salon/service, single-location restaurant, solo contractor) — a fully populated chart of accounts and dashboard in under 15 minutes, no sales call</li>
+            <li>Flat pricing ($29–49/mo, not per-seat), mobile-first, subsidized in part by embedded-payments volume from Phase 06</li>
+            <li>In-app graduation signals — SKU count, headcount, order volume — that prompt an upgrade to full Keel with zero data migration, since it's the same schema underneath</li>
+          </ul>
+          <div class="exit"><b>Exit criteria</b>1,000+ self-serve accounts and a measurable graduation rate into full Keel within 12 months</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="architecture">
+      <h2><span class="section-num">02</span>Architecture</h2>
+      <p>Five decisions carry the whole system. Everything else — which job queue, which ORM — is replaceable; these aren't.</p>
+
+      <div class="principles">
+        <div class="principle"><h4>Ledger as source of truth</h4><p>Every business event, in every module, becomes an immutable double-entry journal entry the moment it happens. There is no nightly batch and no "close the books" ritual standing between an action and its true financial effect.</p></div>
+        <div class="principle"><h4>Event-sourced core, CRUD periphery</h4><p>The ledger itself is append-only. Operational modules — sales, procurement, inventory — can use ordinary CRUD, but any state change that has financial consequence must emit a ledger event synchronously.</p></div>
+        <div class="principle"><h4>Multi-tenant from day one</h4><p>Postgres row-level security keyed on <code>tenant_id</code>, not schema-per-tenant. Simpler operations at the scale Keel actually runs at; schema-per-tenant is a cost worth avoiding until there's a specific reason not to.</p></div>
+        <div class="principle"><h4>API-first</h4><p>Every UI action is a call to a publicly-shaped API. This is what lets Phase 6's automation layer and marketplace exist later without a rewrite of the core.</p></div>
+        <div class="principle"><h4>Boring, provable technology</h4><p>Postgres, not a bespoke ledger database. A well-understood job queue, not a custom event bus. Microservices get introduced when a real scaling problem shows up, not before.</p></div>
+        <div class="principle"><h4>One core, two front doors</h4><p>Keel Lite (Phase 07) is not a fork — it's the same multi-tenant ledger and schema behind a constrained UI and a more aggressive onboarding wizard. Upgrading from Lite to full Keel unlocks modules; it never migrates data.</p></div>
+      </div>
+
+      <div class="diagram-panel">
+        <pre class="mermaid">
+flowchart TB
+    UI["Web App (Next.js)"]
+    GW["API Gateway / Auth"]
+    SALES["Sales &amp; Quote-to-Cash"]
+    PROC["Procurement"]
+    INV["Inventory"]
+    MFG["Job Costing / Mfg"]
+    LEDGER[("Ledger Engine<br/>double-entry, append-only")]
+    PG[("Postgres<br/>multi-tenant RLS")]
+    QUEUE[["Job Queue"]]
+    RPT["Real-time financials &amp; dashboards"]
+    BANK["Plaid — bank feeds"]
+    PAY["Stripe — payments"]
+    TAX["Avalara — tax"]
+
+    UI --> GW
+    GW --> SALES
+    GW --> PROC
+    GW --> INV
+    GW --> MFG
+    SALES -- posts event --> LEDGER
+    PROC -- posts event --> LEDGER
+    INV -- posts event --> LEDGER
+    MFG -- posts event --> LEDGER
+    LEDGER --> PG
+    SALES --> PG
+    PROC --> PG
+    INV --> PG
+    MFG --> PG
+    LEDGER --> QUEUE
+    QUEUE --> RPT
+    RPT --> UI
+    GW --> BANK
+    GW --> PAY
+    GW --> TAX
+        </pre>
+        <div class="diagram-caption">Every module writes to Postgres directly for its own operational state, but financial state only ever enters the system through the ledger.</div>
+      </div>
+    </section>
+
+    <section id="data-model">
+      <h2><span class="section-num">03</span>Core data model</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Entity</th><th>Purpose</th><th>Key fields</th></tr></thead>
+          <tbody>
+            <tr><td class="strong">account</td><td>Chart of accounts line</td><td><code>code, name, type, normal_balance</code></td></tr>
+            <tr><td class="strong">journal_entry</td><td>Immutable, append-only posting</td><td><code>id, tenant_id, date, memo, source_type, source_id</code></td></tr>
+            <tr><td class="strong">journal_line</td><td>One debit or credit leg of an entry</td><td><code>entry_id, account_code, debit, credit</code></td></tr>
+            <tr><td class="strong">item</td><td>Inventory SKU</td><td><code>sku, name, qty_on_hand, avg_cost, price</code></td></tr>
+            <tr><td class="strong">sales_order</td><td>Quote-to-cash record; posts on fulfillment</td><td><code>customer, sku, qty, price, terms, status</code></td></tr>
+            <tr><td class="strong">purchase_order</td><td>Procure-to-pay record; posts on receipt</td><td><code>vendor, sku, qty, cost, status</code></td></tr>
+            <tr><td class="strong">tenant</td><td>Row-level security boundary</td><td><code>id, plan, created_at</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The pattern that repeats: <code>sales_order</code> and <code>purchase_order</code> never touch account balances directly. Fulfilling or receiving one calls the ledger engine, which is the only thing allowed to write a <code>journal_entry</code>. The POC linked below implements exactly this shape in miniature.</p>
+    </section>
+
+    <section id="stack">
+      <h2><span class="section-num">04</span>Tech stack</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Layer</th><th>Choice</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td class="strong">Frontend</td><td>Next.js + TypeScript + Tailwind</td><td>Fast iteration; SSR suits dashboard-heavy screens</td></tr>
+            <tr><td class="strong">Backend API</td><td>Node/TypeScript (NestJS)</td><td>Shares types with the frontend; easy hiring</td></tr>
+            <tr><td class="strong">Database</td><td>Postgres (Supabase or RDS)</td><td>Mature row-level security, JSON columns for flexible fields</td></tr>
+            <tr><td class="strong">Ledger engine</td><td>Custom service on an append-only table</td><td>This is the actual IP — not something to outsource</td></tr>
+            <tr><td class="strong">Job queue</td><td>Postgres-backed (Graphile Worker)</td><td>Avoids standing up Kafka before there's a reason to</td></tr>
+            <tr><td class="strong">Auth</td><td>Auth0 / Clerk</td><td>Not a differentiator — buy it</td></tr>
+            <tr><td class="strong">Bank feeds</td><td>Plaid</td><td>Standard for SMB banking connections</td></tr>
+            <tr><td class="strong">Payments</td><td>Stripe</td><td>ACH + card today; embedded-finance revenue in Phase 6</td></tr>
+            <tr><td class="strong">Hosting</td><td>Render / Vercel + managed Postgres</td><td>Low ops burden for a small early team</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><span class="mono-tag">Security note</span> RLS per tenant, encryption at rest, and an audit trail that comes for free: every journal entry already carries an actor and a timestamp, because that's what a ledger is. SOC 2 Type 1 targeted around Phase 4, once the flat-fee onboarding tier starts selling into slightly larger accounts that ask for it.</p>
+    </section>
+
+    <section id="monetization">
+      <h2><span class="section-num">05</span>Monetization by phase</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Phase</th><th>Revenue lever introduced</th></tr></thead>
+          <tbody>
+            <tr><td class="strong">01 – Core ledger</td><td>Per-user/month SaaS tiers (Starter / Growth / Pro)</td></tr>
+            <tr><td class="strong">03 – Quote-to-cash</td><td>First paying cohort at full price — no more design-partner discounting</td></tr>
+            <tr><td class="strong">04 – Onboarding</td><td>Flat-fee guided setup ($2,500) replaces hourly implementation billing</td></tr>
+            <tr><td class="strong">05 – Manufacturing</td><td>Vertical template pack as a premium add-on</td></tr>
+            <tr><td class="strong">06 – Embedded finance</td><td>Payments take-rate, payroll/lending referral fees, marketplace take-rate</td></tr>
+            <tr><td class="strong">07 – Keel Lite</td><td>Flat low-price self-serve tier; upgrade-driven expansion revenue as accounts graduate into full Keel</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="demo">
+      <h2><span class="section-num">06</span>Try it</h2>
+      <p>The proof of concept below isn't a mockup — it's a small working ledger. Create a sales order, fulfill it, and watch the trial balance, gross margin, and inventory value update from the same transaction, live.</p>
+      <div class="callout">
+        <p><strong>Keel — interactive POC.</strong> Chart of accounts, journal, sales, purchasing, and inventory, all posting to one ledger.</p>
+        <a class="btn-link" href="https://claude.ai/code/artifact/3a018741-e8dc-422c-9254-9113b0ec1ac7" target="_blank" rel="noopener">Open the demo →</a>
+      </div>
+    </section>
+
+    <footer>Keel — product plan v0.1. Working document; phase boundaries are hypotheses, not commitments.</footer>
+  </main>
+</div>
