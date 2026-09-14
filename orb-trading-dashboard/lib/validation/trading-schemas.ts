@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import type { EntrySignal, ORBSignal, OpeningRange, Trade, TradingSettings } from '@/types/trading'
 
-const VALID_SYMBOLS = ['SPY', 'QQQ', 'TSLA', 'WMT'] as const
+const VALID_SYMBOLS = ['SPY', 'QQQ', 'TSLA', 'WMT', 'CRWD', 'NVDA'] as const
 
 const baseSchema = z.object({
   symbol: z.enum(VALID_SYMBOLS, {
