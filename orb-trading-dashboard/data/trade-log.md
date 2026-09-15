@@ -8,11 +8,15 @@ Verified against actual Robinhood order history via connected MCP (accounts •�
 
 ### By account (lifetime)
 
-| Account | Trades (closed) | Wins | Losses | Net P&L (closed) | Open positions |
-|---------|--------|------|--------|---------|---------|
-| **Investing (••••4232)** | 25 | 24 | 1 | **+$7,342** | SPY $756P x5 (unrealized +$83 if filled), COIN $175P x3 (unrealized +$45 if filled) |
-| **Joint (••••0501)** | 8 | 6 | 2 | **-$300** | SPY $756P x5 (unrealized +$125 if filled), COIN $175P x1 (unrealized +$20 if filled) |
-| **Combined** | 33 | 30 | 3 | **+$7,042** | — |
+**Open positions valued via live option quotes (get_option_quotes), not stale pending-order prices — updated 09-15 ~3:42 PM ET.**
+
+| Account | Trades (closed) | Wins | Losses | Net P&L (closed) | Open positions (live mark) | Unrealized |
+|---------|--------|------|--------|---------|---------|---------|
+| **Investing (••••4232)** | 25 | 24 | 1 | **+$7,342** | SPY $756P x5 @$0.784→$0.135; COIN $175P x3 @$4.85→$6.50 | **+$170.50** |
+| **Joint (••••0501)** | 8 | 6 | 2 | **-$300** | SPY $756P x5 @$0.70→$0.135; COIN $175P x1 @$4.80→$6.50 | **-$112.50** |
+| **Combined** | 33 | 30 | 3 | **+$7,042** | — | **+$58.00** |
+
+*SPY (0DTE, expires today) is decaying against the position — mark down from $0.235 to $0.135 since last check. COIN moved sharply favorable — mark up from $3.65 to $6.50. Net effect: unrealized roughly flat combined, but very different per-account exposure (Investing net positive open, Joint net negative open) since position sizes differ between accounts.*
 
 ### By day
 
