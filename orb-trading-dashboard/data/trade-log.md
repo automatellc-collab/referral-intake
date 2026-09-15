@@ -64,12 +64,18 @@ From here forward, every new trade gets attributed at the moment it's reported, 
 
 ## New trades (2026-09-15 onward)
 
-| Date | Account | Symbol | Contract | Entry | Contracts | Cost | Attribution |
-|------|---------|--------|----------|-------|-----------|------|--------------|
-| 09-15 | Investing (••••4232) | COIN | $177.50P exp 9/18 | $5.00/contract | 3 | $1,500 | **TOOL** — matches FIBONACCI signal (default) at $178.30, reported 10:07 AM ET. Verified via `get_option_orders`. |
-| 09-15 | Joint (••••0501) | MSTR | $129P exp 9/18 | $3.60/contract | 1 | $360 | **TOOL** — matches FIBONACCI signal (default) at $129.77, reported 10:07 AM ET. Verified via `get_option_orders`. |
+| Date | Account | Symbol | Contract | Entry | Exit | Contracts | P&L | Attribution |
+|------|---------|--------|----------|-------|------|-----------|-----|--------------|
+| 09-15 | Investing (••••4232) | COIN | $177.50P exp 9/18 | $5.00 (x3) + $5.05 (x1 added) | $5.30 | 4 | **+$115** | **TOOL** — matches FIBONACCI signal (default) at $178.30, reported 10:07 AM ET |
+| 09-15 | Joint (••••0501) | MSTR | $129P exp 9/18 | $3.60/contract | pending close @ $3.75 (not yet filled) | 1 | open | **TOOL** — matches FIBONACCI signal (default) at $129.77, reported 10:07 AM ET |
+| 09-15 | Investing (••••4232) | QQQ | $707P exp 9/16 | $3.61/contract | $4.20/contract | 1 | **+$59** | **TOOL** — matches FIBONACCI signal (default) at $707.02, reported 10:17 AM ET, confirmed bearish |
+| 09-15 | Joint (••••0501) | QQQ | $707P exp 9/15 (0DTE) | $1.18/contract | $1.55/contract | 2 | **+$74** | **TOOL** — matches FIBONACCI signal (default) at $707.02, reported 10:17 AM ET, confirmed bearish |
+| 09-15 | Investing (••••4232) | SPY | $757P exp 9/15 (0DTE) | $0.91/contract | $1.05/contract | 3 | **+$42** | **TOOL** — matches FIBONACCI signal (default) at $757.60, reported 10:25 AM ET, confirmed bearish |
+| 09-15 | Joint (••••0501) | SPY | $757P exp 9/15 (0DTE) | $0.90/contract | $1.05/contract | 4 | **+$60** | **TOOL** — matches FIBONACCI signal (default) at $757.60, reported 10:25 AM ET, confirmed bearish |
 
-Both open as of 09-15 ~10:15 AM ET. COIN: $1.18 OTM ($178.68 vs $177.50 strike). MSTR: $1.01 OTM ($130.01 vs $129 strike). Both puts, both bearish, both 3-day holds (exp 9/18, not 0DTE).
+**Closed P&L this batch: +$350 across 5 closed trades, all wins. MSTR still open (joint).**
+
+Tool-attributed running total: 6 (from 09-14, +$1,166) + 2 COIN/MSTR entries + 4 new closed (QQQ x2, SPY x2) = 12 tool-attributed trades, 11 closed + 1 open, 11-0 on closed trades.
 
 ## Sizing rule
 
