@@ -4,32 +4,42 @@ Verified against actual Robinhood order history (account ••••4232, "inve
 
 ## Verified Trades, 2026-09-08 through 2026-09-14
 
-| Date | Symbol | Contract | Buy | Sell | Contracts | Net P&L |
-|------|--------|----------|-----|------|-----------|---------|
-| 09-08 | TSLA | $370C exp 9/9 | $2.40 | $3.00/$3.25 | 3 | **+$214** |
-| 09-08 | TSLA | $362.50C exp 9/9 | $4.40 | $6.00/$6.25/$6.50 | 3 | **+$555** |
-| 09-09 | QQQ | $718C exp 9/10 | $2.92 | $3.90 | 1 | **+$103** |
-| 09-09 | NVDA | $222.50P exp 9/11 | $2.01/$1.76 | $2.10/$2.20 | 7 | **+$148** |
-| 09-09 | PLTR | $175C exp 9/11 (short) | — | $1.16 | 1 | **+$117** (expired OTM, kept premium) |
-| 09-10 | AAPL | $315C exp 9/11 | $4.65 | $7.00/$5.80 | 2 | **+$350** |
-| 09-10 | AAPL | $317.50C exp 9/11 | $3.45 | $5.30/$4.15 | 3 | **+$440** |
-| 09-10 | QQQ | $715P exp 9/10 | $3.00/$2.82/$2.34 | $6.40/$7.00 | 10 | **+$3,716** |
-| 09-10 | QQQ | $711C exp 9/11 | $4.00 | $4.10 | 3 | **+$39** |
-| 09-10 | SPY | $757P exp 9/11 | $3.05 | $2.15 | 3 | **-$258** (only loss) |
-| 09-10 | TSLA | $365C exp 9/11 | $4.80 | $5.50 | 1 | **+$76** |
-| 09-10 | NVDA | $217.50P exp 9/11 | $1.75 | $1.80 | 5 | **+$25** |
-| 09-10 | PLTR | $170C exp 9/11 | $1.55/$3.30 (2 opens) | $1.60/$1.75/$3.45 | 5 | **+$70** |
-| 09-11 | QQQ | $716P exp 9/14 | $2.67 | $3.00 | 5 | **+$165** |
-| 09-14 | SPY | $761C exp 9/15 | $1.92/$1.96/$1.69 | $2.25/$2.00/$2.10 | 15 (3 rounds) | **+$360** |
-| 09-14 | QQQ | $706C exp 9/15 | $2.93 | $3.87 | 5 | **+$470** |
-| 09-14 | TSLA | $357.50P exp 9/14 (0DTE) | $1.897 avg | $2.15 | 3 | **+$77** |
-| 09-14 | AMD | $492.50C exp 9/14 (0DTE) | $2.13 | $2.40/$2.60 | 3 | **+$101** |
-| 09-14 | NVDA | $212.50C exp 9/14 (0DTE) | $0.37 | $0.45/$0.48 | 10 | **+$83** |
-| 09-14 | PLTR | $172.50C exp 9/18 | $3.55 | $3.70 (13-min hold) | 5 | **+$75** |
+| Date | Symbol | Contract | Buy | Sell | Contracts | Net P&L | Attribution |
+|------|--------|----------|-----|------|-----------|---------|--------------|
+| 09-08 | TSLA | $370C exp 9/9 | $2.40 | $3.00/$3.25 | 3 | **+$214** | Discretionary — no monitoring record |
+| 09-08 | TSLA | $362.50C exp 9/9 | $4.40 | $6.00/$6.25/$6.50 | 3 | **+$555** | Discretionary — no monitoring record |
+| 09-09 | QQQ | $718C exp 9/10 | $2.92 | $3.90 | 1 | **+$103** | Discretionary — no monitoring record |
+| 09-09 | NVDA | $222.50P exp 9/11 | $2.01/$1.76 | $2.10/$2.20 | 7 | **+$148** | Discretionary — NVDA not in tool universe yet |
+| 09-09 | PLTR | $175C exp 9/11 (short) | — | $1.16 | 1 | **+$117** (expired OTM, kept premium) | Discretionary — PLTR not in tool universe yet |
+| 09-10 | AAPL | $315C exp 9/11 | $4.65 | $7.00/$5.80 | 2 | **+$350** | Discretionary — AAPL never in tool universe |
+| 09-10 | AAPL | $317.50C exp 9/11 | $3.45 | $5.30/$4.15 | 3 | **+$440** | Discretionary — AAPL never in tool universe |
+| 09-10 | QQQ | $715P exp 9/10 | $3.00/$2.82/$2.34 | $6.40/$7.00 | 10 | **+$3,716** | Discretionary — no monitoring record |
+| 09-10 | QQQ | $711C exp 9/11 | $4.00 | $4.10 | 3 | **+$39** | Discretionary — no monitoring record |
+| 09-10 | SPY | $757P exp 9/11 | $3.05 | $2.15 | 3 | **-$258** (only loss) | Discretionary — no monitoring record |
+| 09-10 | TSLA | $365C exp 9/11 | $4.80 | $5.50 | 1 | **+$76** | Discretionary — no monitoring record |
+| 09-10 | NVDA | $217.50P exp 9/11 | $1.75 | $1.80 | 5 | **+$25** | Discretionary — NVDA not in tool universe yet |
+| 09-10 | PLTR | $170C exp 9/11 | $1.55/$3.30 (2 opens) | $1.60/$1.75/$3.45 | 5 | **+$70** | Discretionary — PLTR not in tool universe yet |
+| 09-11 | QQQ | $716P exp 9/14 | $2.67 | $3.00 | 5 | **+$165** | Discretionary — no signal match found |
+| 09-14 | SPY | $761C exp 9/15 | $1.92/$1.96/$1.69 | $2.25/$2.00/$2.10 | 15 (3 rounds) | **+$360** | **TOOL** — matches FIBONACCI signal ~$761-762 |
+| 09-14 | QQQ | $706C exp 9/15 | $2.93 | $3.87 | 5 | **+$470** | **TOOL** — matches FIBONACCI signal ~$706-708 |
+| 09-14 | TSLA | $357.50P exp 9/14 (0DTE) | $1.897 avg | $2.15 | 3 | **+$77** | **TOOL** — matches RETEST bearish signal @ $357.49 |
+| 09-14 | AMD | $492.50C exp 9/14 (0DTE) | $2.13 | $2.40/$2.60 | 3 | **+$101** | **TOOL** — matches RETEST/FIBONACCI ~$492-496 |
+| 09-14 | NVDA | $212.50C exp 9/14 (0DTE) | $0.37 | $0.45/$0.48 | 10 | **+$83** | **TOOL** — matches FIBONACCI signal ~$211.88-212.44 |
+| 09-14 | PLTR | $172.50C exp 9/18 | $3.55 | $3.70 (13-min hold) | 5 | **+$75** | **TOOL** entry — matches FIBONACCI ~$172.47-172.90, but contract expiry (9/18) exceeds the signal's same-day horizon |
 
-**Total verified net P&L, 09-08 to 09-14: +$6,926 across 20 trades. 19 wins, 1 loss (-$258 on SPY put, 09-10). Win rate: 95%.**
+**Total verified net P&L, 09-08 to 09-14: +$6,926 across 20 trades. 19 wins, 1 loss (-$258 on SPY put, 09-10). Raw win rate: 95%.**
 
 All positions closed same day or within the window — no open exposure remaining from this list as of 2026-09-15.
+
+## Attribution split (2026-09-15 analysis)
+
+Attribution is inferred by matching trade timing/price/symbol against signals actually reported live in conversation, plus the tool's own symbol-list history (NVDA/AMD/PLTR/COIN were only added 2026-09-14; before that the tool couldn't have generated a signal for them). This is **not a hard system log join** — there's no stored signal history in the app for 9/8-9/11, so "discretionary" here means "no verifiable tool attribution," not necessarily "the tool had nothing to do with it."
+
+**TOOL-GENERATED (verified match to a live-reported signal): n=6, 6 wins, 0 losses, 100% win rate, total +$1,166, avg +$194/trade.** All six are from 09-14, the only day with a matching signal record for every trade.
+
+**DISCRETIONARY / UNVERIFIED: n=14, 13 wins, 1 loss, 93% win rate, total +$5,760, avg +$411/trade.** Excluding the one outlier (QQQ +$3,716, 09-10): n=13, total +$2,044, avg +$157/trade.
+
+**What this means:** the headline 95%/$6,926 number is not the tool's track record — it's a mix. The tool's own attributable trades (n=6) happen to be undefeated so far, but n=6 is too small to mean anything on its own. The single biggest win (+$3,716, over half the total P&L) has no tool attribution at all — it happened before NVDA/AMD/PLTR were even tracked and before any live monitoring record exists for that morning. **Per the 2026-09-15 council review: do not increase position size, do not treat this as a validated edge, and do not tell anyone else "this strategy works" until there are 50+ tool-attributed trades to look at.**
 
 ## Other account activity (not ORB-signal trades, logged for context only)
 

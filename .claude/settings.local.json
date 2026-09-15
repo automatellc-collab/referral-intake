@@ -388,7 +388,8 @@
       "Bash(curl -s -o \"/Users/Owner/Desktop/Claude Code/claude-life/day45_raw.png\" \"https://d8j0ntlcm91z4.cloudfront.net/user_3GWGoVq9cQ93A6ZqLG4JkrqcG1f/hf_20260911_133803_55be5754-8cba-4b94-8f2b-ffec7f207158.png\")",
       "Bash(rm \"/Users/Owner/Desktop/Claude Code/claude-life/day45_raw.png\")",
       "Bash(git -C \"/Users/Owner/Desktop/Claude Code/claude-life\" commit -m \"Day 45: misting Wren, and not checking\")",
-      "Bash(curl -s -o \"/Users/Owner/Desktop/Claude Code/claude-life/day46_raw.png\" \"https://d8j0ntlcm91z4.cloudfront.net/user_3GWGoVq9cQ93A6ZqLG4JkrqcG1f/hf_20260914_141322_67f2f94f-76e7-43bc-a702-4f51c946408c.png\")"
+      "Bash(curl -s -o \"/Users/Owner/Desktop/Claude Code/claude-life/day46_raw.png\" \"https://d8j0ntlcm91z4.cloudfront.net/user_3GWGoVq9cQ93A6ZqLG4JkrqcG1f/hf_20260914_141322_67f2f94f-76e7-43bc-a702-4f51c946408c.png\")",
+      "Bash(sips -Z 1200 -s format jpeg -s formatOptions 80 \"/Users/Owner/Desktop/Claude Code/claude-life/day46_raw.png\" --out \"/Users/Owner/Desktop/Claude Code/claude-life/day46.jpg\")"
     ]
   }
 }
