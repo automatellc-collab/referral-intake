@@ -64,7 +64,12 @@ From here forward, every new trade gets attributed at the moment it's reported, 
 
 ## New trades (2026-09-15 onward)
 
-*(none logged yet — will be appended here as they're reported or verified)*
+| Date | Account | Symbol | Contract | Entry | Contracts | Cost | Attribution |
+|------|---------|--------|----------|-------|-----------|------|--------------|
+| 09-15 | Investing (••••4232) | COIN | $177.50P exp 9/18 | $5.00/contract | 3 | $1,500 | **TOOL** — matches FIBONACCI signal (default) at $178.30, reported 10:07 AM ET. Verified via `get_option_orders`. |
+| 09-15 | Joint (••••0501) | MSTR | $129P exp 9/18 | $3.60/contract | 1 | $360 | **TOOL** — matches FIBONACCI signal (default) at $129.77, reported 10:07 AM ET. Verified via `get_option_orders`. |
+
+Both open as of 09-15 ~10:15 AM ET. COIN: $1.18 OTM ($178.68 vs $177.50 strike). MSTR: $1.01 OTM ($130.01 vs $129 strike). Both puts, both bearish, both 3-day holds (exp 9/18, not 0DTE).
 
 ## Sizing rule
 
