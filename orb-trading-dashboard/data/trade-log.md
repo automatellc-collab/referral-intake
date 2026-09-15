@@ -52,6 +52,20 @@ This log was rebuilt from scratch by querying `get_option_orders` / `get_equity_
 
 **Going forward:** pull from the Robinhood MCP to verify trade history rather than relying solely on what's mentioned in conversation. When the user reports a trade in chat, treat it as a pointer to go verify, not as the final number.
 
+## Live logging protocol (started 2026-09-15)
+
+From here forward, every new trade gets attributed at the moment it's reported, not reconstructed later:
+
+1. When a signal is reported live in this conversation (symbol, profile, entry type, trigger price, timestamp), that report IS the attribution record.
+2. When the user says they took a trade off a recently-reported signal, log it immediately as **TOOL-GENERATED**, referencing the exact signal (profile + entry type + trigger price) it matches.
+3. When the user reports a trade with no recent matching signal (different symbol, price far from anything reported, or no monitoring active at the time), log it as **DISCRETIONARY**.
+4. Periodically (not necessarily every trade) verify against `get_option_orders`/`get_equity_orders` to catch trades that weren't reported in conversation at all, same as the 9/8-9/14 reconciliation — append any found as DISCRETIONARY/UNVERIFIED unless a signal match is confirmed.
+5. Keep a running attribution split (tool vs. discretionary, win rate and total P&L for each) updated at the bottom of the table — that split is the actual thing being tracked, not the blended headline number.
+
+## New trades (2026-09-15 onward)
+
+*(none logged yet — will be appended here as they're reported or verified)*
+
 ## Sizing rule
 
 System default risk unit: $100 risk per trade (per `TradingSettings.riskPerTradePct` × account equity). Actual position sizes ranged 1-15 contracts across these trades — normal variation for scalping options at different premium levels, not itself evidence of undisciplined sizing.
