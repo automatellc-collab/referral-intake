@@ -8,11 +8,11 @@ Verified against actual Robinhood order history via connected MCP (accounts •�
 
 ### By account (lifetime)
 
-| Account | Trades | Wins | Losses | Net P&L |
-|---------|--------|------|--------|---------|
-| **Investing (••••4232)** | 24 | 23 | 1 | **+$7,312** |
-| **Joint (••••0501)** | 7 | 5 | 2 | **-$323** |
-| **Combined** | 31 | 28 | 3 | **+$6,989** |
+| Account | Trades (closed) | Wins | Losses | Net P&L (closed) | Open positions |
+|---------|--------|------|--------|---------|---------|
+| **Investing (••••4232)** | 25 | 24 | 1 | **+$7,342** | SPY $756P x5 (unrealized +$83 if filled), COIN $175P x3 (unrealized +$45 if filled) |
+| **Joint (••••0501)** | 8 | 6 | 2 | **-$300** | SPY $756P x5 (unrealized +$125 if filled), COIN $175P x1 (unrealized +$20 if filled) |
+| **Combined** | 33 | 30 | 3 | **+$7,042** | — |
 
 ### By day
 
@@ -23,14 +23,14 @@ Verified against actual Robinhood order history via connected MCP (accounts •�
 | 09-10 | +$4,458 | $0 | +$4,458 |
 | 09-11 | +$165 | **-$608** | -$443 |
 | 09-14 | +$1,166 | +$146 | +$1,312 |
-| 09-15 | +$386 | +$139 | +$525 |
+| 09-15 | +$416 | +$162 | +$578 |
 
 ### By week
 
 | Week | Investing | Joint | Combined |
 |------|-----------|-------|----------|
 | Week of 09-08 (Tue-Fri) | +$5,760 | **-$608** | +$5,152 |
-| Week of 09-14 (Mon-Tue, ongoing) | +$1,552 | +$285 | +$1,837 |
+| Week of 09-14 (Mon-Tue, ongoing) | +$1,582 | +$308 | +$1,890 |
 
 *Update all three tables every time a new trade is logged. Re-verify joint account periodically — this correction shows conversation-only tracking misses trades in accounts that aren't discussed.*
 
@@ -114,10 +114,23 @@ From here forward, every new trade gets attributed at the moment it's reported, 
 | 09-15 | Investing (••••4232) | SPY | $757P exp 9/15 (0DTE) | $0.91/contract | $1.05/contract | 3 | **+$42** | **TOOL** — matches FIBONACCI signal (default) at $757.60, reported 10:25 AM ET, confirmed bearish |
 | 09-15 | Joint (••••0501) | SPY | $757P exp 9/15 (0DTE) | $0.90/contract | $1.05/contract | 4 | **+$60** | **TOOL** — matches FIBONACCI signal (default) at $757.60, reported 10:25 AM ET, confirmed bearish |
 | 09-15 | Investing (••••4232) | QQQ | $706P exp 9/15 (0DTE) | $1.13/contract | $1.30/contract | 10 | **+$170** | **TOOL** — matches FIBONACCI signal (default) at $706.36, reported 10:32 AM ET, confirmed bearish |
+| 09-15 | Investing (••••4232) | MSTR | $129P exp 9/18 | $3.95/contract | $4.10/contract | 2 | **+$30** | **TOOL** — second MSTR round, matches FIBONACCI signal (default) ~$129.01-129.09, confirmed bearish |
+| 09-15 | Joint (••••0501) | SPY | $757P exp 9/15 (0DTE) | $0.99/contract | $1.05/$1.10 | 3 | **+$23** | **TOOL** — matches ongoing SPY $757 bearish signal window |
 
-**Total 09-15 closed P&L: +$525 across 7 closed trades, all wins (COIN, MSTR, QQQ x3, SPY x2). Nothing open.**
+**Currently open (both accounts, unrealized if filled at pending price):**
 
-Tool-attributed running total: 6 (from 09-14, +$1,166) + 7 (from 09-15, +$525) = **13 tool-attributed trades, 13 closed, 13-0.**
+| Account | Symbol | Contract | Avg Entry | Contracts | Pending Close | Unrealized if filled |
+|---------|--------|----------|-----------|-----------|----------------|----------------------|
+| Investing | SPY | $756P exp 9/15 (0DTE) | $0.784 | 5 | @ $0.95 | +$83 |
+| Investing | COIN | $175P exp 9/18 | $4.85 | 3 | @ $5.00 | +$45 |
+| Joint | SPY | $756P exp 9/15 (0DTE) | $0.70 | 5 | @ $0.95 | +$125 |
+| Joint | COIN | $175P exp 9/18 | $4.80 | 1 | @ $5.00 | +$20 |
+
+Both match SPY FIBONACCI signals (~$756.83-757.13, bearish, ~10:45-11:10 AM ET) and COIN FIBONACCI signals (~$176.97-177.38, bearish, ~10:55-11:00 AM ET) — **TOOL-GENERATED**. Note: SPY $756P and $757P are different strikes traded in the same window — don't conflate them.
+
+**Total 09-15 closed P&L: +$578 across 9 closed trades, all wins. 4 positions still open (unrealized +$273 if all fill at pending price).**
+
+Tool-attributed running total: 6 (from 09-14, +$1,166) + 9 (from 09-15 closed, +$578) = **15 tool-attributed trades closed, 15-0**, plus 4 more open (all pending closes, all currently favorable).
 
 ## Sizing rule
 
