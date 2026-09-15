@@ -4,15 +4,35 @@ Verified against actual Robinhood order history via connected MCP (accounts •�
 
 ## RUNNING TOTAL — kept current, per account
 
-*(09-08 through 09-14 trades were all in Investing; see table below for that period)*
+**Correction (2026-09-15, later pull):** Joint account was previously under-checked — only queried from 09-15 onward. A fuller pull found joint activity on 09-11 and 09-14 that had been missed, including two losses. Numbers below are corrected.
+
+### By account (lifetime)
 
 | Account | Trades | Wins | Losses | Net P&L |
 |---------|--------|------|--------|---------|
 | **Investing (••••4232)** | 24 | 23 | 1 | **+$7,312** |
-| **Joint (••••0501)** | 3 | 3 | 0 | **+$139** |
-| **Combined** | 27 | 26 | 1 | **+$7,451** |
+| **Joint (••••0501)** | 7 | 5 | 2 | **-$323** |
+| **Combined** | 31 | 28 | 3 | **+$6,989** |
 
-*Investing total = $6,926 (09-08 to 09-14) + $386 (09-15). Update this table every time a new trade is logged.*
+### By day
+
+| Date | Investing | Joint | Combined |
+|------|-----------|-------|----------|
+| 09-08 | +$769 | $0 | +$769 |
+| 09-09 | +$368 | $0 | +$368 |
+| 09-10 | +$4,458 | $0 | +$4,458 |
+| 09-11 | +$165 | **-$608** | -$443 |
+| 09-14 | +$1,166 | +$146 | +$1,312 |
+| 09-15 | +$386 | +$139 | +$525 |
+
+### By week
+
+| Week | Investing | Joint | Combined |
+|------|-----------|-------|----------|
+| Week of 09-08 (Tue-Fri) | +$5,760 | **-$608** | +$5,152 |
+| Week of 09-14 (Mon-Tue, ongoing) | +$1,552 | +$285 | +$1,837 |
+
+*Update all three tables every time a new trade is logged. Re-verify joint account periodically — this correction shows conversation-only tracking misses trades in accounts that aren't discussed.*
 
 ## Verified Trades, 2026-09-08 through 2026-09-14
 
@@ -52,6 +72,15 @@ Attribution is inferred by matching trade timing/price/symbol against signals ac
 **DISCRETIONARY / UNVERIFIED: n=14, 13 wins, 1 loss, 93% win rate, total +$5,760, avg +$411/trade.** Excluding the one outlier (QQQ +$3,716, 09-10): n=13, total +$2,044, avg +$157/trade.
 
 **What this means:** the headline 95%/$6,926 number is not the tool's track record — it's a mix. The tool's own attributable trades (n=6) happen to be undefeated so far, but n=6 is too small to mean anything on its own. The single biggest win (+$3,716, over half the total P&L) has no tool attribution at all — it happened before NVDA/AMD/PLTR were even tracked and before any live monitoring record exists for that morning. **Per the 2026-09-15 council review: do not increase position size, do not treat this as a validated edge, and do not tell anyone else "this strategy works" until there are 50+ tool-attributed trades to look at.**
+
+## Joint account — newly discovered historical trades (found 2026-09-15, later pull)
+
+| Date | Symbol | Contract | Buy | Sell | Contracts | Net P&L | Attribution |
+|------|--------|----------|-----|------|-----------|---------|--------------|
+| 09-11 | HOOD | $115C exp 9/11 | $0.94 | $0.18 | 3 | **-$228** | Discretionary — HOOD never in tool universe |
+| 09-11 | CLS | $347.50C exp 9/11 | $2.50 | $0.60 | 2 | **-$380** | Discretionary — CLS never in tool universe |
+| 09-14 | QQQ | $706C exp 9/14 (0DTE) | $1.56 | $2.00 (stop-triggered) | 2 | **+$88** | **TOOL** — matches FIBONACCI signal ~$706.09 reported 9:53 AM ET (this is the original "+$88 QQQ" trade referenced early in conversation — turns out it was in Joint, not Investing) |
+| 09-14 | SPY | $761C exp 9/15 | $1.72/$1.99 (2 buys) | $2.00 | 4 | **+$58** | Unverified — entered 10:13-10:19 AM ET, before SPY $761 signals started appearing in the live monitoring transcript that day |
 
 ## Other account activity (not ORB-signal trades, logged for context only)
 
