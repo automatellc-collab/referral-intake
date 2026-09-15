@@ -8,6 +8,7 @@ import { SettingsRepository } from "@/lib/repositories/settings-repository";
 import { TradeRepository } from "@/lib/repositories/trade-repository";
 import { DailyStatsRepository } from "@/lib/repositories/daily-stats-repository";
 import { executeEntrySignal } from "@/lib/trade-executor";
+import { calculateSignalFreshness } from "@/lib/signal-freshness";
 
 interface ExecuteRequestBody {
   symbol: string;
@@ -102,7 +103,14 @@ export async function POST(request: Request) {
       { userId, entry, settings, accountEquity: body.accountEquity },
     );
 
-    return NextResponse.json({ success: true, data: result });
+    // Freshness is only meaningful for signals still awaiting a manual
+    // decision (ALERTED) — an EXECUTED/BLOCKED result has already resolved.
+    const freshness =
+      result.status === "ALERTED"
+        ? calculateSignalFreshness(entry, snapshot.quote.price, Date.now())
+        : undefined;
+
+    return NextResponse.json({ success: true, data: { ...result, ...(freshness && { freshness }) } });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to execute signal";
     return NextResponse.json({ success: false, error: message }, { status: 502 });
