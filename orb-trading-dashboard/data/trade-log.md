@@ -1,6 +1,18 @@
 # Discretionary Trade Log
 
-Verified against actual Robinhood order history (account ••••4232, "investing") via connected MCP. Pulled 2026-09-15, covering 2026-09-08 onward. Single-leg directional option trades only (calls/puts bought or sold to open, then closed) — multi-leg spread/roll orders excluded (see note at bottom; those belong to a separate income/wheel strategy, not ORB signals).
+Verified against actual Robinhood order history via connected MCP (accounts ••••4232 "investing" and ••••0501 "joint"). Pulled 2026-09-15, covering 2026-09-08 onward. Single-leg directional option trades only (calls/puts bought or sold to open, then closed) — multi-leg spread/roll orders excluded (see note at bottom; those belong to a separate income/wheel strategy, not ORB signals).
+
+## RUNNING TOTAL — kept current, per account
+
+*(09-08 through 09-14 trades were all in Investing; see table below for that period)*
+
+| Account | Trades | Wins | Losses | Net P&L |
+|---------|--------|------|--------|---------|
+| **Investing (••••4232)** | 24 | 23 | 1 | **+$7,312** |
+| **Joint (••••0501)** | 3 | 3 | 0 | **+$139** |
+| **Combined** | 27 | 26 | 1 | **+$7,451** |
+
+*Investing total = $6,926 (09-08 to 09-14) + $386 (09-15). Update this table every time a new trade is logged.*
 
 ## Verified Trades, 2026-09-08 through 2026-09-14
 
