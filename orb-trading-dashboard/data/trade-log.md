@@ -67,15 +67,16 @@ From here forward, every new trade gets attributed at the moment it's reported, 
 | Date | Account | Symbol | Contract | Entry | Exit | Contracts | P&L | Attribution |
 |------|---------|--------|----------|-------|------|-----------|-----|--------------|
 | 09-15 | Investing (••••4232) | COIN | $177.50P exp 9/18 | $5.00 (x3) + $5.05 (x1 added) | $5.30 | 4 | **+$115** | **TOOL** — matches FIBONACCI signal (default) at $178.30, reported 10:07 AM ET |
-| 09-15 | Joint (••••0501) | MSTR | $129P exp 9/18 | $3.60/contract | pending close @ $3.75 (not yet filled) | 1 | open | **TOOL** — matches FIBONACCI signal (default) at $129.77, reported 10:07 AM ET |
+| 09-15 | Joint (••••0501) | MSTR | $129P exp 9/18 | $3.60/contract | $3.65/contract | 1 | **+$5** | **TOOL** — matches FIBONACCI signal (default) at $129.77, reported 10:07 AM ET |
 | 09-15 | Investing (••••4232) | QQQ | $707P exp 9/16 | $3.61/contract | $4.20/contract | 1 | **+$59** | **TOOL** — matches FIBONACCI signal (default) at $707.02, reported 10:17 AM ET, confirmed bearish |
 | 09-15 | Joint (••••0501) | QQQ | $707P exp 9/15 (0DTE) | $1.18/contract | $1.55/contract | 2 | **+$74** | **TOOL** — matches FIBONACCI signal (default) at $707.02, reported 10:17 AM ET, confirmed bearish |
 | 09-15 | Investing (••••4232) | SPY | $757P exp 9/15 (0DTE) | $0.91/contract | $1.05/contract | 3 | **+$42** | **TOOL** — matches FIBONACCI signal (default) at $757.60, reported 10:25 AM ET, confirmed bearish |
 | 09-15 | Joint (••••0501) | SPY | $757P exp 9/15 (0DTE) | $0.90/contract | $1.05/contract | 4 | **+$60** | **TOOL** — matches FIBONACCI signal (default) at $757.60, reported 10:25 AM ET, confirmed bearish |
+| 09-15 | Investing (••••4232) | QQQ | $706P exp 9/15 (0DTE) | $1.13/contract | $1.30/contract | 10 | **+$170** | **TOOL** — matches FIBONACCI signal (default) at $706.36, reported 10:32 AM ET, confirmed bearish |
 
-**Closed P&L this batch: +$350 across 5 closed trades, all wins. MSTR still open (joint).**
+**Total 09-15 closed P&L: +$525 across 7 closed trades, all wins (COIN, MSTR, QQQ x3, SPY x2). Nothing open.**
 
-Tool-attributed running total: 6 (from 09-14, +$1,166) + 2 COIN/MSTR entries + 4 new closed (QQQ x2, SPY x2) = 12 tool-attributed trades, 11 closed + 1 open, 11-0 on closed trades.
+Tool-attributed running total: 6 (from 09-14, +$1,166) + 7 (from 09-15, +$525) = **13 tool-attributed trades, 13 closed, 13-0.**
 
 ## Sizing rule
 
