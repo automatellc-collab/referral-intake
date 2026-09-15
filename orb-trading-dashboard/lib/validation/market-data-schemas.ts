@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-const VALID_SYMBOLS = ['SPY', 'QQQ', 'TSLA', 'CRWD', 'NVDA', 'AMD', 'PLTR', 'COIN'] as const
+const VALID_SYMBOLS = ['SPY', 'QQQ', 'TSLA', 'CRWD', 'NVDA', 'AMD', 'PLTR', 'COIN', 'MSTR', 'META', 'AVGO'] as const
 
 export const candleSchema = z.object({
   timestamp: z.number(),
