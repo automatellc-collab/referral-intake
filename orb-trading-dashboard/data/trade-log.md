@@ -27,9 +27,9 @@ Verified against actual Robinhood order history via connected MCP (accounts •�
 
 | Account | Trades (closed) | Wins | Losses | Net P&L (closed) | Open positions |
 |---------|--------|------|--------|---------|---------|
-| **Investing (••••4232)** | 38 | 35 | 3 | **+$8,104** | None |
+| **Investing (••••4232)** | 39 | 35 | 4 | **+$7,622** | QQQ $712C ×10 |
 | **Joint (••••0501)** | 13 | 10 | 3 | **-$436** | None |
-| **Combined** | 51 | 45 | 6 | **+$7,668** | None |
+| **Combined** | 52 | 45 | 7 | **+$7,186** | QQQ $712C ×10 |
 
 ### By day
 
@@ -41,14 +41,14 @@ Verified against actual Robinhood order history via connected MCP (accounts •�
 | 09-11 | +$165 | **-$608** | -$443 |
 | 09-14 | +$1,166 | +$146 | +$1,312 |
 | 09-15 | +$134 | **-$103** | +$31 |
-| 09-16 | +$1,044 | +$129 | +$1,173 |
+| 09-16 | +$562 | +$129 | +$691 |
 
 ### By week
 
 | Week | Investing | Joint | Combined |
 |------|-----------|-------|----------|
 | Week of 09-08 (Tue-Fri) | +$5,760 | **-$608** | +$5,152 |
-| Week of 09-14 (Mon-Wed, ongoing) | +$2,344 | +$172 | +$2,516 |
+| Week of 09-14 (Mon-Wed, ongoing) | +$1,862 | +$172 | +$2,034 |
 
 *Update all three tables every time a new trade is logged. Re-verify joint account periodically — this correction shows conversation-only tracking misses trades in accounts that aren't discussed.*
 
@@ -156,7 +156,7 @@ Tool-attributed running total: 6 (from 09-14, +$1,166) + 13 (from 09-15 closed, 
 
 09-16 closed so far: +$39 + $93 + $215 = **+$347**, all wins.
 
-Tool-attributed running total: 19 (through 09-15, +$1,197) + 14 (09-16, +$1,173) = **33 tool-attributed trades closed, 30 wins - 3 losses (91% win rate)**, net +$2,370.
+Tool-attributed running total: 19 (through 09-15, +$1,197) + 15 (09-16, +$691) = **34 tool-attributed trades closed, 30 wins - 4 losses (88% win rate)**, net +$1,888.
 
 | 09-16 | Investing (••••4232) | AMD | $525C exp 9/18 | $10.45/contract | $11.00 (x1) + $11.55 (x1) | 2 | **+$165** | **TOOL** — matches FIBONACCI signal (default) at $524.50 / RETEST (video-literal) at $523.74, both bullish. Sold in two legs while repricing a limit order down from $12.00 to fill. |
 | 09-16 | Joint (••••0501) | QQQ | $710C exp 9/17 | $3.81/contract | $3.90/contract | 2 | **+$18** | **TOOL** — matches RETEST signal (video-literal) at $709.52, bullish. Sold after repricing a limit order down from $4.25 to fill. |
@@ -190,13 +190,17 @@ QQQ $711C round total: +$20 (first half) + $45 (second half) = **+$65** on the f
 
 09-16 closed totals: +$1,313 (through the prior 13 trades) - $140 (NVDA round 4) = **+$1,173**, 13 wins - 1 loss across 14 closed trades.
 
-### Open positions (as of 09-16, ~1:52 PM ET)
+| 09-16 | Investing (••••4232) | META | $672.50P exp 9/18 | $8.25/contract | $5.84/contract | 2 | **-$482** | **TOOL** — matches RETEST signal (video-literal) at $674.75-674.82, bearish. First META trade today. Thesis broke: price reclaimed the opening-range low it had briefly broken, on rising volume, and kept climbing against the put. Second loss of the day. |
+
+09-16 closed totals: +$1,173 (through the prior 14 trades) - $482 (META) = **+$691**, 13 wins - 2 losses across 15 closed trades.
+
+### Open positions (as of 09-16, ~2:08 PM ET)
 
 | Account | Symbol | Contract | Entry | Contracts | Cost | Attribution |
 |---------|--------|----------|-------|-----------|------|--------------|
-| Investing (••••4232) | META | $672.50P exp 9/18 | $8.25/contract | 2 | $1,650 | **TOOL** — matches RETEST signal (video-literal) at $674.75-674.82, bearish. First META trade today. |
+| Investing (••••4232) | QQQ | $712C exp 9/17 | $3.23/contract | 10 | $3,230 | **TOOL** — matches FIBONACCI signal (default) at $711.07, bullish. |
 
-Not 0DTE (exp 9/18), so only the 30% trailing stop applies. Currently HOLD, flat off entry. Seeded in `exit-monitoring-state.json`.
+Not 0DTE (exp 9/17), so only the 30% trailing stop applies. Currently HOLD, slightly down off entry. Seeded in `exit-monitoring-state.json`.
 
 ## Sizing rule
 

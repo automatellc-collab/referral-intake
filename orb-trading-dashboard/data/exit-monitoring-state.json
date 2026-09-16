@@ -1,14 +1,14 @@
 {
   "positions": {
-    "32cda0ef-835c-4a8c-9530-22295a802cd7__investing": {
-      "symbol": "META",
+    "18fe2ab2-4b66-4c0c-b2d8-20364da53c6d__investing": {
+      "symbol": "QQQ",
       "account": "investing",
-      "strike": "672.50P",
-      "expiration": "2026-09-18",
-      "entryPrice": 8.25,
-      "entryTime": 1789581160649,
+      "strike": "712C",
+      "expiration": "2026-09-17",
+      "entryPrice": 3.23,
+      "entryTime": 1789582105134,
       "isZeroDTE": false,
-      "peakMarkSinceEntry": 8.25
+      "peakMarkSinceEntry": 3.23
     }
   }
 }
