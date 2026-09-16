@@ -1,15 +1,15 @@
 {
   "positions": {
-    "18fe2ab2-4b66-4c0c-b2d8-20364da53c6d__investing": {
-      "symbol": "QQQ",
+    "1cb8c1de-da79-474e-9157-8c8e22863ff0__investing": {
+      "symbol": "MSTR",
       "account": "investing",
-      "strike": "712C",
-      "expiration": "2026-09-17",
-      "entryPrice": 3.06,
-      "entryTime": 1789582105134,
+      "strike": "125P",
+      "expiration": "2026-09-18",
+      "entryPrice": 3.05,
+      "entryTime": 1789584033134,
       "isZeroDTE": false,
-      "peakMarkSinceEntry": 3.23,
-      "note": "scaled to 15 contracts at 18:11:29Z, added 5 @ $2.72; blended avg $3.06"
+      "peakMarkSinceEntry": 3.05,
+      "watchLevel": "OR low 128.24 - reclaim above this invalidates the bearish thesis"
     }
   }
 }

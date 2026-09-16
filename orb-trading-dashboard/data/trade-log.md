@@ -198,9 +198,10 @@ QQQ $711C round total: +$20 (first half) + $45 (second half) = **+$65** on the f
 
 | Account | Symbol | Contract | Entry | Contracts | Cost | Attribution |
 |---------|--------|----------|-------|-----------|------|--------------|
-| Investing (••••4232) | QQQ | $712C exp 9/17 | $3.06/contract blended | 15 | $4,590 | **TOOL** — matches FIBONACCI signal (default) at $711.07, bullish. Scaled from 10 to 15 contracts at 2:11 PM ET (added 5 @ $2.72). |
+| Investing (••••4232) | QQQ | $712C exp 9/17 | $3.06/contract blended | 15 | $4,590 | **TOOL** — matches FIBONACCI signal (default) at $711.07, bullish. Scaled from 10 to 15 contracts at 2:11 PM ET (added 5 @ $2.72). Mark has since fallen to $1.635 (-47%) as QQQ dropped below its entire opening range — reclaim on the underlying invalidated the bullish thesis. Still open as of last check. |
+| Investing (••••4232) | MSTR | $125P exp 9/18 | $3.05/contract | 10 | $3,050 | **TOOL** — matches FIBONACCI signal (default) at $125.32, bearish. Watch level: OR low $128.24 — a reclaim above it invalidates the thesis. |
 
-Not 0DTE (exp 9/17), so only the 30% trailing stop applies. Currently HOLD, mark $2.69 vs $3.06 blended entry (-12%), peak gain 5.6% off the $3.23 high. Seeded in `exit-monitoring-state.json`.
+Not 0DTE on either (QQQ exp 9/17, MSTR exp 9/18), so only the 30% trailing stop applies to each. MSTR currently HOLD, flat off entry. Both seeded in `exit-monitoring-state.json`.
 
 ## Sizing rule
 
