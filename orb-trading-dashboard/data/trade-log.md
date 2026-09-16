@@ -27,9 +27,9 @@ Verified against actual Robinhood order history via connected MCP (accounts •�
 
 | Account | Trades (closed) | Wins | Losses | Net P&L (closed) | Open positions |
 |---------|--------|------|--------|---------|---------|
-| **Investing (••••4232)** | 37 | 35 | 2 | **+$8,244** | None |
+| **Investing (••••4232)** | 38 | 35 | 3 | **+$8,104** | None |
 | **Joint (••••0501)** | 13 | 10 | 3 | **-$436** | None |
-| **Combined** | 50 | 45 | 5 | **+$7,808** | None |
+| **Combined** | 51 | 45 | 6 | **+$7,668** | None |
 
 ### By day
 
@@ -41,14 +41,14 @@ Verified against actual Robinhood order history via connected MCP (accounts •�
 | 09-11 | +$165 | **-$608** | -$443 |
 | 09-14 | +$1,166 | +$146 | +$1,312 |
 | 09-15 | +$134 | **-$103** | +$31 |
-| 09-16 | +$1,184 | +$129 | +$1,313 |
+| 09-16 | +$1,044 | +$129 | +$1,173 |
 
 ### By week
 
 | Week | Investing | Joint | Combined |
 |------|-----------|-------|----------|
 | Week of 09-08 (Tue-Fri) | +$5,760 | **-$608** | +$5,152 |
-| Week of 09-14 (Mon-Wed, ongoing) | +$2,484 | +$172 | +$2,656 |
+| Week of 09-14 (Mon-Wed, ongoing) | +$2,344 | +$172 | +$2,516 |
 
 *Update all three tables every time a new trade is logged. Re-verify joint account periodically — this correction shows conversation-only tracking misses trades in accounts that aren't discussed.*
 
@@ -156,7 +156,7 @@ Tool-attributed running total: 6 (from 09-14, +$1,166) + 13 (from 09-15 closed, 
 
 09-16 closed so far: +$39 + $93 + $215 = **+$347**, all wins.
 
-Tool-attributed running total: 19 (through 09-15, +$1,197) + 13 (09-16, +$1,313) = **32 tool-attributed trades closed, 30 wins - 2 losses (94% win rate)**, net +$2,510.
+Tool-attributed running total: 19 (through 09-15, +$1,197) + 14 (09-16, +$1,173) = **33 tool-attributed trades closed, 30 wins - 3 losses (91% win rate)**, net +$2,370.
 
 | 09-16 | Investing (••••4232) | AMD | $525C exp 9/18 | $10.45/contract | $11.00 (x1) + $11.55 (x1) | 2 | **+$165** | **TOOL** — matches FIBONACCI signal (default) at $524.50 / RETEST (video-literal) at $523.74, both bullish. Sold in two legs while repricing a limit order down from $12.00 to fill. |
 | 09-16 | Joint (••••0501) | QQQ | $710C exp 9/17 | $3.81/contract | $3.90/contract | 2 | **+$18** | **TOOL** — matches RETEST signal (video-literal) at $709.52, bullish. Sold after repricing a limit order down from $4.25 to fill. |
@@ -186,11 +186,9 @@ Tool-attributed running total: 19 (through 09-15, +$1,197) + 13 (09-16, +$1,313)
 
 QQQ $711C round total: +$20 (first half) + $45 (second half) = **+$65** on the full 10-contract position.
 
-### Open positions (as of 09-16, ~12:52 PM ET)
+| 09-16 | Investing (••••4232) | NVDA | $217.50C exp 9/18 | $1.81/contract | $1.53/contract | 5 | **-$140** | **TOOL** — matches FIBONACCI signal (default) at ~$215.99-216.01, bullish. Fourth NVDA round today, different strike than the earlier $215C (rounds 1-3 all closed for gains). Stock stalled below its highs, volume faded, held ~32 min before exiting — repriced a sell limit down twice ($1.90→$1.70→$1.53) to get filled. **First loss of the day.** |
 
-| Account | Symbol | Contract | Entry | Contracts | Cost | Attribution |
-|---------|--------|----------|-------|-----------|------|--------------|
-| Investing (••••4232) | NVDA | $217.50C exp 9/18 | $1.81/contract | 5 | $905 | **TOOL** — matches FIBONACCI signal (default) at ~$215.99-216.01, bullish. Fourth NVDA round today, different strike than the earlier $215C (rounds 1-3 all closed for gains). |
+09-16 closed totals: +$1,313 (through the prior 13 trades) - $140 (NVDA round 4) = **+$1,173**, 13 wins - 1 loss across 14 closed trades. Nothing open — exit-monitoring state cleared.
 
 Not 0DTE (exp 9/18), so only the 30% trailing stop applies. Currently HOLD, flat off entry. Seeded in `exit-monitoring-state.json`.
 
