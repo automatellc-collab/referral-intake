@@ -27,9 +27,9 @@ Verified against actual Robinhood order history via connected MCP (accounts •�
 
 | Account | Trades (closed) | Wins | Losses | Net P&L (closed) | Open positions |
 |---------|--------|------|--------|---------|---------|
-| **Investing (••••4232)** | 27 | 25 | 2 | **+$7,060** | None |
-| **Joint (••••0501)** | 10 | 7 | 3 | **-$565** | None |
-| **Combined** | 37 | 32 | 5 | **+$6,495** | None |
+| **Investing (••••4232)** | 29 | 27 | 2 | **+$7,314** | None |
+| **Joint (••••0501)** | 11 | 8 | 3 | **-$472** | None |
+| **Combined** | 40 | 35 | 5 | **+$6,842** | None |
 
 ### By day
 
@@ -41,13 +41,14 @@ Verified against actual Robinhood order history via connected MCP (accounts •�
 | 09-11 | +$165 | **-$608** | -$443 |
 | 09-14 | +$1,166 | +$146 | +$1,312 |
 | 09-15 | +$134 | **-$103** | +$31 |
+| 09-16 | +$254 | +$93 | +$347 |
 
 ### By week
 
 | Week | Investing | Joint | Combined |
 |------|-----------|-------|----------|
 | Week of 09-08 (Tue-Fri) | +$5,760 | **-$608** | +$5,152 |
-| Week of 09-14 (Mon-Tue, ongoing) | +$1,300 | +$43 | +$1,343 |
+| Week of 09-14 (Mon-Wed, ongoing) | +$1,554 | +$136 | +$1,690 |
 
 *Update all three tables every time a new trade is logged. Re-verify joint account periodically — this correction shows conversation-only tracking misses trades in accounts that aren't discussed.*
 
@@ -149,10 +150,13 @@ Tool-attributed running total: 6 (from 09-14, +$1,166) + 13 (from 09-15 closed, 
 
 | Date | Account | Symbol | Contract | Entry | Exit | Contracts | P&L | Attribution |
 |------|---------|--------|----------|-------|------|-----------|-----|--------------|
-| 09-16 | Investing (••••4232) | NVDA | $215C exp 9/18 | $2.67/contract | open | 3 | open | **TOOL** — matches FIBONACCI signal (default) at $214.90, reported 9:52 AM ET, confirmed bullish. First position under the new exit-monitoring system (not 0DTE — trailing stop applies, no time-stop). |
-| 09-16 | Joint (••••0501) | NVDA | $215C exp 9/18 | $2.59/contract | open | 3 | open | **TOOL** — same signal as above |
+| 09-16 | Investing (••••4232) | NVDA | $215C exp 9/18 | $2.67/contract | $2.80/contract | 3 | **+$39** | **TOOL** — matches FIBONACCI signal (default) at $214.90, reported 9:52 AM ET, confirmed bullish. First position closed under the new exit-monitoring system — closed manually before any exit rule fired (peak gain only reached ~3.7-6.9%, well under the 30% trailing-stop threshold). |
+| 09-16 | Joint (••••0501) | NVDA | $215C exp 9/18 | $2.59/contract | $2.90/contract | 3 | **+$93** | **TOOL** — same signal as above |
+| 09-16 | Investing (••••4232) | QQQ | $710C exp 9/16 (0DTE) | $2.20 (x1) + $2.13 (x5) | $2.50/contract | 6 | **+$215** | **TOOL** — matches FIBONACCI signal (default) at $709.86, reported 10:01 AM ET, confirmed bullish. Fast scalp, ~6 min hold — closed well before any time-stop concern. |
 
-Both entered as this signal was reported live. Cost: $801 (Investing) + $777 (Joint) = $1,578 total. Exit monitoring active — tracked in `data/exit-monitoring-state.json`, trailing-stop rule will fire if premium peaks 30%+ then retreats to breakeven or below.
+09-16 closed so far: +$39 + $93 + $215 = **+$347**, all wins. Nothing open — exit-monitoring state cleared.
+
+Tool-attributed running total: 19 (through 09-15, +$1,197) + 3 (09-16, +$347) = **22 tool-attributed trades closed, 20 wins - 2 losses (91% win rate)**, net +$1,544.
 
 ## Sizing rule
 
