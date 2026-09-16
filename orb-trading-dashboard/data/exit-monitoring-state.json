@@ -1,3 +1,24 @@
 {
-  "positions": {}
+  "positions": {
+    "c387c5a6-fd8c-436c-8583-d9ea2f18deef__investing": {
+      "symbol": "QQQ",
+      "account": "investing",
+      "strike": "710C",
+      "expiration": "2026-09-16",
+      "entryPrice": 2.30,
+      "entryTime": 1789568937226,
+      "isZeroDTE": true,
+      "peakMarkSinceEntry": 2.385
+    },
+    "c387c5a6-fd8c-436c-8583-d9ea2f18deef__joint": {
+      "symbol": "QQQ",
+      "account": "joint",
+      "strike": "710C",
+      "expiration": "2026-09-16",
+      "entryPrice": 2.44,
+      "entryTime": 1789568952437,
+      "isZeroDTE": true,
+      "peakMarkSinceEntry": 2.385
+    }
+  }
 }

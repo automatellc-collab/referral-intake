@@ -161,6 +161,15 @@ Tool-attributed running total: 19 (through 09-15, +$1,197) + 5 (09-16, +$530) = 
 | 09-16 | Investing (••••4232) | AMD | $525C exp 9/18 | $10.45/contract | $11.00 (x1) + $11.55 (x1) | 2 | **+$165** | **TOOL** — matches FIBONACCI signal (default) at $524.50 / RETEST (video-literal) at $523.74, both bullish. Sold in two legs while repricing a limit order down from $12.00 to fill. |
 | 09-16 | Joint (••••0501) | QQQ | $710C exp 9/17 | $3.81/contract | $3.90/contract | 2 | **+$18** | **TOOL** — matches RETEST signal (video-literal) at $709.52, bullish. Sold after repricing a limit order down from $4.25 to fill. |
 
+### Open positions (as of 09-16, ~10:29 AM ET)
+
+| Account | Symbol | Contract | Entry | Contracts | Cost | Attribution |
+|---------|--------|----------|-------|-----------|------|--------------|
+| Investing (••••4232) | QQQ | $710C exp 9/16 (0DTE) | $2.30/contract | 3 | $690 | **TOOL** — matches dual-confirmed bullish signal: FIBONACCI (default) at $709.72 + RETEST (video-literal) at $709.52, both FRESH, reported ~10:26 AM ET |
+| Joint (••••0501) | QQQ | $710C exp 9/16 (0DTE) | $2.44/contract | 1 | $244 | **TOOL** — same signal as above. Already has a pending sell limit @ $2.55 working, unfilled as of this check. |
+
+Both 0DTE — the 2:30 PM ET time-stop rule applies if these are still open then. Seeded in `exit-monitoring-state.json`; both currently HOLD (Investing +3.7% off entry, Joint -2.3% off entry as of the seed check — mark $2.385 vs entries $2.30/$2.44).
+
 09-16 totals now: +$39 (NVDA-Inv) + $93 (NVDA-Joint) + $215 (QQQ-Inv 0DTE) + $165 (AMD-Inv) + $18 (QQQ-Joint) = **+$530**, all 5 trades wins. Nothing open — exit-monitoring state cleared.
 
 ## Sizing rule
