@@ -1,3 +1,14 @@
 {
-  "positions": {}
+  "positions": {
+    "32cda0ef-835c-4a8c-9530-22295a802cd7__investing": {
+      "symbol": "META",
+      "account": "investing",
+      "strike": "672.50P",
+      "expiration": "2026-09-18",
+      "entryPrice": 8.25,
+      "entryTime": 1789581160649,
+      "isZeroDTE": false,
+      "peakMarkSinceEntry": 8.25
+    }
+  }
 }

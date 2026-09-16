@@ -188,7 +188,13 @@ QQQ $711C round total: +$20 (first half) + $45 (second half) = **+$65** on the f
 
 | 09-16 | Investing (••••4232) | NVDA | $217.50C exp 9/18 | $1.81/contract | $1.53/contract | 5 | **-$140** | **TOOL** — matches FIBONACCI signal (default) at ~$215.99-216.01, bullish. Fourth NVDA round today, different strike than the earlier $215C (rounds 1-3 all closed for gains). Stock stalled below its highs, volume faded, held ~32 min before exiting — repriced a sell limit down twice ($1.90→$1.70→$1.53) to get filled. **First loss of the day.** |
 
-09-16 closed totals: +$1,313 (through the prior 13 trades) - $140 (NVDA round 4) = **+$1,173**, 13 wins - 1 loss across 14 closed trades. Nothing open — exit-monitoring state cleared.
+09-16 closed totals: +$1,313 (through the prior 13 trades) - $140 (NVDA round 4) = **+$1,173**, 13 wins - 1 loss across 14 closed trades.
+
+### Open positions (as of 09-16, ~1:52 PM ET)
+
+| Account | Symbol | Contract | Entry | Contracts | Cost | Attribution |
+|---------|--------|----------|-------|-----------|------|--------------|
+| Investing (••••4232) | META | $672.50P exp 9/18 | $8.25/contract | 2 | $1,650 | **TOOL** — matches RETEST signal (video-literal) at $674.75-674.82, bearish. First META trade today. |
 
 Not 0DTE (exp 9/18), so only the 30% trailing stop applies. Currently HOLD, flat off entry. Seeded in `exit-monitoring-state.json`.
 
