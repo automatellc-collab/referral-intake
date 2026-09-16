@@ -174,7 +174,15 @@ Tool-attributed running total: 19 (through 09-15, +$1,197) + 11 (09-16, +$1,248)
 
 | 09-16 | Investing (••••4232) | SPY | $761C exp 9/17 | $3.235/contract blended | $3.50/contract | 10 | **+$265** | **TOOL** — matches FIBONACCI signal (default) at $760.30, bullish. ~2 minute hold. |
 
-09-16 closed totals: +$983 (through the prior 10 trades) + $265 (SPY) = **+$1,248**, all 11 trades wins. Nothing open — exit-monitoring state cleared.
+09-16 closed totals: +$983 (through the prior 10 trades) + $265 (SPY) = **+$1,248**, all 11 trades wins.
+
+### Open positions (as of 09-16, ~11:13 AM ET)
+
+| Account | Symbol | Contract | Entry | Contracts | Cost | Attribution |
+|---------|--------|----------|-------|-----------|------|--------------|
+| Investing (••••4232) | QQQ | $711C exp 9/17 | $4.21/contract | 10 | $4,210 | **TOOL** — matches RETEST signal (video-literal) at $709.52, bullish, flipped CHASING→FRESH ~11:11 AM ET. Cancelled a $4.16 limit and filled at $4.21 instead. |
+
+Not 0DTE (exp 9/17), so only the 30% trailing stop applies. Currently HOLD, flat off entry. Seeded in `exit-monitoring-state.json`.
 
 ## Sizing rule
 
