@@ -2,6 +2,21 @@
 
 Verified against actual Robinhood order history via connected MCP (accounts ••••4232 "investing" and ••••0501 "joint"). Pulled 2026-09-15, covering 2026-09-08 onward. Single-leg directional option trades only (calls/puts bought or sold to open, then closed) — multi-leg spread/roll orders excluded (see note at bottom; those belong to a separate income/wheel strategy, not ORB signals).
 
+## Exit monitoring (wired 2026-09-15)
+
+`lib/exit-strategy.ts` + `POST /api/trading/check-exit` implement the exit rules validated by backtest earlier today (+$105 improvement on the two real 0DTE losses, zero interference with the 17 tool-attributed winners — see git history for the two backtest scripts). Live monitoring workflow, to run whenever a real position is open during market hours:
+
+1. Pull open option positions on both accounts: `get_option_positions` (investing ••••4232, joint ••••0501), `nonzero: true`.
+2. For each open position matching the ORB symbol list: check `data/exit-monitoring-state.json` for a tracked `peakMarkSinceEntry`. If this is the first check since entry, seed it with the entry price.
+3. Pull the live mark: `get_option_quotes` with the option's `instrument_id`.
+4. Update `peakMarkSinceEntry = max(stored peak, current mark)` and write it back to the state file.
+5. Determine `isZeroDTE` (expiration date == today) and `entryTime` (from the position's `opened_at`).
+6. Call `POST http://localhost:3300/api/trading/check-exit` with `{entryPrice, currentMark, peakMarkSinceEntry, isZeroDTE, entryTime}`.
+7. If `shouldExit: true`, alert immediately with the `action` and `reason` — this is a signal to consider closing manually, not an automated close (no live order execution exists in this tool).
+8. On position close (confirmed via order history), remove its entry from the state file.
+
+`data/exit-monitoring-state.json` is the only persistence layer — it's a plain JSON file, not a database, and only tracks `peakMarkSinceEntry` per open option (keyed by `option_id`) since that's the one value the exit rules need that isn't available from a single point-in-time quote.
+
 ## RUNNING TOTAL — kept current, per account
 
 **Correction (2026-09-15, later pull):** Joint account was previously under-checked — only queried from 09-15 onward. A fuller pull found joint activity on 09-11 and 09-14 that had been missed, including two losses. Numbers below are corrected.
