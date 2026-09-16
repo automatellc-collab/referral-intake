@@ -8,15 +8,13 @@ Verified against actual Robinhood order history via connected MCP (accounts •�
 
 ### By account (lifetime)
 
-**Open positions valued via live option quotes (get_option_quotes), not stale pending-order prices — updated 09-15 ~3:42 PM ET.**
+**SPY 0DTE positions closed 09-15 ~3:45 PM ET via Robinhood's automatic expiring-option close (not a manual sell) — both for losses. COIN remains open.**
 
-| Account | Trades (closed) | Wins | Losses | Net P&L (closed) | Open positions (live mark) | Unrealized |
-|---------|--------|------|--------|---------|---------|---------|
-| **Investing (••••4232)** | 25 | 24 | 1 | **+$7,342** | SPY $756P x5 @$0.784→$0.135; COIN $175P x3 @$4.85→$6.50 | **+$170.50** |
-| **Joint (••••0501)** | 8 | 6 | 2 | **-$300** | SPY $756P x5 @$0.70→$0.135; COIN $175P x1 @$4.80→$6.50 | **-$112.50** |
-| **Combined** | 33 | 30 | 3 | **+$7,042** | — | **+$58.00** |
-
-*SPY (0DTE, expires today) is decaying against the position — mark down from $0.235 to $0.135 since last check. COIN moved sharply favorable — mark up from $3.65 to $6.50. Net effect: unrealized roughly flat combined, but very different per-account exposure (Investing net positive open, Joint net negative open) since position sizes differ between accounts.*
+| Account | Trades (closed) | Wins | Losses | Net P&L (closed) | Open positions (live mark) |
+|---------|--------|------|--------|---------|---------|
+| **Investing (••••4232)** | 26 | 24 | 2 | **+$7,015** | COIN $175P x3 @$4.85→$6.50 (unrealized +$495) |
+| **Joint (••••0501)** | 9 | 6 | 3 | **-$585** | COIN $175P x1 @$4.80→$6.50 (unrealized +$170) |
+| **Combined** | 35 | 30 | 5 | **+$6,430** | — (unrealized +$665) |
 
 ### By day
 
@@ -27,14 +25,14 @@ Verified against actual Robinhood order history via connected MCP (accounts •�
 | 09-10 | +$4,458 | $0 | +$4,458 |
 | 09-11 | +$165 | **-$608** | -$443 |
 | 09-14 | +$1,166 | +$146 | +$1,312 |
-| 09-15 | +$416 | +$162 | +$578 |
+| 09-15 | +$89 | **-$123** | -$34 |
 
 ### By week
 
 | Week | Investing | Joint | Combined |
 |------|-----------|-------|----------|
 | Week of 09-08 (Tue-Fri) | +$5,760 | **-$608** | +$5,152 |
-| Week of 09-14 (Mon-Tue, ongoing) | +$1,582 | +$308 | +$1,890 |
+| Week of 09-14 (Mon-Tue, ongoing) | +$1,255 | +$23 | +$1,278 |
 
 *Update all three tables every time a new trade is logged. Re-verify joint account periodically — this correction shows conversation-only tracking misses trades in accounts that aren't discussed.*
 
@@ -121,20 +119,21 @@ From here forward, every new trade gets attributed at the moment it's reported, 
 | 09-15 | Investing (••••4232) | MSTR | $129P exp 9/18 | $3.95/contract | $4.10/contract | 2 | **+$30** | **TOOL** — second MSTR round, matches FIBONACCI signal (default) ~$129.01-129.09, confirmed bearish |
 | 09-15 | Joint (••••0501) | SPY | $757P exp 9/15 (0DTE) | $0.99/contract | $1.05/$1.10 | 3 | **+$23** | **TOOL** — matches ongoing SPY $757 bearish signal window |
 
-**Currently open (both accounts, unrealized if filled at pending price):**
+| 09-15 | Investing (••••4232) | SPY | $756P exp 9/15 (0DTE) | $0.784 avg | $0.13 (auto-closed by Robinhood, expiring_option) | 5 | **-$327** | **TOOL** — matches SPY FIBONACCI signals ~$756.83-757.13, bearish. 0DTE decayed to worthless by close, Robinhood auto-liquidated near expiration rather than user selling manually. |
+| 09-15 | Joint (••••0501) | SPY | $756P exp 9/15 (0DTE) | $0.70 avg | $0.13 (auto-closed by Robinhood, expiring_option) | 5 | **-$285** | **TOOL** — same signal as above |
 
-| Account | Symbol | Contract | Avg Entry | Contracts | Pending Close | Unrealized if filled |
+**Currently open:**
+
+| Account | Symbol | Contract | Avg Entry | Contracts | Live Mark (as of 3:42 PM ET) | Unrealized |
 |---------|--------|----------|-----------|-----------|----------------|----------------------|
-| Investing | SPY | $756P exp 9/15 (0DTE) | $0.784 | 5 | @ $0.95 | +$83 |
-| Investing | COIN | $175P exp 9/18 | $4.85 | 3 | @ $5.00 | +$45 |
-| Joint | SPY | $756P exp 9/15 (0DTE) | $0.70 | 5 | @ $0.95 | +$125 |
-| Joint | COIN | $175P exp 9/18 | $4.80 | 1 | @ $5.00 | +$20 |
+| Investing | COIN | $175P exp 9/18 | $4.85 | 3 | $6.50 | +$495 |
+| Joint | COIN | $175P exp 9/18 | $4.80 | 1 | $6.50 | +$170 |
 
-Both match SPY FIBONACCI signals (~$756.83-757.13, bearish, ~10:45-11:10 AM ET) and COIN FIBONACCI signals (~$176.97-177.38, bearish, ~10:55-11:00 AM ET) — **TOOL-GENERATED**. Note: SPY $756P and $757P are different strikes traded in the same window — don't conflate them.
+**Total 09-15 closed P&L: +$89 (Investing) / -$123 (Joint) / -$34 (combined) across 11 closed trades: 9 wins, 2 losses (both SPY 0DTE). COIN remains open, unrealized +$665 combined.**
 
-**Total 09-15 closed P&L: +$578 across 9 closed trades, all wins. 4 positions still open (unrealized +$273 if all fill at pending price).**
+**Lesson:** the SPY 0DTE signal was correct in direction (bearish, and SPY did trade below $756 intraday per the trend check) but time ran out — the position needed to be closed manually at a better mark earlier in the day rather than left to expire. Robinhood's auto-close at $0.13 captured near-zero remaining value.
 
-Tool-attributed running total: 6 (from 09-14, +$1,166) + 9 (from 09-15 closed, +$578) = **15 tool-attributed trades closed, 15-0**, plus 4 more open (all pending closes, all currently favorable).
+Tool-attributed running total: 6 (from 09-14, +$1,166) + 11 (from 09-15 closed, -$34) = **17 tool-attributed trades closed, 15 wins - 2 losses (88% win rate)**, net +$1,132. Both losses are the SPY 0DTE positions that decayed to worthless — first tool-attributed losses since tracking began. COIN still open, unrealized +$665.
 
 ## Sizing rule
 
