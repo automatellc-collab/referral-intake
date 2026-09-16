@@ -165,7 +165,15 @@ Tool-attributed running total: 19 (through 09-15, +$1,197) + 8 (09-16, +$708) = 
 | 09-16 | Joint (••••0501) | QQQ | $710C exp 9/16 (0DTE) | $2.44 (x1) + $2.33 (x1) | $2.45 (x1) + $2.50 (x1) | 2 | **+$18** | **TOOL** — same signal as above. Scaled from 1 to 2 contracts at 10:31 AM ET, then sold in two legs while repricing a limit order down from $2.55. |
 | 09-16 | Investing (••••4232) | TSLA | $362.50C exp 9/18 | $6.00/contract | $6.50/contract | 2 | **+$100** | **TOOL** — matches FIBONACCI signal (default) at $362.96, bullish, reported ~10:36 AM ET |
 
-09-16 totals now: +$39 (NVDA-Inv) + $93 (NVDA-Joint) + $215 (QQQ-Inv 0DTE) + $165 (AMD-Inv) + $18 (QQQ-Joint round 1) + $60 (QQQ-Inv 0DTE round 2) + $18 (QQQ-Joint 0DTE) + $100 (TSLA-Inv) = **+$708**, all 8 trades wins. Nothing open — exit-monitoring state cleared.
+09-16 closed totals: +$39 (NVDA-Inv) + $93 (NVDA-Joint) + $215 (QQQ-Inv 0DTE) + $165 (AMD-Inv) + $18 (QQQ-Joint round 1) + $60 (QQQ-Inv 0DTE round 2) + $18 (QQQ-Joint 0DTE) + $100 (TSLA-Inv) = **+$708**, all 8 closed trades wins.
+
+### Open positions (as of 09-16, ~10:48 AM ET)
+
+| Account | Symbol | Contract | Entry | Contracts | Cost | Attribution |
+|---------|--------|----------|-------|-----------|------|--------------|
+| Investing (••••4232) | NVDA | $215C exp 9/18 | $2.80/contract | 10 | $2,800 | **TOOL** — matches FIBONACCI signal (default) at $215.19, bullish, reported ~10:46 AM ET. Third round on this same contract today (rounds 1-2 both closed for gains). |
+
+Not 0DTE (exp 9/18), so no time-stop pressure — only the 30% trailing stop applies. Currently HOLD, +1.1% off entry. Seeded in `exit-monitoring-state.json`.
 
 ## Sizing rule
 

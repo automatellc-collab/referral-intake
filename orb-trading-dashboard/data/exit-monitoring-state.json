@@ -1,3 +1,14 @@
 {
-  "positions": {}
+  "positions": {
+    "e3d6cb72-1427-4a6a-8a49-684ecac9005a__investing": {
+      "symbol": "NVDA",
+      "account": "investing",
+      "strike": "215C",
+      "expiration": "2026-09-18",
+      "entryPrice": 2.80,
+      "entryTime": 1789570070756,
+      "isZeroDTE": false,
+      "peakMarkSinceEntry": 2.83
+    }
+  }
 }
