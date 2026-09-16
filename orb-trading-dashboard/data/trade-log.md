@@ -27,9 +27,9 @@ Verified against actual Robinhood order history via connected MCP (accounts •�
 
 | Account | Trades (closed) | Wins | Losses | Net P&L (closed) | Open positions |
 |---------|--------|------|--------|---------|---------|
-| **Investing (••••4232)** | 30 | 28 | 2 | **+$7,479** | None |
-| **Joint (••••0501)** | 12 | 9 | 3 | **-$454** | None |
-| **Combined** | 42 | 37 | 5 | **+$7,025** | None |
+| **Investing (••••4232)** | 32 | 30 | 2 | **+$7,639** | None |
+| **Joint (••••0501)** | 13 | 10 | 3 | **-$436** | None |
+| **Combined** | 45 | 40 | 5 | **+$7,203** | None |
 
 ### By day
 
@@ -41,14 +41,14 @@ Verified against actual Robinhood order history via connected MCP (accounts •�
 | 09-11 | +$165 | **-$608** | -$443 |
 | 09-14 | +$1,166 | +$146 | +$1,312 |
 | 09-15 | +$134 | **-$103** | +$31 |
-| 09-16 | +$419 | +$111 | +$530 |
+| 09-16 | +$579 | +$129 | +$708 |
 
 ### By week
 
 | Week | Investing | Joint | Combined |
 |------|-----------|-------|----------|
 | Week of 09-08 (Tue-Fri) | +$5,760 | **-$608** | +$5,152 |
-| Week of 09-14 (Mon-Wed, ongoing) | +$1,719 | +$154 | +$1,873 |
+| Week of 09-14 (Mon-Wed, ongoing) | +$1,879 | +$172 | +$2,051 |
 
 *Update all three tables every time a new trade is logged. Re-verify joint account periodically — this correction shows conversation-only tracking misses trades in accounts that aren't discussed.*
 
@@ -156,22 +156,16 @@ Tool-attributed running total: 6 (from 09-14, +$1,166) + 13 (from 09-15 closed, 
 
 09-16 closed so far: +$39 + $93 + $215 = **+$347**, all wins.
 
-Tool-attributed running total: 19 (through 09-15, +$1,197) + 5 (09-16, +$530) = **24 tool-attributed trades closed, 22 wins - 2 losses (92% win rate)**, net +$1,727.
+Tool-attributed running total: 19 (through 09-15, +$1,197) + 8 (09-16, +$708) = **27 tool-attributed trades closed, 25 wins - 2 losses (93% win rate)**, net +$1,905.
 
 | 09-16 | Investing (••••4232) | AMD | $525C exp 9/18 | $10.45/contract | $11.00 (x1) + $11.55 (x1) | 2 | **+$165** | **TOOL** — matches FIBONACCI signal (default) at $524.50 / RETEST (video-literal) at $523.74, both bullish. Sold in two legs while repricing a limit order down from $12.00 to fill. |
 | 09-16 | Joint (••••0501) | QQQ | $710C exp 9/17 | $3.81/contract | $3.90/contract | 2 | **+$18** | **TOOL** — matches RETEST signal (video-literal) at $709.52, bullish. Sold after repricing a limit order down from $4.25 to fill. |
 
-### Open positions (as of 09-16, ~10:39 AM ET)
+| 09-16 | Investing (••••4232) | QQQ | $710C exp 9/16 (0DTE) | $2.30/contract | $2.50/contract | 3 | **+$60** | **TOOL** — matches dual-confirmed bullish signal: FIBONACCI (default) at $709.72 + RETEST (video-literal) at $709.52, both FRESH, reported ~10:26 AM ET |
+| 09-16 | Joint (••••0501) | QQQ | $710C exp 9/16 (0DTE) | $2.44 (x1) + $2.33 (x1) | $2.45 (x1) + $2.50 (x1) | 2 | **+$18** | **TOOL** — same signal as above. Scaled from 1 to 2 contracts at 10:31 AM ET, then sold in two legs while repricing a limit order down from $2.55. |
+| 09-16 | Investing (••••4232) | TSLA | $362.50C exp 9/18 | $6.00/contract | $6.50/contract | 2 | **+$100** | **TOOL** — matches FIBONACCI signal (default) at $362.96, bullish, reported ~10:36 AM ET |
 
-| Account | Symbol | Contract | Entry | Contracts | Cost | Attribution |
-|---------|--------|----------|-------|-----------|------|--------------|
-| Investing (••••4232) | QQQ | $710C exp 9/16 (0DTE) | $2.30/contract | 3 | $690 | **TOOL** — matches dual-confirmed bullish signal: FIBONACCI (default) at $709.72 + RETEST (video-literal) at $709.52, both FRESH, reported ~10:26 AM ET |
-| Joint (••••0501) | QQQ | $710C exp 9/16 (0DTE) | $2.385/contract blended | 2 | $477 | **TOOL** — same signal as above. Scaled from 1 to 2 contracts at 10:31 AM ET (added 1 @ $2.33). Pending sell limit repriced down from $2.55 to $2.45, still unfilled. |
-| Investing (••••4232) | TSLA | $362.50C exp 9/18 | $6.00/contract | 2 | $1,200 | **TOOL** — matches FIBONACCI signal (default) at $362.96, bullish, reported ~10:36 AM ET |
-
-QQQ mark has pulled back to $2.165 (Investing -5.9%, Joint -9.2% off blended entry) — both still HOLD, peak gain never exceeded ~4% so the trailing stop isn't in play. Neither QQQ position is under time pressure yet, but both are 0DTE so the 2:30 PM ET stop applies if still open then. TSLA is not 0DTE (exp 9/18) and currently flat, +0.4% off entry. All three seeded/updated in `exit-monitoring-state.json`.
-
-09-16 totals so far (closed only): +$39 (NVDA-Inv) + $93 (NVDA-Joint) + $215 (QQQ-Inv 0DTE) + $165 (AMD-Inv) + $18 (QQQ-Joint) = **+$530**, all 5 closed trades wins. 3 positions currently open (see above).
+09-16 totals now: +$39 (NVDA-Inv) + $93 (NVDA-Joint) + $215 (QQQ-Inv 0DTE) + $165 (AMD-Inv) + $18 (QQQ-Joint round 1) + $60 (QQQ-Inv 0DTE round 2) + $18 (QQQ-Joint 0DTE) + $100 (TSLA-Inv) = **+$708**, all 8 trades wins. Nothing open — exit-monitoring state cleared.
 
 ## Sizing rule
 

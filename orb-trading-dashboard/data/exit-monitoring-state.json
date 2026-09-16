@@ -1,35 +1,3 @@
 {
-  "positions": {
-    "c387c5a6-fd8c-436c-8583-d9ea2f18deef__investing": {
-      "symbol": "QQQ",
-      "account": "investing",
-      "strike": "710C",
-      "expiration": "2026-09-16",
-      "entryPrice": 2.30,
-      "entryTime": 1789568937226,
-      "isZeroDTE": true,
-      "peakMarkSinceEntry": 2.385
-    },
-    "c387c5a6-fd8c-436c-8583-d9ea2f18deef__joint": {
-      "symbol": "QQQ",
-      "account": "joint",
-      "strike": "710C",
-      "expiration": "2026-09-16",
-      "entryPrice": 2.385,
-      "entryTime": 1789568952437,
-      "isZeroDTE": true,
-      "peakMarkSinceEntry": 2.385,
-      "note": "scaled to 2 contracts at 14:31:15Z, added 1 @ $2.33; blended avg $2.385"
-    },
-    "9c4d20ee-3af7-4060-afe4-32768ea534fb__investing": {
-      "symbol": "TSLA",
-      "account": "investing",
-      "strike": "362.50C",
-      "expiration": "2026-09-18",
-      "entryPrice": 6.00,
-      "entryTime": 1789569496675,
-      "isZeroDTE": false,
-      "peakMarkSinceEntry": 6.025
-    }
-  }
+  "positions": {}
 }
