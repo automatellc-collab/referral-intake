@@ -145,6 +145,15 @@ From here forward, every new trade gets attributed at the moment it's reported, 
 
 Tool-attributed running total: 6 (from 09-14, +$1,166) + 13 (from 09-15 closed, +$31) = **19 tool-attributed trades closed, 17 wins - 2 losses (89% win rate)**, net +$1,197. Both losses are the SPY 0DTE positions that decayed to worthless — first tool-attributed losses since tracking began.
 
+## New trades (2026-09-16 onward)
+
+| Date | Account | Symbol | Contract | Entry | Exit | Contracts | P&L | Attribution |
+|------|---------|--------|----------|-------|------|-----------|-----|--------------|
+| 09-16 | Investing (••••4232) | NVDA | $215C exp 9/18 | $2.67/contract | open | 3 | open | **TOOL** — matches FIBONACCI signal (default) at $214.90, reported 9:52 AM ET, confirmed bullish. First position under the new exit-monitoring system (not 0DTE — trailing stop applies, no time-stop). |
+| 09-16 | Joint (••••0501) | NVDA | $215C exp 9/18 | $2.59/contract | open | 3 | open | **TOOL** — same signal as above |
+
+Both entered as this signal was reported live. Cost: $801 (Investing) + $777 (Joint) = $1,578 total. Exit monitoring active — tracked in `data/exit-monitoring-state.json`, trailing-stop rule will fire if premium peaks 30%+ then retreats to breakeven or below.
+
 ## Sizing rule
 
 System default risk unit: $100 risk per trade (per `TradingSettings.riskPerTradePct` × account equity). Actual position sizes ranged 1-15 contracts across these trades — normal variation for scalping options at different premium levels, not itself evidence of undisciplined sizing.

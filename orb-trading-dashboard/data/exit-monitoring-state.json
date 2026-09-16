@@ -1,3 +1,24 @@
 {
-  "positions": {}
+  "positions": {
+    "e3d6cb72-1427-4a6a-8a49-684ecac9005a__investing": {
+      "symbol": "NVDA",
+      "account": "investing",
+      "strike": 215.0,
+      "expiration": "2026-09-18",
+      "entryPrice": 2.67,
+      "entryTime": 1789573000000,
+      "isZeroDTE": false,
+      "peakMarkSinceEntry": 2.67
+    },
+    "e3d6cb72-1427-4a6a-8a49-684ecac9005a__joint": {
+      "symbol": "NVDA",
+      "account": "joint",
+      "strike": 215.0,
+      "expiration": "2026-09-18",
+      "entryPrice": 2.59,
+      "entryTime": 1789573000000,
+      "isZeroDTE": false,
+      "peakMarkSinceEntry": 2.59
+    }
+  }
 }
