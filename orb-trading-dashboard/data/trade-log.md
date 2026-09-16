@@ -198,9 +198,9 @@ QQQ $711C round total: +$20 (first half) + $45 (second half) = **+$65** on the f
 
 | Account | Symbol | Contract | Entry | Contracts | Cost | Attribution |
 |---------|--------|----------|-------|-----------|------|--------------|
-| Investing (••••4232) | QQQ | $712C exp 9/17 | $3.23/contract | 10 | $3,230 | **TOOL** — matches FIBONACCI signal (default) at $711.07, bullish. |
+| Investing (••••4232) | QQQ | $712C exp 9/17 | $3.06/contract blended | 15 | $4,590 | **TOOL** — matches FIBONACCI signal (default) at $711.07, bullish. Scaled from 10 to 15 contracts at 2:11 PM ET (added 5 @ $2.72). |
 
-Not 0DTE (exp 9/17), so only the 30% trailing stop applies. Currently HOLD, slightly down off entry. Seeded in `exit-monitoring-state.json`.
+Not 0DTE (exp 9/17), so only the 30% trailing stop applies. Currently HOLD, mark $2.69 vs $3.06 blended entry (-12%), peak gain 5.6% off the $3.23 high. Seeded in `exit-monitoring-state.json`.
 
 ## Sizing rule
 

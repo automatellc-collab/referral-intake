@@ -5,10 +5,11 @@
       "account": "investing",
       "strike": "712C",
       "expiration": "2026-09-17",
-      "entryPrice": 3.23,
+      "entryPrice": 3.06,
       "entryTime": 1789582105134,
       "isZeroDTE": false,
-      "peakMarkSinceEntry": 3.23
+      "peakMarkSinceEntry": 3.23,
+      "note": "scaled to 15 contracts at 18:11:29Z, added 5 @ $2.72; blended avg $3.06"
     }
   }
 }
