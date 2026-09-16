@@ -186,6 +186,14 @@ Tool-attributed running total: 19 (through 09-15, +$1,197) + 13 (09-16, +$1,313)
 
 QQQ $711C round total: +$20 (first half) + $45 (second half) = **+$65** on the full 10-contract position.
 
+### Open positions (as of 09-16, ~12:52 PM ET)
+
+| Account | Symbol | Contract | Entry | Contracts | Cost | Attribution |
+|---------|--------|----------|-------|-----------|------|--------------|
+| Investing (••••4232) | NVDA | $217.50C exp 9/18 | $1.81/contract | 5 | $905 | **TOOL** — matches FIBONACCI signal (default) at ~$215.99-216.01, bullish. Fourth NVDA round today, different strike than the earlier $215C (rounds 1-3 all closed for gains). |
+
+Not 0DTE (exp 9/18), so only the 30% trailing stop applies. Currently HOLD, flat off entry. Seeded in `exit-monitoring-state.json`.
+
 ## Sizing rule
 
 System default risk unit: $100 risk per trade (per `TradingSettings.riskPerTradePct` × account equity). Actual position sizes ranged 1-15 contracts across these trades — normal variation for scalping options at different premium levels, not itself evidence of undisciplined sizing.
