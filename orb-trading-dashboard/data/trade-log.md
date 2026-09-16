@@ -202,14 +202,20 @@ QQQ $711C round total: +$20 (first half) + $45 (second half) = **+$65** on the f
 
 09-16 closed totals: +$691 (through the prior 15 trades) - $2,190 (QQQ) = **-$1,499**, 13 wins - 3 losses across 16 closed trades.
 
-### Open positions (as of 09-16, ~2:42 PM ET)
+| Date | Account | Symbol | Contract | Entry | Exit | Contracts | P&L | Attribution |
+|------|---------|--------|----------|-------|------|-----------|-----|--------------|
+| 09-16 | Investing (••••4232) | QQQ | $709C exp 9/16 (0DTE, partial 1 of 5) | $2.17/contract | $0.65/contract | 1 | **-$152** | **DISCRETIONARY** — sold 1 contract after the time-stop signal fired. |
+
+09-16 closed totals: -$1,499 (through the prior 16 trades) - $152 (QQQ 0DTE partial) = **-$1,651**, 13 wins - 4 losses across 17 closed trades.
+
+### Open positions (as of 09-16, ~2:57 PM ET)
 
 | Account | Symbol | Contract | Entry | Contracts | Cost | Attribution |
 |---------|--------|----------|-------|-----------|------|--------------|
-| Investing (••••4232) | MSTR | $125P exp 9/18 | $3.05/contract | 10 | $3,050 | **TOOL** — matches FIBONACCI signal (default) at $125.32, bearish. Watch level: OR low $128.24 — a reclaim above it invalidates the thesis. |
-| Investing (••••4232) | QQQ | $709C exp 9/16 (0DTE) | $2.17/contract | 5 | $1,085 | **DISCRETIONARY** — entered on the reversal bounce off the breakdown low, no matching live signal at the moment of entry. **0DTE and already flagged TIME_STOP_CUT_LOSS** — mark dropped to $1.30 (-40%) past the 2:30 PM ET cutoff, exit rule fired immediately. |
+| Investing (••••4232) | MSTR | $125P exp 9/18 | $3.05/contract | 10 | $3,050 | **TOOL** — matches FIBONACCI signal (default) at $125.32, bearish. Watch level: OR low $128.24 — a reclaim above it invalidates the thesis. Mark has jumped to $3.80 (+24.6% peak gain), approaching the 30% trailing-stop threshold. |
+| Investing (••••4232) | QQQ | $709C exp 9/16 (0DTE, remainder 4 of 5) | $2.17/contract | 4 | $868 | **DISCRETIONARY** — remaining 4 contracts. Mark now $0.365 (-83%). **TIME_STOP_CUT_LOSS still firing** — 0DTE, past the 2:30 PM ET cutoff, underwater. |
 
-Not 0DTE on MSTR (exp 9/18), so only the 30% trailing stop applies there — HOLD, mark $2.58 vs $3.05 entry, thesis intact (MSTR still below its $128.24 watch level). **QQQ is 0DTE and past its time-stop, underwater — shouldExit: true, action TIME_STOP_CUT_LOSS.** Both seeded in `exit-monitoring-state.json`.
+Not 0DTE on MSTR (exp 9/18) — only the 30% trailing stop applies, currently HOLD but getting close. QQQ remainder is 0DTE and still flagged shouldExit: true. Both tracked in `exit-monitoring-state.json`.
 
 ## Sizing rule
 
