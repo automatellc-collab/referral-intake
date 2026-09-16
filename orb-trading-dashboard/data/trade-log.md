@@ -207,8 +207,9 @@ QQQ $711C round total: +$20 (first half) + $45 (second half) = **+$65** on the f
 | Account | Symbol | Contract | Entry | Contracts | Cost | Attribution |
 |---------|--------|----------|-------|-----------|------|--------------|
 | Investing (••••4232) | MSTR | $125P exp 9/18 | $3.05/contract | 10 | $3,050 | **TOOL** — matches FIBONACCI signal (default) at $125.32, bearish. Watch level: OR low $128.24 — a reclaim above it invalidates the thesis. |
+| Investing (••••4232) | QQQ | $709C exp 9/16 (0DTE) | $2.17/contract | 5 | $1,085 | **DISCRETIONARY** — entered on the reversal bounce off the breakdown low, no matching live signal at the moment of entry. **0DTE and already flagged TIME_STOP_CUT_LOSS** — mark dropped to $1.30 (-40%) past the 2:30 PM ET cutoff, exit rule fired immediately. |
 
-Not 0DTE (exp 9/18), so only the 30% trailing stop applies. Currently HOLD, mark $2.58 vs $3.05 entry — MSTR price ($126.52) still below the $128.24 watch level, thesis intact. Seeded in `exit-monitoring-state.json`.
+Not 0DTE on MSTR (exp 9/18), so only the 30% trailing stop applies there — HOLD, mark $2.58 vs $3.05 entry, thesis intact (MSTR still below its $128.24 watch level). **QQQ is 0DTE and past its time-stop, underwater — shouldExit: true, action TIME_STOP_CUT_LOSS.** Both seeded in `exit-monitoring-state.json`.
 
 ## Sizing rule
 
