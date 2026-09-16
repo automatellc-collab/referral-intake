@@ -154,9 +154,18 @@ Tool-attributed running total: 6 (from 09-14, +$1,166) + 13 (from 09-15 closed, 
 | 09-16 | Joint (••••0501) | NVDA | $215C exp 9/18 | $2.59/contract | $2.90/contract | 3 | **+$93** | **TOOL** — same signal as above |
 | 09-16 | Investing (••••4232) | QQQ | $710C exp 9/16 (0DTE) | $2.20 (x1) + $2.13 (x5) | $2.50/contract | 6 | **+$215** | **TOOL** — matches FIBONACCI signal (default) at $709.86, reported 10:01 AM ET, confirmed bullish. Fast scalp, ~6 min hold — closed well before any time-stop concern. |
 
-09-16 closed so far: +$39 + $93 + $215 = **+$347**, all wins. Nothing open — exit-monitoring state cleared.
+09-16 closed so far: +$39 + $93 + $215 = **+$347**, all wins.
 
 Tool-attributed running total: 19 (through 09-15, +$1,197) + 3 (09-16, +$347) = **22 tool-attributed trades closed, 20 wins - 2 losses (91% win rate)**, net +$1,544.
+
+### Open positions (as of 09-16, ~10:20 AM ET)
+
+| Account | Symbol | Contract | Entry | Contracts | Cost | Attribution |
+|---------|--------|----------|-------|-----------|------|--------------|
+| Investing (••••4232) | AMD | $525C exp 9/18 | $10.45/contract | 2 | $2,090 | **TOOL** — matches FIBONACCI signal (default) at $524.50 / RETEST (video-literal) at $523.74, both bullish, reported ~10:04-10:16 AM ET |
+| Joint (••••0501) | QQQ | $710C exp 9/17 | $3.81/contract | 2 | $762 | **TOOL** — matches RETEST signal (video-literal) at $709.52, bullish, flipped FRESH ~10:16 AM ET |
+
+Neither is 0DTE (AMD expires 9/18, QQQ expires 9/17), so the time-stop rule doesn't apply to either — only the 30%-peak trailing stop is live for these. Seeded in `exit-monitoring-state.json`; both currently HOLD (AMD +0.7% off entry, QQQ +2.1% off entry as of the seed check).
 
 ## Sizing rule
 
