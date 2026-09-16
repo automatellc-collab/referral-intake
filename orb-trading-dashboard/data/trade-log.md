@@ -170,7 +170,15 @@ Tool-attributed running total: 19 (through 09-15, +$1,197) + 10 (09-16, +$983) =
 | 09-16 | Investing (••••4232) | NVDA | $215C exp 9/18 | $2.80/contract | $2.95 (x5) + $3.00 (x5) | 10 | **+$175** | **TOOL** — matches FIBONACCI signal (default) at $215.19, bullish. Third round on this contract today (rounds 1-2 also closed for gains). Sold in two legs. |
 | 09-16 | Investing (••••4232) | TSLA | $365C exp 9/18 | $5.25/contract | $5.75/contract | 2 | **+$100** | **TOOL** — matches FIBONACCI signal (default) at $363.26, bullish. Second TSLA contract traded today (first was the $362.50C, also a win). |
 
-09-16 closed totals: +$708 (through the prior 8 trades) + $175 (NVDA round 3) + $100 (TSLA round 2) = **+$983**, all 10 trades wins. Nothing open — exit-monitoring state cleared.
+09-16 closed totals: +$708 (through the prior 8 trades) + $175 (NVDA round 3) + $100 (TSLA round 2) = **+$983**, all 10 trades wins.
+
+### Open positions (as of 09-16, ~11:08 AM ET)
+
+| Account | Symbol | Contract | Entry | Contracts | Cost | Attribution |
+|---------|--------|----------|-------|-----------|------|--------------|
+| Investing (••••4232) | SPY | $761C exp 9/17 | $3.235/contract blended | 10 | $3,235 | **TOOL** — matches FIBONACCI signal (default) at $760.30, bullish, reported ~11:06 AM ET |
+
+Not 0DTE (exp 9/17), so only the 30% trailing stop applies. Currently HOLD, +5.3% off entry. Seeded in `exit-monitoring-state.json`.
 
 ## Sizing rule
 
