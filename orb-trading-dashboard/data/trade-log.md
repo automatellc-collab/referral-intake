@@ -27,9 +27,9 @@ Verified against actual Robinhood order history via connected MCP (accounts •�
 
 | Account | Trades (closed) | Wins | Losses | Net P&L (closed) | Open positions |
 |---------|--------|------|--------|---------|---------|
-| **Investing (••••4232)** | 29 | 27 | 2 | **+$7,314** | None |
-| **Joint (••••0501)** | 11 | 8 | 3 | **-$472** | None |
-| **Combined** | 40 | 35 | 5 | **+$6,842** | None |
+| **Investing (••••4232)** | 30 | 28 | 2 | **+$7,479** | None |
+| **Joint (••••0501)** | 12 | 9 | 3 | **-$454** | None |
+| **Combined** | 42 | 37 | 5 | **+$7,025** | None |
 
 ### By day
 
@@ -41,14 +41,14 @@ Verified against actual Robinhood order history via connected MCP (accounts •�
 | 09-11 | +$165 | **-$608** | -$443 |
 | 09-14 | +$1,166 | +$146 | +$1,312 |
 | 09-15 | +$134 | **-$103** | +$31 |
-| 09-16 | +$254 | +$93 | +$347 |
+| 09-16 | +$419 | +$111 | +$530 |
 
 ### By week
 
 | Week | Investing | Joint | Combined |
 |------|-----------|-------|----------|
 | Week of 09-08 (Tue-Fri) | +$5,760 | **-$608** | +$5,152 |
-| Week of 09-14 (Mon-Wed, ongoing) | +$1,554 | +$136 | +$1,690 |
+| Week of 09-14 (Mon-Wed, ongoing) | +$1,719 | +$154 | +$1,873 |
 
 *Update all three tables every time a new trade is logged. Re-verify joint account periodically — this correction shows conversation-only tracking misses trades in accounts that aren't discussed.*
 
@@ -156,16 +156,12 @@ Tool-attributed running total: 6 (from 09-14, +$1,166) + 13 (from 09-15 closed, 
 
 09-16 closed so far: +$39 + $93 + $215 = **+$347**, all wins.
 
-Tool-attributed running total: 19 (through 09-15, +$1,197) + 3 (09-16, +$347) = **22 tool-attributed trades closed, 20 wins - 2 losses (91% win rate)**, net +$1,544.
+Tool-attributed running total: 19 (through 09-15, +$1,197) + 5 (09-16, +$530) = **24 tool-attributed trades closed, 22 wins - 2 losses (92% win rate)**, net +$1,727.
 
-### Open positions (as of 09-16, ~10:20 AM ET)
+| 09-16 | Investing (••••4232) | AMD | $525C exp 9/18 | $10.45/contract | $11.00 (x1) + $11.55 (x1) | 2 | **+$165** | **TOOL** — matches FIBONACCI signal (default) at $524.50 / RETEST (video-literal) at $523.74, both bullish. Sold in two legs while repricing a limit order down from $12.00 to fill. |
+| 09-16 | Joint (••••0501) | QQQ | $710C exp 9/17 | $3.81/contract | $3.90/contract | 2 | **+$18** | **TOOL** — matches RETEST signal (video-literal) at $709.52, bullish. Sold after repricing a limit order down from $4.25 to fill. |
 
-| Account | Symbol | Contract | Entry | Contracts | Cost | Attribution |
-|---------|--------|----------|-------|-----------|------|--------------|
-| Investing (••••4232) | AMD | $525C exp 9/18 | $10.45/contract | 2 | $2,090 | **TOOL** — matches FIBONACCI signal (default) at $524.50 / RETEST (video-literal) at $523.74, both bullish, reported ~10:04-10:16 AM ET |
-| Joint (••••0501) | QQQ | $710C exp 9/17 | $3.81/contract | 2 | $762 | **TOOL** — matches RETEST signal (video-literal) at $709.52, bullish, flipped FRESH ~10:16 AM ET |
-
-Neither is 0DTE (AMD expires 9/18, QQQ expires 9/17), so the time-stop rule doesn't apply to either — only the 30%-peak trailing stop is live for these. Seeded in `exit-monitoring-state.json`; both currently HOLD (AMD +0.7% off entry, QQQ +2.1% off entry as of the seed check).
+09-16 totals now: +$39 (NVDA-Inv) + $93 (NVDA-Joint) + $215 (QQQ-Inv 0DTE) + $165 (AMD-Inv) + $18 (QQQ-Joint) = **+$530**, all 5 trades wins. Nothing open — exit-monitoring state cleared.
 
 ## Sizing rule
 

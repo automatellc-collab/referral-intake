@@ -1,24 +1,3 @@
 {
-  "positions": {
-    "eaccf086-ec4d-43f5-92b9-457e7a4803bb__investing": {
-      "symbol": "AMD",
-      "account": "investing",
-      "strike": "525C",
-      "expiration": "2026-09-18",
-      "entryPrice": 10.45,
-      "entryTime": 1789568235472,
-      "isZeroDTE": false,
-      "peakMarkSinceEntry": 10.525
-    },
-    "4721c35e-6b83-4591-85ba-644798ae28d7__joint": {
-      "symbol": "QQQ",
-      "account": "joint",
-      "strike": "710C",
-      "expiration": "2026-09-17",
-      "entryPrice": 3.81,
-      "entryTime": 1789568319062,
-      "isZeroDTE": false,
-      "peakMarkSinceEntry": 3.89
-    }
-  }
+  "positions": {}
 }
