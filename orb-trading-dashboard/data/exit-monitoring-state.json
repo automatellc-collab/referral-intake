@@ -15,10 +15,21 @@
       "account": "joint",
       "strike": "710C",
       "expiration": "2026-09-16",
-      "entryPrice": 2.44,
+      "entryPrice": 2.385,
       "entryTime": 1789568952437,
       "isZeroDTE": true,
-      "peakMarkSinceEntry": 2.385
+      "peakMarkSinceEntry": 2.385,
+      "note": "scaled to 2 contracts at 14:31:15Z, added 1 @ $2.33; blended avg $2.385"
+    },
+    "9c4d20ee-3af7-4060-afe4-32768ea534fb__investing": {
+      "symbol": "TSLA",
+      "account": "investing",
+      "strike": "362.50C",
+      "expiration": "2026-09-18",
+      "entryPrice": 6.00,
+      "entryTime": 1789569496675,
+      "isZeroDTE": false,
+      "peakMarkSinceEntry": 6.025
     }
   }
 }
