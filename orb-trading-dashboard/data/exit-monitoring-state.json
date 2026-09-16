@@ -1,14 +1,3 @@
 {
-  "positions": {
-    "80cf5d4e-a72c-4f0f-8956-c8bfe8db2128__investing": {
-      "symbol": "QQQ",
-      "account": "investing",
-      "strike": "711C",
-      "expiration": "2026-09-17",
-      "entryPrice": 4.21,
-      "entryTime": 1789571575917,
-      "isZeroDTE": false,
-      "peakMarkSinceEntry": 4.21
-    }
-  }
+  "positions": {}
 }
