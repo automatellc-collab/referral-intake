@@ -27,9 +27,9 @@ Verified against actual Robinhood order history via connected MCP (accounts •�
 
 | Account | Trades (closed) | Wins | Losses | Net P&L (closed) | Open positions |
 |---------|--------|------|--------|---------|---------|
-| **Investing (••••4232)** | 39 | 35 | 4 | **+$7,622** | QQQ $712C ×10 |
+| **Investing (••••4232)** | 40 | 35 | 5 | **+$5,432** | MSTR $125P ×10 |
 | **Joint (••••0501)** | 13 | 10 | 3 | **-$436** | None |
-| **Combined** | 52 | 45 | 7 | **+$7,186** | QQQ $712C ×10 |
+| **Combined** | 53 | 45 | 8 | **+$4,996** | MSTR $125P ×10 |
 
 ### By day
 
@@ -41,14 +41,14 @@ Verified against actual Robinhood order history via connected MCP (accounts •�
 | 09-11 | +$165 | **-$608** | -$443 |
 | 09-14 | +$1,166 | +$146 | +$1,312 |
 | 09-15 | +$134 | **-$103** | +$31 |
-| 09-16 | +$562 | +$129 | +$691 |
+| 09-16 | -$1,628 | +$129 | -$1,499 |
 
 ### By week
 
 | Week | Investing | Joint | Combined |
 |------|-----------|-------|----------|
 | Week of 09-08 (Tue-Fri) | +$5,760 | **-$608** | +$5,152 |
-| Week of 09-14 (Mon-Wed, ongoing) | +$1,862 | +$172 | +$2,034 |
+| Week of 09-14 (Mon-Wed, ongoing) | -$328 | +$172 | -$156 |
 
 *Update all three tables every time a new trade is logged. Re-verify joint account periodically — this correction shows conversation-only tracking misses trades in accounts that aren't discussed.*
 
@@ -156,7 +156,7 @@ Tool-attributed running total: 6 (from 09-14, +$1,166) + 13 (from 09-15 closed, 
 
 09-16 closed so far: +$39 + $93 + $215 = **+$347**, all wins.
 
-Tool-attributed running total: 19 (through 09-15, +$1,197) + 15 (09-16, +$691) = **34 tool-attributed trades closed, 30 wins - 4 losses (88% win rate)**, net +$1,888.
+Tool-attributed running total: 19 (through 09-15, +$1,197) + 16 (09-16, -$1,499) = **35 tool-attributed trades closed, 30 wins - 5 losses (86% win rate)**, net -$302.
 
 | 09-16 | Investing (••••4232) | AMD | $525C exp 9/18 | $10.45/contract | $11.00 (x1) + $11.55 (x1) | 2 | **+$165** | **TOOL** — matches FIBONACCI signal (default) at $524.50 / RETEST (video-literal) at $523.74, both bullish. Sold in two legs while repricing a limit order down from $12.00 to fill. |
 | 09-16 | Joint (••••0501) | QQQ | $710C exp 9/17 | $3.81/contract | $3.90/contract | 2 | **+$18** | **TOOL** — matches RETEST signal (video-literal) at $709.52, bullish. Sold after repricing a limit order down from $4.25 to fill. |
@@ -196,12 +196,19 @@ QQQ $711C round total: +$20 (first half) + $45 (second half) = **+$65** on the f
 
 ### Open positions (as of 09-16, ~2:08 PM ET)
 
+| Date | Account | Symbol | Contract | Entry | Exit | Contracts | P&L | Attribution |
+|------|---------|--------|----------|-------|------|-----------|-----|--------------|
+| 09-16 | Investing (••••4232) | QQQ | $712C exp 9/17 | $3.06/contract blended | $1.60/contract | 15 | **-$2,190** | **TOOL** — matches FIBONACCI signal (default) at $711.07, bullish. Scaled from 10 to 15 contracts at 2:11 PM ET while already down, then QQQ broke clean through its entire opening range against the position. **Largest loss of the day, and of the session** — the averaging-down decision compounded the damage significantly (would have been roughly -$730 on the original 10 contracts alone). Third loss of the day. |
+
+09-16 closed totals: +$691 (through the prior 15 trades) - $2,190 (QQQ) = **-$1,499**, 13 wins - 3 losses across 16 closed trades.
+
+### Open positions (as of 09-16, ~2:42 PM ET)
+
 | Account | Symbol | Contract | Entry | Contracts | Cost | Attribution |
 |---------|--------|----------|-------|-----------|------|--------------|
-| Investing (••••4232) | QQQ | $712C exp 9/17 | $3.06/contract blended | 15 | $4,590 | **TOOL** — matches FIBONACCI signal (default) at $711.07, bullish. Scaled from 10 to 15 contracts at 2:11 PM ET (added 5 @ $2.72). Mark has since fallen to $1.635 (-47%) as QQQ dropped below its entire opening range — reclaim on the underlying invalidated the bullish thesis. Still open as of last check. |
 | Investing (••••4232) | MSTR | $125P exp 9/18 | $3.05/contract | 10 | $3,050 | **TOOL** — matches FIBONACCI signal (default) at $125.32, bearish. Watch level: OR low $128.24 — a reclaim above it invalidates the thesis. |
 
-Not 0DTE on either (QQQ exp 9/17, MSTR exp 9/18), so only the 30% trailing stop applies to each. MSTR currently HOLD, flat off entry. Both seeded in `exit-monitoring-state.json`.
+Not 0DTE (exp 9/18), so only the 30% trailing stop applies. Currently HOLD, mark $2.58 vs $3.05 entry — MSTR price ($126.52) still below the $128.24 watch level, thesis intact. Seeded in `exit-monitoring-state.json`.
 
 ## Sizing rule
 
