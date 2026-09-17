@@ -212,4 +212,59 @@ describe("getEntrySignal", () => {
       expect(entry?.type).toBe("RETEST");
     });
   });
+
+  describe("post-11am 10-minute chart switch", () => {
+    test("before 11am, a two-candle pattern is evaluated on raw 5-minute candles and finds no rejection", () => {
+      // Neither candle alone is a rejection: the first dips to the ORB high
+      // but closes back below it; the second never dips to the ORB high at all.
+      const candles = [
+        candle(10, 0, 106, 106.2, 104.5, 104.8),
+        candle(10, 5, 104.8, 106.3, 105.2, 106.1),
+      ];
+
+      const entry = getEntrySignal(bullishSignal, candles, settings);
+      expect(entry).toBeNull();
+    });
+
+    test("after 11am, the same two-candle pattern is merged into one 10-minute bar and DOES register as a rejection", () => {
+      // Same OHLC shape as above, just timestamped after 11am. Merged into a
+      // single 10-minute bar: low=104.5 (dips to/through the ORB high),
+      // close=106.1 (closes back above it) — a clean rejection the raw
+      // 5-minute view above missed because neither individual candle alone
+      // both dipped AND closed back above.
+      const candles = [
+        candle(11, 0, 106, 106.2, 104.5, 104.8),
+        candle(11, 5, 104.8, 106.3, 105.2, 106.1),
+      ];
+
+      const entry = getEntrySignal(bullishSignal, candles, settings);
+
+      expect(entry).not.toBeNull();
+      expect(entry?.type).toBe("RETEST");
+      expect(entry?.price).toBe(106.1);
+      expect(entry?.detectedAt).toBe(etTimestamp(11, 0)); // bucketed to the 10-minute bar start
+    });
+
+    test("after 11am, a lone still-forming 5-minute candle is treated as its own (incomplete) 10-minute bar", () => {
+      const candles = [candle(11, 0, 105.5, 106.2, 104.8, 106)]; // rejection on its own already
+      const entry = getEntrySignal(bullishSignal, candles, settings);
+
+      expect(entry?.type).toBe("RETEST");
+      expect(entry?.detectedAt).toBe(etTimestamp(11, 0));
+    });
+
+    test("after 11am, BREAKOUT_LEG Fibonacci anchors still see the true swing high/low across merged bars", () => {
+      const breakoutLegSettings = { ...settings, fibonacciAnchorMode: "BREAKOUT_LEG" as const };
+      // Swing high of 110 occurs in the first 5-min candle of a post-11am pair;
+      // it must survive the merge into the 10-minute bar for the anchor calc.
+      const candles = [
+        candle(11, 0, 106, 110, 106, 109),
+        candle(11, 5, 109, 109.2, 108.2, 108.4),
+      ];
+
+      const entry = getEntrySignal(bullishSignal, candles, breakoutLegSettings);
+      expect(entry).not.toBeNull();
+      expect(entry?.type).toBe("FIBONACCI");
+    });
+  });
 });

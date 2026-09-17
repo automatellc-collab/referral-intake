@@ -24,6 +24,7 @@ export function parseUtcSpaceDatetime(datetime: string): number {
 
 const MARKET_OPEN_MINUTES = 9 * 60 + 30; // 9:30 AM ET
 const OPENING_RANGE_CLOSE_MINUTES = 9 * 60 + 45; // 9:45 AM ET
+const ELEVEN_AM_MINUTES = 11 * 60; // 11:00 AM ET
 const MARKET_CLOSE_MINUTES = 16 * 60; // 4:00 PM ET
 
 export function getEasternMinutesOfDay(timestampMs: number): number {
@@ -46,4 +47,8 @@ export function isMarketOpen(timestampMs: number): boolean {
 
 export function hasOpeningRangeClosed(timestampMs: number): boolean {
   return getEasternMinutesOfDay(timestampMs) >= OPENING_RANGE_CLOSE_MINUTES;
+}
+
+export function isAfterElevenAm(timestampMs: number): boolean {
+  return getEasternMinutesOfDay(timestampMs) >= ELEVEN_AM_MINUTES;
 }

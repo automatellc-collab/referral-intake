@@ -1,5 +1,6 @@
+import { aggregateCandles } from "@/lib/candle-aggregation";
 import { calculateFibonacciLevels, isPriceInFibonacciZone } from "@/lib/fibonacci";
-import { isWithinOpeningRangeWindow } from "@/lib/market-hours";
+import { isAfterElevenAm, isWithinOpeningRangeWindow } from "@/lib/market-hours";
 import type {
   Candle,
   EntrySignal,
@@ -110,6 +111,23 @@ function buildEntry(
   };
 }
 
+const TEN_MINUTE_BUCKET_MS = 10 * 60 * 1000;
+
+// The opening range and the 9:45-11:00 monitoring window run on the native
+// 5-minute candles. After 11am ET, midday chop makes single 5-minute bars
+// noisy — switch to 10-minute bars (merging consecutive 5-minute candles) for
+// the rest of the signal-detection window, per the video's original approach.
+function applyElevenAmTimeframeSwitch(candles: Candle[]): Candle[] {
+  const before = candles.filter((c) => !isAfterElevenAm(c.timestamp));
+  const after = candles.filter((c) => isAfterElevenAm(c.timestamp));
+
+  if (after.length === 0) {
+    return candles;
+  }
+
+  return [...before, ...aggregateCandles(after, TEN_MINUTE_BUCKET_MS)];
+}
+
 function getFibonacciAnchors(
   signal: ORBSignal,
   candlesSinceBreakout: Candle[],
@@ -136,12 +154,13 @@ export function getEntrySignal(
   settings: TradingSettings,
 ): EntrySignal | null {
   const { openingRange, direction } = signal;
+  const candles = applyElevenAmTimeframeSwitch(candlesSinceBreakout);
 
   // A retest/rejection means price came BACK to the level after breaking
   // out — the breakout candle's own wick touching that level is normal
   // same-bar noise, not a retest. Exclude it so this doesn't trivially
   // trigger on every breakout.
-  const postBreakoutCandles = candlesSinceBreakout.filter((c) => c.timestamp > signal.breakoutAt);
+  const postBreakoutCandles = candles.filter((c) => c.timestamp > signal.breakoutAt);
   if (postBreakoutCandles.length === 0) {
     return null;
   }
@@ -177,7 +196,7 @@ export function getEntrySignal(
   // FibonacciAnchorMode in types/trading.ts. Unlike the retest scan, the
   // swing high/low DOES include the breakout candle — its high/low is a
   // real price the move reached, relevant to measuring the leg's extent.
-  const anchors = getFibonacciAnchors(signal, candlesSinceBreakout, settings.fibonacciAnchorMode);
+  const anchors = getFibonacciAnchors(signal, candles, settings.fibonacciAnchorMode);
   if (anchors.low >= anchors.high) {
     return null; // swing hasn't developed enough to define a meaningful zone yet
   }
