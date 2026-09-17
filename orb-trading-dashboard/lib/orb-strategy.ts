@@ -1,5 +1,5 @@
 import { calculateFibonacciLevels, isPriceInFibonacciZone } from "@/lib/fibonacci";
-import { isAfterElevenAm, isWithinOpeningRangeWindow } from "@/lib/market-hours";
+import { isWithinOpeningRangeWindow } from "@/lib/market-hours";
 import type {
   Candle,
   EntrySignal,
@@ -110,31 +110,6 @@ function buildEntry(
   };
 }
 
-const OBSERVATION_WINDOW_MS = 10 * 60 * 1000;
-
-// After 11am ET, midday chop makes single-poll signals noisy — require the
-// condition to have held continuously for OBSERVATION_WINDOW_MS before
-// alerting, rather than firing the instant it's first true. Morning signals
-// (higher-conviction opening-drive moves) are unaffected.
-function hasHeldForObservationWindow(conditionStartedAt: number, now: number): boolean {
-  return now - conditionStartedAt >= OBSERVATION_WINDOW_MS;
-}
-
-// Scans candles from the end backward, returning the timestamp of the
-// earliest candle in the unbroken trailing run that satisfies `predicate` —
-// i.e. how long the condition has held continuously up to the latest candle.
-function findTrailingStreakStart(
-  candles: Candle[],
-  predicate: (candle: Candle) => boolean,
-): number | null {
-  let streakStart: number | null = null;
-  for (let i = candles.length - 1; i >= 0; i--) {
-    if (!predicate(candles[i])) break;
-    streakStart = candles[i].timestamp;
-  }
-  return streakStart;
-}
-
 function getFibonacciAnchors(
   signal: ORBSignal,
   candlesSinceBreakout: Candle[],
@@ -159,7 +134,6 @@ export function getEntrySignal(
   signal: ORBSignal,
   candlesSinceBreakout: Candle[],
   settings: TradingSettings,
-  now: number = Date.now(),
 ): EntrySignal | null {
   const { openingRange, direction } = signal;
 
@@ -188,9 +162,6 @@ export function getEntrySignal(
       isRejectionCandle(c, direction, openingRange),
     );
     if (rejectionCandle) {
-      if (isAfterElevenAm(now) && !hasHeldForObservationWindow(rejectionCandle.timestamp, now)) {
-        return null; // still within the post-11am 10-minute observation window
-      }
       return buildEntry("RETEST", signal, rejectionCandle.close, rejectionCandle.timestamp, settings);
     }
   }
@@ -214,14 +185,6 @@ export function getEntrySignal(
   const fibLevels = calculateFibonacciLevels(anchors.low, anchors.high, direction);
 
   if (isPriceInFibonacciZone(lastCandle.close, fibLevels, direction)) {
-    if (isAfterElevenAm(now)) {
-      const streakStart = findTrailingStreakStart(postBreakoutCandles, (c) =>
-        isPriceInFibonacciZone(c.close, fibLevels, direction),
-      );
-      if (streakStart === null || !hasHeldForObservationWindow(streakStart, now)) {
-        return null; // still within the post-11am 10-minute observation window
-      }
-    }
     return buildEntry("FIBONACCI", signal, lastCandle.close, lastCandle.timestamp, settings);
   }
 
