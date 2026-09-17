@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   getEasternDateString,
   getEasternMinutesOfDay,
+  isAfterElevenAm,
   isWithinOpeningRangeWindow,
   isMarketOpen,
   parseUtcSpaceDatetime,
@@ -53,6 +54,20 @@ describe("isMarketOpen", () => {
 
   test("returns false after market close", () => {
     expect(isMarketOpen(etTimestamp(16, 30))).toBe(false);
+  });
+});
+
+describe("isAfterElevenAm", () => {
+  test("returns false at 10:59 AM ET", () => {
+    expect(isAfterElevenAm(etTimestamp(10, 59))).toBe(false);
+  });
+
+  test("returns true at 11:00 AM ET", () => {
+    expect(isAfterElevenAm(etTimestamp(11, 0))).toBe(true);
+  });
+
+  test("returns true in the afternoon", () => {
+    expect(isAfterElevenAm(etTimestamp(14, 30))).toBe(true);
   });
 });
 
