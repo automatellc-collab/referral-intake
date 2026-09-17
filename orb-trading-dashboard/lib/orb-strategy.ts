@@ -114,10 +114,14 @@ function buildEntry(
 const TEN_MINUTE_BUCKET_MS = 10 * 60 * 1000;
 
 // The opening range and the 9:45-11:00 monitoring window run on the native
-// 5-minute candles. After 11am ET, midday chop makes single 5-minute bars
-// noisy — switch to 10-minute bars (merging consecutive 5-minute candles) for
-// the rest of the signal-detection window, per the video's original approach.
-function applyElevenAmTimeframeSwitch(candles: Candle[]): Candle[] {
+// 5-minute candles. When enabled and after 11am ET, midday chop makes single
+// 5-minute bars noisy — switch to 10-minute bars (merging consecutive 5-minute
+// candles) for the rest of the signal-detection window, per the video's approach.
+function applyElevenAmTimeframeSwitch(candles: Candle[], enabled: boolean): Candle[] {
+  if (!enabled) {
+    return candles;
+  }
+
   const before = candles.filter((c) => !isAfterElevenAm(c.timestamp));
   const after = candles.filter((c) => isAfterElevenAm(c.timestamp));
 
@@ -154,7 +158,7 @@ export function getEntrySignal(
   settings: TradingSettings,
 ): EntrySignal | null {
   const { openingRange, direction } = signal;
-  const candles = applyElevenAmTimeframeSwitch(candlesSinceBreakout);
+  const candles = applyElevenAmTimeframeSwitch(candlesSinceBreakout, settings.useElevenAmSwitch);
 
   // A retest/rejection means price came BACK to the level after breaking
   // out — the breakout candle's own wick touching that level is normal

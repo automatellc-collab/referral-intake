@@ -52,6 +52,7 @@ export const DEFAULT_SETTINGS: Omit<TradingSettings, "userId"> = {
   fibonacciAnchorMode: "OPENING_RANGE",
   entryTypeFilter: "ANY",
   maxHoldMinutes: null,
+  useElevenAmSwitch: false,
 };
 
 export class SettingsRepository {

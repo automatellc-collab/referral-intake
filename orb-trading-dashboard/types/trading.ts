@@ -83,6 +83,9 @@ export interface TradingSettings {
   /** Force-close a trade this many minutes after entry if stop/target hasn't
    * hit yet, instead of riding to end of day. Null = no limit (ride to EOD). */
   maxHoldMinutes: number | null;
+  /** After 11am ET, merge 5-min candles into 10-min bars for signal detection.
+   * Reduces false signals from midday chop. Default: false. */
+  useElevenAmSwitch: boolean;
 }
 
 export interface Trade {
