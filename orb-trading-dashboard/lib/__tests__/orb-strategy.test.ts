@@ -115,6 +115,27 @@ describe("getEntrySignal", () => {
     expect(entry?.direction).toBe("BULLISH");
   });
 
+  test("freezes a FIBONACCI entry's price/time at the candle that actually closed in the zone, not the latest poll", () => {
+    // Root cause of a signal-free morning (2026-09-22): live polling only
+    // checked the newest candle's close each cycle, so a candle that
+    // closed inside the fib zone got silently missed once a later candle
+    // closed outside it — the backtest that validated this edge (~210
+    // trades/yr on SPY) never misses a candle since it walks every bar.
+    const zoneCandle = candle(9, 55, 105, 105.5, 102.5, 103.2); // closes inside ~[102.71, 103.58]
+    const laterCandles = [
+      candle(9, 50, 106, 108, 106, 107),
+      zoneCandle,
+      candle(10, 0, 103.2, 104, 102.9, 104), // supersedes it, closes OUTSIDE the zone
+    ];
+
+    const entry = getEntrySignal(bullishSignal, laterCandles, settings);
+
+    expect(entry).not.toBeNull();
+    expect(entry?.type).toBe("FIBONACCI");
+    expect(entry?.price).toBe(zoneCandle.close);
+    expect(entry?.detectedAt).toBe(zoneCandle.timestamp);
+  });
+
   test("freezes a RETEST entry's price/time at the actual rejection candle, not the latest poll", () => {
     // Real incident (2026-08-31): the rejection fires once, but the app
     // polls every 5 min. A live user was nearly misled into re-pricing an

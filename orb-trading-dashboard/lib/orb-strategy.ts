@@ -207,8 +207,20 @@ export function getEntrySignal(
 
   const fibLevels = calculateFibonacciLevels(anchors.low, anchors.high, direction);
 
-  if (isPriceInFibonacciZone(lastCandle.close, fibLevels, direction)) {
-    return buildEntry("FIBONACCI", signal, lastCandle.close, lastCandle.timestamp, settings);
+  // Sticky, like the RETEST check above: scan every post-breakout candle's
+  // close for the first one that fell in the Fibonacci zone, not just
+  // whatever candle is newest on this poll. Checking only lastCandle.close
+  // meant a candle that closed in the zone got silently "superseded" by
+  // the next candle closing outside it before the next 2-min poll ever
+  // saw it — live polling only observes the latest candle, but the
+  // backtest engine that validated this edge (~210 trades/yr on SPY,
+  // 62% WR) walks every candle sequentially and never misses one. Root
+  // caused 2026-09-22 after a signal-free morning against that backtest.
+  const fibCandle = postBreakoutCandles.find((c) =>
+    isPriceInFibonacciZone(c.close, fibLevels, direction),
+  );
+  if (fibCandle) {
+    return buildEntry("FIBONACCI", signal, fibCandle.close, fibCandle.timestamp, settings);
   }
 
   return null;
