@@ -32,7 +32,7 @@ describe("parseJsonResponse", () => {
     const act = parseJsonResponse(response);
 
     // Assert
-    await expect(act).rejects.toThrow(/too large.*3MB combined/i);
+    await expect(act).rejects.toThrow(/too large/i);
   });
 
   test("throws a generic message with the status code for any other non-JSON body", async () => {

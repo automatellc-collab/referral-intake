@@ -186,8 +186,8 @@ describe("POST /api/extract", () => {
   });
 
   test("returns 400 and cleans up when a single attachment exceeds the combined size budget", async () => {
-    // Arrange — 20MB combined budget
-    headMock.mockResolvedValue({ size: 21 * 1024 * 1024 });
+    // Arrange — 1GB combined budget
+    headMock.mockResolvedValue({ size: 1024 * 1024 * 1024 + 1 }); // 1GB + 1 byte
     const request = makeRequest({ referralText: "text", specialty: "Cardiology", attachments: [validAttachment] });
 
     // Act
@@ -201,8 +201,8 @@ describe("POST /api/extract", () => {
   });
 
   test("returns 400 when multiple attachments individually fit but combined exceed the budget", async () => {
-    // Arrange — two files, each under any per-file cap, but summing past the 20MB combined budget
-    headMock.mockResolvedValue({ size: 11 * 1024 * 1024 });
+    // Arrange — two files, each under per-file cap, but summing past the 1GB combined budget
+    headMock.mockResolvedValue({ size: 600 * 1024 * 1024 }); // 600MB each = 1.2GB total
     const request = makeRequest({
       referralText: "text",
       specialty: "Gynecologic Oncology",

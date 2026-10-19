@@ -11,7 +11,7 @@ export async function parseJsonResponse<T>(response: Response): Promise<T> {
   } catch {
     if (response.status === 413) {
       throw new Error(
-        "The request was too large — attachments must total under 3MB combined. Try fewer or smaller files.",
+        "The request was too large. Try with fewer or smaller files.",
       );
     }
     throw new Error(`The server returned an unexpected response (HTTP ${response.status}). Please try again.`);
