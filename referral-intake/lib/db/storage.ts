@@ -3,7 +3,7 @@ import "server-only";
 import { createHash } from "crypto";
 import { db } from "./client";
 import { extractionCache, auditLog, reviewQueue } from "./schema";
-import { eq } from "drizzle-orm";
+import { eq, lt } from "drizzle-orm";
 import type { NoteSummary } from "@/lib/schema";
 
 export async function cacheExtraction(params: {
@@ -139,7 +139,7 @@ export async function cleanupExpiredCache(): Promise<number> {
   try {
     const result = await db
       .delete(extractionCache)
-      .where(extractionCache.expiresAt < new Date())
+      .where(lt(extractionCache.expiresAt, new Date()))
       .returning();
 
     return result.length;
