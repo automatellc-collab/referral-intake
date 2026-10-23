@@ -85,32 +85,30 @@ export async function extractSummary(
       }\n\nCover text:\n${referralText || "(no cover text — see attached documents)"}`,
     });
 
-    const response = await client.messages.parse({
-      model: MODEL,
-      max_tokens: 4096,
-      system: systemPromptFor(specialty),
-      messages: [{ role: "user", content }],
-      output_config: {
-        format: zodOutputFormat(NoteSummarySchema),
-      },
-    });
+    try {
+      // Try strict structured output first
+      const response = await client.messages.parse({
+        model: MODEL,
+        max_tokens: 4096,
+        system: systemPromptFor(specialty),
+        messages: [{ role: "user", content }],
+        output_config: {
+          format: zodOutputFormat(NoteSummarySchema),
+        },
+      });
 
-    if (!response.parsed_output) {
-      const responseContent = response.content[0];
-      let message = "unknown parsing error";
-
-      if (responseContent && "text" in responseContent) {
-        message = responseContent.text;
-        // If Claude returned text but parsing failed, it might be raw content instead of JSON
-        if (!message.startsWith("{")) {
-          message = `Claude returned non-JSON response (likely raw text from PDF). First 300 chars: ${message.substring(0, 300)}`;
-        }
+      if (!response.parsed_output) {
+        // Fallback: try flexible extraction without strict schema validation
+        console.warn("Structured output parsing failed, trying flexible extraction");
+        return await flexibleExtract(client, specialty, content);
       }
 
-      throw new Error(`Failed to parse extraction output: ${message}`);
+      return response.parsed_output;
+    } catch (parseError) {
+      // If structured parsing throws, try flexible extraction as fallback
+      console.warn("Structured parsing error, trying flexible extraction:", parseError);
+      return await flexibleExtract(client, specialty, content);
     }
-
-    return response.parsed_output;
   } finally {
     // Clean up uploaded files
     for (const fileId of uploadedFileIds) {
@@ -120,6 +118,49 @@ export async function extractSummary(
         console.error("Failed to delete uploaded file:", error);
       }
     }
+  }
+}
+
+async function flexibleExtract(
+  client: Anthropic,
+  specialty: string,
+  content: Anthropic.ContentBlockParam[],
+): Promise<unknown> {
+  // Flexible extraction without strict schema validation
+  const flexContent = [...content];
+  // Update the prompt to request flexible JSON output
+  const lastText = flexContent[flexContent.length - 1];
+  if (lastText && lastText.type === "text") {
+    flexContent[flexContent.length - 1] = {
+      ...lastText,
+      text:
+        lastText.text +
+        "\n\nReturn a JSON object with these fields: openingNarrative, activeProblems (list), medicalHistory (list), currentMedications (list), allergies (list), redFlags (list), gaps (list), specialty. Use your best judgment to extract and structure the available data.",
+    };
+  }
+
+  const response = await client.messages.create({
+    model: MODEL,
+    max_tokens: 4096,
+    system: systemPromptFor(specialty),
+    messages: [{ role: "user", content: flexContent }],
+  });
+
+  const responseContent = response.content[0];
+  if (!responseContent || responseContent.type !== "text") {
+    throw new Error("Claude did not return a text response");
+  }
+
+  const text = responseContent.text;
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    throw new Error(`Could not extract JSON from response: ${text.substring(0, 200)}`);
+  }
+
+  try {
+    return JSON.parse(jsonMatch[0]);
+  } catch (parseError) {
+    throw new Error(`Failed to parse flexible extraction output: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
   }
 }
 
