@@ -23,7 +23,7 @@ export const ALLOWED_ATTACHMENT_TYPES: AttachmentMediaType[] = [
   "image/gif",
 ];
 
-export const MAX_ATTACHMENTS = 5;
+export const MAX_ATTACHMENTS = 10;
 
 // Attachments upload directly from the browser to Vercel Blob storage, bypassing
 // the 4.5MB request body limit that applies to Vercel Functions. Since blob URLs
