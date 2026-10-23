@@ -1,7 +1,7 @@
 import "server-only";
 
 import Anthropic from "@anthropic-ai/sdk";
-import { NoteSummarySchema } from "@/lib/schema";
+import { NoteSummarySchema, type NoteSummary } from "@/lib/schema";
 import type { AttachmentMediaType } from "@/lib/attachments";
 
 const MODEL = "claude-opus-5";
@@ -13,26 +13,49 @@ export interface ExtractAttachment {
 }
 
 function systemPromptFor(specialty: string): string {
-  return `You are a clinical intake assistant that drafts specialist pre-chart summaries for a ${specialty} practice. Given a raw referral packet (letter, imaging/lab reports, PCP notes — often combined, sometimes as attached PDFs or images), extract key information into a structured summary.
+  return `You are a clinical intake assistant that extracts specialist pre-chart summaries for a ${specialty} practice from raw referral packets (letters, imaging reports, lab results, PCP notes). Extract information into this exact JSON structure:
 
-Extract the following information from the referral:
-- openingNarrative: A paragraph summary of the patient, reason for referral, and key details
-- activeProblems: List of diagnoses/problems mentioned
-- medicalHistory: Past medical history items
-- currentMedications: Current medications listed
-- allergies: Drug allergies and reactions
-- redFlags: Clinically significant findings
-- gaps: Missing information a specialist would expect
-- specialty: The specialty field
+{
+  "openingNarrative": {
+    "status": "extracted" | "inferred" | "missing",
+    "value": "Single draft paragraph — age, referring physician, reason, symptoms, timeline, history. Dictation style, only explicit facts."
+  },
+  "urgency": {
+    "level": "Routine" | "Urgent" | "STAT",
+    "rationale": "One sentence explaining why, quoting trigger language if present."
+  },
+  "resultsTimeline": [
+    { "date": "e.g. 7/21/2026", "test": "Test name", "finding": "Result as stated" }
+  ],
+  "reviewOfSystemsNotes": ["Explicit symptom positives/negatives from referral"],
+  "medicalHistory": ["Past medical history items"],
+  "activeProblems": [
+    { "diagnosis": "Diagnosis name", "icdCode": "ICD-10 only if explicit in text, else empty string" }
+  ],
+  "surgicalHistory": ["Past surgical procedures"],
+  "currentMedications": {
+    "status": "extracted" | "inferred" | "missing",
+    "items": ["Medication names and doses as listed"]
+  },
+  "allergies": {
+    "status": "extracted" | "inferred" | "missing",
+    "items": ["Drug name: reaction type"]
+  },
+  "socialHistoryNotes": ["Smoking status, occupation if relevant"],
+  "redFlags": [
+    { "term": "Clinically significant finding", "context": "Sentence it appeared in" }
+  ],
+  "gaps": ["Standard ${specialty} information missing from this referral"]
+}
 
-Return ONLY a valid JSON object. No markdown, no extra text. Just the JSON object.`;
+Return ONLY valid JSON. No markdown, no extra text.`;
 }
 
 export async function extractSummary(
   specialty: string,
   referralText: string,
   attachments: ExtractAttachment[] = [],
-): Promise<unknown> {
+): Promise<NoteSummary> {
   const client = new Anthropic();
 
   const content: Anthropic.ContentBlockParam[] = [];
@@ -99,13 +122,21 @@ export async function extractSummary(
       throw new Error(`No JSON found in response. Got: ${text.substring(0, 300)}`);
     }
 
+    let parsed: unknown;
     try {
-      const parsed = JSON.parse(jsonMatch[0]);
-      return parsed;
+      parsed = JSON.parse(jsonMatch[0]);
     } catch (parseError) {
       throw new Error(
         `Invalid JSON from Claude: ${parseError instanceof Error ? parseError.message : String(parseError)}. Raw: ${jsonMatch[0].substring(0, 300)}`,
       );
+    }
+
+    // Validate against NoteSummary schema
+    try {
+      return NoteSummarySchema.parse(parsed);
+    } catch (validationError) {
+      const details = validationError instanceof Error ? validationError.message : String(validationError);
+      throw new Error(`Validation failed: ${details}`);
     }
   } finally {
     // Clean up uploaded files
