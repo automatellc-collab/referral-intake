@@ -148,7 +148,9 @@ async function flexibleExtract(
 
   const responseContent = response.content[0];
   if (!responseContent || responseContent.type !== "text") {
-    throw new Error("Claude did not return a text response");
+    const contentType = responseContent?.type || "none";
+    const details = responseContent && "text" in responseContent ? responseContent.text : "";
+    throw new Error(`Claude did not return text (got: ${contentType}). Response: ${details.substring(0, 200)}`);
   }
 
   const text = responseContent.text;
