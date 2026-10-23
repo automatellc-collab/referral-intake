@@ -74,15 +74,17 @@ export async function extractSummary(
       messages: [{ role: "user", content }],
     });
 
-    const responseContent = response.content[0];
-    if (!responseContent || responseContent.type !== "text") {
-      throw new Error("Claude did not return a text response");
+    // Find first text block in response
+    const textBlock = response.content.find((block) => block.type === "text");
+    if (!textBlock || textBlock.type !== "text") {
+      const responseTypes = response.content.map((b) => b.type).join(", ");
+      throw new Error(`Claude did not return a text response (got: ${responseTypes})`);
     }
 
-    const text = responseContent.text;
+    const text = textBlock.text;
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      throw new Error(`Claude did not return valid JSON: ${text.substring(0, 200)}`);
+      throw new Error(`Claude did not return valid JSON: ${text.substring(0, 500)}`);
     }
 
     try {
