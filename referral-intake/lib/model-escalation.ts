@@ -25,11 +25,18 @@ export interface ModelEscalationResult {
   estimatedCost: number;
 }
 
-const MODEL_ESCALATION = [
+interface ModelConfig {
+  model: string;
+  name: "haiku" | "sonnet" | "opus";
+  cost: number;
+  threshold: number;
+}
+
+const MODEL_ESCALATION: ModelConfig[] = [
   { model: "claude-3-5-haiku-20241022", name: "haiku", cost: 0.8, threshold: 0.7 },
   { model: "claude-3-5-sonnet-20241022", name: "sonnet", cost: 3.0, threshold: 0.5 },
   { model: "claude-opus-5", name: "opus", cost: 15.0, threshold: 0 },
-] as const;
+];
 
 export async function escalatingExtraction(
   specialty: string,
@@ -43,7 +50,7 @@ export async function escalatingExtraction(
     summary: null,
     confidence: 0,
   };
-  let currentModel = MODEL_ESCALATION[0];
+  let currentModel: ModelConfig = MODEL_ESCALATION[0];
 
   for (const modelConfig of MODEL_ESCALATION) {
     const attemptNumber = attempts.length + 1;
