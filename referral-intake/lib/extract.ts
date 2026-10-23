@@ -67,23 +67,31 @@ export async function extractSummary(
       }\n\nCover text:\n${referralText || "(no cover text — see attached documents)"}`,
     });
 
-    const response = await client.messages.parse({
+    const response = await client.messages.create({
       model: MODEL,
       max_tokens: 4096,
       system: systemPromptFor(specialty),
       messages: [{ role: "user", content }],
-      output_config: {
-        format: zodOutputFormat(NoteSummarySchema),
-      },
     });
 
-    if (!response.parsed_output) {
-      const responseContent = response.content[0];
-      const message = responseContent && "text" in responseContent ? responseContent.text : "unknown parsing error";
-      throw new Error(`Failed to parse extraction output: ${message}`);
+    const responseContent = response.content[0];
+    if (!responseContent || responseContent.type !== "text") {
+      throw new Error("Claude did not return a text response");
     }
 
-    return response.parsed_output;
+    const text = responseContent.text;
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error(`Claude did not return valid JSON: ${text.substring(0, 200)}`);
+    }
+
+    try {
+      const parsed = JSON.parse(jsonMatch[0]);
+      return parsed;
+    } catch (parseError: unknown) {
+      const errorMsg = parseError instanceof Error ? parseError.message : "unknown error";
+      throw new Error(`Failed to parse Claude's JSON response: ${errorMsg}`);
+    }
   } finally {
     await deleteUploadedFiles(client, uploadedFiles);
   }
