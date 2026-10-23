@@ -67,64 +67,144 @@ export async function extractSummary(
   const client = new Anthropic();
   const uploadedFileIds: string[] = [];
   let pdfBase64: string | undefined;
+  const requestId = `extract-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const startTime = Date.now();
 
   try {
-    // Step 1: Classify document type
-    console.log("[Extraction] Step 1: Classifying document...");
+    // === PHASE 2: DOCUMENT CLASSIFICATION ===
+    console.log(`[${requestId}] Step 1: Classifying document...`);
     const primaryPDF = attachments.find((a) => a.mediaType === "application/pdf");
     const classificationText = primaryPDF ? referralText.substring(0, 2000) : referralText;
     const classification = await classifyDocument(
       classificationText,
       primaryPDF?.filename || "referral",
     );
-    console.log(`[Extraction] Document type: ${classification.type} (confidence: ${classification.confidence})`);
+    console.log(
+      `[${requestId}] Document type: ${classification.type} (confidence: ${classification.confidence})`,
+    );
 
-    // Step 2: Prepare multimodal content (vision + text)
-    console.log("[Extraction] Step 2: Preparing content...");
-    const content: Anthropic.ContentBlockParam[] = [];
+    // === PHASE 1: MULTIMODAL EXTRACTION WITH VISION ===
+    console.log(`[${requestId}] Step 2: Preparing multimodal content...`);
 
     // Use PDF with vision if available
     for (const attachment of attachments) {
       if (attachment.mediaType === "application/pdf" && !pdfBase64) {
         if (attachment.base64.length > 10 * 1024 * 1024) {
-          // Large file: use Files API
           try {
             const fileId = await uploadToFilesAPI(client, attachment);
             uploadedFileIds.push(fileId);
-            content.push({
-              type: "document",
-              source: { type: "file", file_id: fileId },
-            });
           } catch (error) {
             console.warn("Files API failed, falling back to base64");
             pdfBase64 = attachment.base64;
           }
         } else {
-          // Small file: use base64 (faster)
           pdfBase64 = attachment.base64;
         }
       }
     }
 
-    // Step 3: Orchestrated extraction with 4 fallback controls
-    console.log("[Extraction] Step 3: Running orchestrated extraction...");
-    const orchestrationResult = await orchestrateExtraction(specialty, referralText, pdfBase64);
+    // === PHASE 3: ESCALATING EXTRACTION WITH MODEL SELECTION ===
+    console.log(`[${requestId}] Step 3: Running escalating extraction...`);
+    const { escalatingExtraction } = await import("./model-escalation");
+    const escalationResult = await escalatingExtraction(
+      specialty,
+      referralText,
+      pdfBase64,
+      0.65, // confidence threshold
+    );
 
-    if (!orchestrationResult.summary) {
+    if (!escalationResult.summary) {
       throw new Error(
-        `Extraction failed after ${orchestrationResult.totalAttempts} attempts: ${orchestrationResult.controls
-          .flatMap((c) => c.errors)
-          .join("; ")}`,
+        `Extraction failed: ${escalationResult.attempts
+          .map((a) => `${a.model}(${a.error || "no error"})`)
+          .join(", ")}`,
       );
     }
 
-    return {
-      summary: orchestrationResult.summary,
-      confidence: orchestrationResult.confidence,
+    // === PHASE 4: MEDICAL VALIDATION AND GROUNDING ===
+    console.log(`[${requestId}] Step 4: Medical validation...`);
+    const { validateMedicalContent } = await import("./medical-validator");
+    const validationResult = await validateMedicalContent(escalationResult.summary, specialty);
+
+    let confidence = escalationResult.confidence * validationResult.validityScore;
+    const validationErrors = validationResult.issues;
+
+    // === PHASE 5: REVIEW ROUTING ===
+    console.log(`[${requestId}] Step 5: Determining review requirements...`);
+    const { determineReviewNeeded, generateReviewSummary } = await import("./review-system");
+    const reviewDecision = await determineReviewNeeded(
+      escalationResult.summary,
+      confidence,
+      classification.type,
+      validationErrors,
+    );
+
+    let reviewReason: string | undefined;
+    if (reviewDecision.needsReview) {
+      reviewReason = await generateReviewSummary(
+        escalationResult.summary,
+        confidence,
+        classification.type,
+        reviewDecision.reasons,
+      );
+    }
+
+    // === PHASE 6: FORMAT DETECTION ===
+    console.log(`[${requestId}] Step 6: Format analysis...`);
+    const { detectFormat } = await import("./format-handler");
+    const formatAnalysis = await detectFormat(referralText, primaryPDF?.filename || "referral");
+
+    // Adjust confidence based on format
+    if (formatAnalysis.format === "scanned-pdf") {
+      confidence *= 0.95; // Slight penalty for scanned docs
+    }
+
+    // === PHASE 7: ANALYTICS & AUDIT LOG ===
+    console.log(`[${requestId}] Step 7: Logging metrics...`);
+    const latencyMs = Date.now() - startTime;
+    const { logAudit } = await import("./db/storage");
+
+    logAudit({
+      requestId,
+      input: referralText,
+      specialty,
       documentType: classification.type,
-      requiresReview: orchestrationResult.requiresReview,
-      reviewReason: orchestrationResult.reviewReason,
+      model: escalationResult.model,
+      extractionMethod: escalationResult.model.includes("haiku") ? "haiku" : "escalated",
+      success: true,
+      confidence,
+      tokensUsed: escalationResult.totalTokens,
+      estimatedCost: escalationResult.estimatedCost,
+      latencyMs,
+      retryCount: escalationResult.attempts.length - 1,
+    }).catch((e) => console.error("Audit logging failed:", e));
+
+    console.log(`[${requestId}] ✓ Complete (${latencyMs}ms, confidence: ${(confidence * 100).toFixed(1)}%)`);
+
+    return {
+      summary: escalationResult.summary,
+      confidence: Math.min(confidence, 1.0),
+      documentType: classification.type,
+      requiresReview: reviewDecision.needsReview,
+      reviewReason,
     };
+  } catch (error) {
+    const latencyMs = Date.now() - startTime;
+    const { logAudit } = await import("./db/storage");
+
+    logAudit({
+      requestId,
+      input: referralText,
+      specialty,
+      model: "unknown",
+      extractionMethod: "failed",
+      success: false,
+      latencyMs,
+      errorMessage: error instanceof Error ? error.message : String(error),
+      retryCount: 0,
+    }).catch((e) => console.error("Audit logging failed:", e));
+
+    throw error;
   } finally {
     // Clean up uploaded files
     for (const fileId of uploadedFileIds) {
