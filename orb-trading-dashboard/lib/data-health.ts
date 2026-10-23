@@ -10,7 +10,9 @@ import { hasOpeningRangeClosed, isMarketOpen, isWithinOpeningRangeWindow } from 
 import type { Candle } from "@/types/trading";
 
 const STALE_THRESHOLD_MINUTES = 15;
-const MIN_OPENING_RANGE_CANDLES = 2; // out of 3 expected 5-min bars (9:30, 9:35, 9:40)
+const MIN_OPENING_RANGE_CANDLES = 2; // out of 3 expected 5-min bars (9:30, 9:35, 9:40) for the standard 15-min OR
+const MIN_OPENING_RANGE_CANDLES_WIDE = 4; // out of 6 expected 5-min bars for a 30-min OR (e.g. QQQ)
+const WIDE_OPENING_RANGE_SYMBOLS = new Set(["QQQ"]);
 
 export interface DataHealth {
   isLive: boolean;
@@ -18,7 +20,7 @@ export interface DataHealth {
   openingRangeComplete: boolean;
 }
 
-export function assessDataHealth(candles: Candle[], now: number): DataHealth {
+export function assessDataHealth(candles: Candle[], now: number, symbol?: string): DataHealth {
   const marketOpen = isMarketOpen(now);
   const latestTimestamp = candles.length > 0 ? Math.max(...candles.map((c) => c.timestamp)) : null;
 
@@ -34,9 +36,12 @@ export function assessDataHealth(candles: Candle[], now: number): DataHealth {
   }
 
   let openingRangeComplete = true;
-  if (hasOpeningRangeClosed(now)) {
-    const rangeCandleCount = candles.filter((c) => isWithinOpeningRangeWindow(c.timestamp)).length;
-    openingRangeComplete = rangeCandleCount >= MIN_OPENING_RANGE_CANDLES;
+  if (hasOpeningRangeClosed(now, symbol)) {
+    const rangeCandleCount = candles.filter((c) => isWithinOpeningRangeWindow(c.timestamp, symbol)).length;
+    const minCandles = symbol && WIDE_OPENING_RANGE_SYMBOLS.has(symbol)
+      ? MIN_OPENING_RANGE_CANDLES_WIDE
+      : MIN_OPENING_RANGE_CANDLES;
+    openingRangeComplete = rangeCandleCount >= minCandles;
   }
 
   return { isLive, staleSinceMinutes, openingRangeComplete };

@@ -13,6 +13,13 @@ vi.mock("@/lib/market-data-client", async () => {
 const { getSymbolSnapshot } = vi.hoisted(() => ({ getSymbolSnapshot: vi.fn() }));
 vi.mock("@/lib/market-data", () => ({ getSymbolSnapshot }));
 
+const EMPTY_LEVEL_CONTEXT: SymbolSnapshot["levelContext"] = {
+  priorDayHigh: null,
+  priorDayLow: null,
+  premarketHigh: null,
+  premarketLow: null,
+};
+
 function staleSnapshot(): SymbolSnapshot {
   return {
     symbol: "SPY",
@@ -20,6 +27,7 @@ function staleSnapshot(): SymbolSnapshot {
     todayCandles: [],
     openingRange: null,
     dataHealth: { isLive: false, staleSinceMinutes: 25, openingRangeComplete: true },
+    levelContext: EMPTY_LEVEL_CONTEXT,
   };
 }
 
@@ -30,6 +38,7 @@ function gapSnapshot(): SymbolSnapshot {
     todayCandles: [],
     openingRange: null,
     dataHealth: { isLive: true, staleSinceMinutes: null, openingRangeComplete: false },
+    levelContext: EMPTY_LEVEL_CONTEXT,
   };
 }
 

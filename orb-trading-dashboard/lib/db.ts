@@ -85,6 +85,7 @@ function runMigrations(database: Database.Database): void {
   addColumnIfMissing(database, "trading_settings", "entry_type_filter", "TEXT NOT NULL DEFAULT 'ANY'");
   addColumnIfMissing(database, "trading_settings", "max_hold_minutes", "INTEGER");
   addColumnIfMissing(database, "trading_settings", "use_eleven_am_switch", "INTEGER NOT NULL DEFAULT 0");
+  addColumnIfMissing(database, "trading_settings", "require_high_quality_breakout", "INTEGER NOT NULL DEFAULT 0");
 }
 
 function addColumnIfMissing(

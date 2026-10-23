@@ -23,9 +23,21 @@ export function parseUtcSpaceDatetime(datetime: string): number {
 }
 
 const MARKET_OPEN_MINUTES = 9 * 60 + 30; // 9:30 AM ET
-const OPENING_RANGE_CLOSE_MINUTES = 9 * 60 + 45; // 9:45 AM ET
+const OPENING_RANGE_CLOSE_MINUTES = 9 * 60 + 45; // 9:45 AM ET (15-min OR, default)
 const ELEVEN_AM_MINUTES = 11 * 60; // 11:00 AM ET
 const MARKET_CLOSE_MINUTES = 16 * 60; // 4:00 PM ET
+
+// QQQ backtested better with a 30-min opening range (9:30-10:00 ET) than the
+// standard 15-min window (2026-09-27: 55.0% WR / +$658.89 vs 49.5% WR /
+// -$268.27 over a full year, FIBONACCI_ONLY). Every other symbol keeps 15-min.
+const WIDE_OPENING_RANGE_SYMBOLS = new Set(["QQQ"]);
+const OPENING_RANGE_CLOSE_MINUTES_WIDE = 10 * 60; // 10:00 AM ET (30-min OR)
+
+function getOpeningRangeCloseMinutes(symbol?: string): number {
+  return symbol && WIDE_OPENING_RANGE_SYMBOLS.has(symbol)
+    ? OPENING_RANGE_CLOSE_MINUTES_WIDE
+    : OPENING_RANGE_CLOSE_MINUTES;
+}
 
 export function getEasternMinutesOfDay(timestampMs: number): number {
   const parts = ET_TIME_FORMATTER.formatToParts(new Date(timestampMs));
@@ -35,9 +47,9 @@ export function getEasternMinutesOfDay(timestampMs: number): number {
   return (hour % 24) * 60 + minute;
 }
 
-export function isWithinOpeningRangeWindow(timestampMs: number): boolean {
+export function isWithinOpeningRangeWindow(timestampMs: number, symbol?: string): boolean {
   const minutes = getEasternMinutesOfDay(timestampMs);
-  return minutes >= MARKET_OPEN_MINUTES && minutes < OPENING_RANGE_CLOSE_MINUTES;
+  return minutes >= MARKET_OPEN_MINUTES && minutes < getOpeningRangeCloseMinutes(symbol);
 }
 
 export function isMarketOpen(timestampMs: number): boolean {
@@ -45,8 +57,8 @@ export function isMarketOpen(timestampMs: number): boolean {
   return minutes >= MARKET_OPEN_MINUTES && minutes < MARKET_CLOSE_MINUTES;
 }
 
-export function hasOpeningRangeClosed(timestampMs: number): boolean {
-  return getEasternMinutesOfDay(timestampMs) >= OPENING_RANGE_CLOSE_MINUTES;
+export function hasOpeningRangeClosed(timestampMs: number, symbol?: string): boolean {
+  return getEasternMinutesOfDay(timestampMs) >= getOpeningRangeCloseMinutes(symbol);
 }
 
 export function isAfterElevenAm(timestampMs: number): boolean {

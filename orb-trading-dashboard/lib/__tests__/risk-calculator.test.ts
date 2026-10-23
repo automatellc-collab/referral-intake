@@ -19,7 +19,7 @@ const baseSettings: TradingSettings = {
   maxDailySpendUsd: 2000,
   fibonacciAnchorMode: "OPENING_RANGE",
   entryTypeFilter: "ANY",
-  maxHoldMinutes: null,
+  maxHoldMinutes: null, useElevenAmSwitch: false, requireHighQualityBreakout: false,
 };
 
 describe("calculateDailyLossLimit", () => {
@@ -136,5 +136,44 @@ describe("calculatePositionSize", () => {
     });
 
     expect(result.quantity).toBe(0);
+  });
+
+  test("halves risk for 0-1 DTE contracts — real incident 2026-09-17: a 1DTE TSLA call was sized largest of the day and decayed fastest", () => {
+    const uncapped = calculatePositionSize({
+      accountEquity: 10000,
+      entryPrice: 100,
+      stopLoss: 95,
+      settings: { ...baseSettings, maxTradePerOrderUsd: 5000 },
+    });
+    const oneDte = calculatePositionSize({
+      accountEquity: 10000,
+      entryPrice: 100,
+      stopLoss: 95,
+      settings: { ...baseSettings, maxTradePerOrderUsd: 5000 },
+      daysToExpiration: 1,
+    });
+
+    expect(oneDte.riskAmountUsd).toBeCloseTo(uncapped.riskAmountUsd / 2, 5);
+    expect(oneDte.quantity).toBeLessThan(uncapped.quantity);
+  });
+
+  test("reduces risk to 75% for 2-3 DTE contracts and leaves 4+ DTE at full risk", () => {
+    const threeDte = calculatePositionSize({
+      accountEquity: 10000,
+      entryPrice: 100,
+      stopLoss: 95,
+      settings: { ...baseSettings, maxTradePerOrderUsd: 5000 },
+      daysToExpiration: 3,
+    });
+    const tenDte = calculatePositionSize({
+      accountEquity: 10000,
+      entryPrice: 100,
+      stopLoss: 95,
+      settings: { ...baseSettings, maxTradePerOrderUsd: 5000 },
+      daysToExpiration: 10,
+    });
+
+    expect(threeDte.riskAmountUsd).toBeCloseTo(100 * 0.75, 5);
+    expect(tenDte.riskAmountUsd).toBeCloseTo(100, 5);
   });
 });

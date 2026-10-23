@@ -1,19 +1,16 @@
 /**
- * RingCatch — Slice 2.5 (+ Slice 3 booking)
- * -----------------------------------------
- * Fluid, INTERRUPTIBLE phone conversation via Twilio ConversationRelay.
+ * RingCatch — multi-tenant call engine (generalized Slice 2.5 + 3)
+ * -----------------------------------------------------------------
+ * Fluid, INTERRUPTIBLE phone conversation via Twilio ConversationRelay, for
+ * ANY business configured in the tenants table (see ringcatch-studio's wizard).
  *
- * vs Slice 2 (turn-based <Gather>): here Twilio streams the caller's speech to
- * our WebSocket as it happens, we STREAM the LLM reply back token-by-token for
- * Twilio to speak immediately, and the caller can talk over the AI (barge-in).
- * Twilio still does STT + TTS; we own the "brain" and the booking.
+ * One deployed process serves every tenant: the dialed number tells us which
+ * tenant answered, and lib/brain.js compiles that tenant's fields + industry
+ * template into the system prompt. Nothing here is business-specific anymore.
  *
- * Slice 3: the AI offers real appointment windows (calendar.js), books the one
- * the caller picks (mock or Google Calendar), and texts confirmations. A
- * text-a-link SMS is the safety net if no exact slot gets locked in.
- *
- * Twilio setup: point the number's Voice webhook at POST /voice. ConversationRelay
- * needs a PUBLIC wss URL — set PUBLIC_URL (https://…) and we derive wss://…/relay.
+ * Twilio setup per tenant: point their number's Voice webhook at POST /voice.
+ * ConversationRelay needs a PUBLIC wss URL — set PUBLIC_URL (https://…) and we
+ * derive wss://…/relay.
  */
 
 require("dotenv").config();
@@ -22,12 +19,12 @@ const express = require("express");
 const twilio = require("twilio");
 const { WebSocketServer } = require("ws");
 const { getAvailableSlots, bookSlot, textLink } = require("./calendar");
+const { getTenantByPhoneNumber, getTenantById, createCallLog, finishCallLog, createBooking } = require("./lib/tenants");
+const { buildSystemPrompt, greetingFor } = require("./lib/brain");
 
 const {
   TWILIO_ACCOUNT_SID,
   TWILIO_AUTH_TOKEN,
-  TWILIO_NUMBER,
-  OWNER_PHONE,
   LLM_BASE_URL,
   LLM_MODEL,
   LLM_API_KEY,
@@ -37,16 +34,6 @@ const {
   PORT,
 } = process.env;
 
-const BUSINESS = {
-  name: process.env.BUSINESS_NAME || "Rooter Bros Plumbing",
-  trade: process.env.BUSINESS_TRADE || "plumbing",
-  hours: process.env.BUSINESS_HOURS || "Mon–Sat, 7am to 6pm",
-  services:
-    process.env.BUSINESS_SERVICES ||
-    "leak repair, water heaters, drain cleaning, toilets, faucets, and emergency calls",
-  area: process.env.BUSINESS_AREA || "the greater Marietta and Atlanta area",
-};
-
 const VOICE = process.env.TTS_VOICE || "en-US-Neural2-D"; // ConversationRelay TTS voice
 const MAX_TURNS = 14;
 
@@ -54,71 +41,65 @@ const app = express();
 app.use(express.urlencoded({ extended: false }));
 const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 
-// ---- 1) Inbound call: hand the media stream to ConversationRelay ------------
-function relayWss() {
-  if (RELAY_WSS_URL) return RELAY_WSS_URL;
-  if (PUBLIC_URL) return PUBLIC_URL.replace(/^http/, "ws").replace(/\/$/, "") + "/relay";
-  return "wss://example.invalid/relay"; // must be set in prod; fine for local ws tests
+// ---- 1) Inbound call: look up the tenant, hand off to ConversationRelay ----
+function relayWssBase() {
+  if (RELAY_WSS_URL) return RELAY_WSS_URL.replace(/\/relay.*$/, "");
+  if (PUBLIC_URL) return PUBLIC_URL.replace(/^http/, "ws").replace(/\/$/, "");
+  return "wss://example.invalid"; // must be set in prod; fine for local ws tests
 }
 
-app.post("/voice", (req, res) => {
-  const greeting =
-    `Thanks for calling ${BUSINESS.name}. The owner's on another job right now, ` +
-    `but I can help. What can we do for you?`;
+app.post("/voice", async (req, res) => {
+  const dialedNumber = req.body.To;
+  const tenant = await getTenantByPhoneNumber(dialedNumber);
+
+  if (!tenant) {
+    const twiml =
+      `<?xml version="1.0" encoding="UTF-8"?>` +
+      `<Response><Say>This number is not set up yet. Goodbye.</Say><Hangup/></Response>`;
+    return res.type("text/xml").send(twiml);
+  }
+
+  const greeting = greetingFor(tenant);
+  const relayUrl = `${relayWssBase()}/relay?tenantId=${encodeURIComponent(tenant.id)}`;
   const twiml =
     `<?xml version="1.0" encoding="UTF-8"?>` +
     `<Response><Connect>` +
-    `<ConversationRelay url="${relayWss()}" voice="${VOICE}" ` +
+    `<ConversationRelay url="${escapeXml(relayUrl)}" voice="${VOICE}" ` +
     `welcomeGreeting="${escapeXml(greeting)}" interruptible="true" />` +
     `</Connect></Response>`;
   res.type("text/xml").send(twiml);
 });
 
-app.get("/", (_req, res) => res.send("RingCatch Slice 2.5 (fluid + booking) is running."));
+app.get("/", (_req, res) => res.send("RingCatch multi-tenant call engine is running."));
 
 function escapeXml(s) {
   return s.replace(/[<>&'"]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", "'": "&apos;", '"': "&quot;" }[c]));
-}
-
-// ---- System prompt (brain), now with booking ------------------------------
-function buildSystemPrompt(slots) {
-  const slotList = slots.map((s) => `${s.id}) ${s.label}`).join("; ");
-  return (
-    `You are the friendly phone receptionist for ${BUSINESS.name}, a ${BUSINESS.trade} business, ` +
-    `answering because the owner couldn't pick up. You are speaking OUT LOUD on a phone call.\n\n` +
-    `Goals, in order:\n` +
-    `1. Greet, find out what they need.\n` +
-    `2. Collect, one question at a time: caller's name, callback number, the job, the address, urgency.\n` +
-    `3. Offer to book an appointment from these windows: ${slotList}. ` +
-    `Offer them by their words (e.g. "this afternoon, 1 to 3"), not by number.\n` +
-    `4. Answer simple questions from the business info below.\n\n` +
-    `Style (spoken aloud): one or two SHORT sentences per reply. No lists, no markdown, no emojis. ` +
-    `One question at a time. Never invent prices or exact arrival times beyond the windows.\n\n` +
-    `Booking: once you have the name AND callback number AND the job, offer the windows. ` +
-    `When the caller picks one, confirm it in words and then output [[BOOK n]] at the very end of that ` +
-    `message, where n is the window number (1, 2, or 3). Only one [[BOOK]].\n\n` +
-    `Ending: after booking (or if they decline a time but you have their details), thank them by name, ` +
-    `say the owner will follow up, give a brief goodbye, then output [[END]] at the very end. ` +
-    `Never output [[END]] before you have at least the name and callback number.\n\n` +
-    `Business info — hours: ${BUSINESS.hours}. Services: ${BUSINESS.services}. Service area: ${BUSINESS.area}.`
-  );
 }
 
 // ---- 2) The WebSocket brain (ConversationRelay protocol) -------------------
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server, path: "/relay" });
 
-wss.on("connection", (ws) => {
+wss.on("connection", async (ws, req) => {
+  const tenantId = new URL(req.url, "http://internal").searchParams.get("tenantId");
+  const tenant = await getTenantById(tenantId);
+  if (!tenant) {
+    ws.close();
+    return;
+  }
+
   const state = {
+    tenant,
     caller: null,
+    callLogId: null,
     messages: [],
-    slots: getAvailableSlots(new Date(), 3),
+    slots: tenant.booking_enabled ? getAvailableSlots(new Date(), 3) : [],
     turns: 0,
     gen: 0, // bumped on barge-in to abort in-flight token streaming
     booked: false,
     ended: false,
   };
-  state.messages.push({ role: "system", content: buildSystemPrompt(state.slots) });
+  state.messages.push({ role: "system", content: buildSystemPrompt(tenant, state.slots) });
 
   ws.on("message", async (raw) => {
     let msg;
@@ -127,11 +108,9 @@ wss.on("connection", (ws) => {
     switch (msg.type) {
       case "setup":
         state.caller = msg.from || "unknown";
+        state.callLogId = (await createCallLog(tenant.id, state.caller))?.id || null;
         // Twilio speaks welcomeGreeting itself; seed it so the model has context.
-        state.messages.push({
-          role: "assistant",
-          content: `Thanks for calling ${BUSINESS.name}. The owner's on another job right now, but I can help. What can we do for you?`,
-        });
+        state.messages.push({ role: "assistant", content: greetingFor(tenant) });
         break;
 
       case "prompt": // a completed caller utterance (transcribed)
@@ -148,7 +127,7 @@ wss.on("connection", (ws) => {
     }
   });
 
-  ws.on("close", () => endCall(state)); // caller hung up -> summarize + SMS owner
+  ws.on("close", () => endCall(state)); // caller hung up -> summarize + notify owner
 });
 
 async function handleUtterance(ws, state, heard) {
@@ -189,6 +168,7 @@ async function handleUtterance(ws, state, heard) {
 
 // ---- Booking (Slice 3) -----------------------------------------------------
 async function doBooking(state, slotId) {
+  const { tenant } = state;
   const slot = state.slots.find((s) => s.id === slotId) || state.slots[0];
   if (!slot) return;
   const details = await extractDetails(state.messages, state.caller);
@@ -198,13 +178,14 @@ async function doBooking(state, slotId) {
   state.bookedSlot = result.ok ? slot : null;
 
   if (result.ok) {
+    await createBooking(tenant.id, state.callLogId, details, slot);
     // Confirm to the caller (their number is known from setup) and notify owner.
-    safeSms(state.caller, `${BUSINESS.name}: you're booked for ${slot.label}. We'll see you then! Reply here if anything changes.`);
-    safeSms(OWNER_PHONE, `✅ New booking — ${BUSINESS.name}\n${slot.label}\n${details.name || "?"} · ${details.phone || state.caller}\n${details.job || ""}\n${details.address || ""}`);
+    safeSms(tenant, state.caller, `${tenant.business_name}: you're booked for ${slot.label}. We'll see you then! Reply here if anything changes.`);
+    notifyOwner(tenant, `✅ New booking — ${tenant.business_name}\n${slot.label}\n${details.name || "?"} · ${details.phone || state.caller}\n${details.job || ""}\n${details.address || ""}`);
   } else {
     console.error("Booking failed:", result.error);
     // Safety net: text a self-serve scheduling link instead.
-    textLink(client, state.caller, TWILIO_NUMBER, BUSINESS.name);
+    textLink(client, state.caller, tenant.phone_number, tenant.business_name);
   }
 }
 
@@ -222,35 +203,44 @@ async function extractDetails(messages, callerNumber) {
   return d;
 }
 
-// ---- End of call: summarize + text the owner -------------------------------
+// ---- End of call: summarize, persist, and notify the owner -----------------
 async function endCall(state) {
   if (!state || state.ended) return;
   state.ended = true;
+  const { tenant } = state;
 
   // Safety net: if no exact slot got locked in, text the caller a self-serve
   // scheduling link (no-ops unless BOOKING_LINK is set). Rosie's "text a link".
-  if (!state.booked) textLink(client, state.caller, TWILIO_NUMBER, BUSINESS.name);
+  if (!state.booked) textLink(client, state.caller, tenant.phone_number, tenant.business_name);
 
-  const summary = await summarizeConversation(state.messages);
+  const transcript = state.messages.filter((m) => m.role !== "system")
+    .map((m) => `${m.role === "user" ? "Caller" : "Reception"}: ${m.content}`).join("\n");
+  const summary = await summarizeConversation(tenant, state.messages);
+  await finishCallLog(state.callLogId, { transcript, summary, booked: state.booked });
+
   const header = state.booked
-    ? `📞 Call + booking (${state.bookedSlot?.label}) — ${BUSINESS.name}`
-    : `📞 New call — ${BUSINESS.name}`;
-  safeSms(OWNER_PHONE, `${header}\nFrom: ${state.caller}\n\n${summary}`);
+    ? `📞 Call + booking (${state.bookedSlot?.label}) — ${tenant.business_name}`
+    : `📞 New call — ${tenant.business_name}`;
+  notifyOwner(tenant, `${header}\nFrom: ${state.caller}\n\n${summary}`);
 }
 
-async function summarizeConversation(messages) {
+async function summarizeConversation(tenant, messages) {
   const transcript = messages.filter((m) => m.role !== "system")
     .map((m) => `${m.role === "user" ? "Caller" : "Reception"}: ${m.content}`).join("\n");
   const prompt =
-    `Summarize this call for the owner of ${BUSINESS.name} in 3–4 terse lines: name, callback number, ` +
+    `Summarize this call for the owner of ${tenant.business_name} in 3–4 terse lines: name, callback number, ` +
     `what they need, address, urgency, and whether an appointment was booked. Say "not given" for anything missing.` +
     `\n\n${transcript}`;
   return (await chat([{ role: "user", content: prompt }], 220)) || transcript;
 }
 
-function safeSms(to, body) {
-  if (!to || !TWILIO_NUMBER) return;
-  client.messages.create({ to, from: TWILIO_NUMBER, body })
+function notifyOwner(tenant, body) {
+  if (tenant.notification_channels?.sms !== false) safeSms(tenant, tenant.owner_phone, body);
+}
+
+function safeSms(tenant, to, body) {
+  if (!to || !tenant.phone_number) return;
+  client.messages.create({ to, from: tenant.phone_number, body })
     .catch((e) => console.error("SMS failed:", e.message));
 }
 
@@ -353,7 +343,7 @@ async function chat(messages, maxTokens) {
 
 if (require.main === module) {
   const port = PORT || 3000;
-  server.listen(port, () => console.log(`RingCatch Slice 2.5 listening on :${port} (ws: /relay)`));
+  server.listen(port, () => console.log(`RingCatch multi-tenant engine listening on :${port} (ws: /relay)`));
 }
 
-module.exports = { app, server, wss, buildSystemPrompt, summarizeConversation, makeSpeechFilter, getAvailableSlots, doBooking, extractDetails };
+module.exports = { app, server, wss, summarizeConversation, makeSpeechFilter, getAvailableSlots, doBooking, extractDetails };

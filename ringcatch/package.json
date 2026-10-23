@@ -6,12 +6,15 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "start:engine": "node slice2_5.js",
+    "dev:engine": "node --watch slice2_5.js"
   },
   "engines": {
     "node": ">=18"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.45.4",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "twilio": "^5.3.0",

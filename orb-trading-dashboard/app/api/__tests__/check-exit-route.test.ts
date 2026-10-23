@@ -28,12 +28,12 @@ describe('POST /api/trading/check-exit', () => {
     expect(json.data.action).toBe('HOLD')
   })
 
-  it('returns TIME_STOP_CUT_LOSS for a 0DTE position underwater past 2:30 PM ET', async () => {
+  it('returns TIME_STOP_CUT_LOSS for a 0DTE position underwater (but within the hard-stop band) past 2:30 PM ET', async () => {
     const now = Date.UTC(2026, 8, 15, 18, 35) // 2:35 PM ET
     const entryTime = Date.UTC(2026, 8, 15, 15, 1) // 11:01 AM ET
     const res = await POST(makeRequest({
       entryPrice: 0.784,
-      currentMark: 0.235,
+      currentMark: 0.65, // -17%, under the -28% hard stop
       peakMarkSinceEntry: 0.784,
       isZeroDTE: true,
       entryTime,
@@ -42,6 +42,22 @@ describe('POST /api/trading/check-exit', () => {
     const json = await res.json()
     expect(json.data.shouldExit).toBe(true)
     expect(json.data.action).toBe('TIME_STOP_CUT_LOSS')
+  })
+
+  it('returns HARD_STOP_LOSS for a position that breached -28% before the time-stop would otherwise apply', async () => {
+    const now = Date.UTC(2026, 8, 15, 18, 35) // 2:35 PM ET
+    const entryTime = Date.UTC(2026, 8, 15, 15, 1) // 11:01 AM ET
+    const res = await POST(makeRequest({
+      entryPrice: 0.784,
+      currentMark: 0.235, // -70%
+      peakMarkSinceEntry: 0.784,
+      isZeroDTE: true,
+      entryTime,
+      now,
+    }))
+    const json = await res.json()
+    expect(json.data.shouldExit).toBe(true)
+    expect(json.data.action).toBe('HARD_STOP_LOSS')
   })
 
   it('returns TRAILING_STOP when a position peaked 30%+ then retreated to breakeven', async () => {

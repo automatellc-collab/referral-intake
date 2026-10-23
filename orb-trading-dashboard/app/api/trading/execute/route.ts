@@ -3,7 +3,7 @@ import { checkApiAuth, resolveProfileId } from "@/lib/api-auth";
 import { createMarketDataClientFromEnv } from "@/lib/market-data-client";
 import { createRobinhoodClientFromEnv } from "@/lib/robinhood-client";
 import { getSymbolSnapshot } from "@/lib/market-data";
-import { detectBreakout, getEntrySignal } from "@/lib/orb-strategy";
+import { findQualifyingBreakout, getEntrySignal } from "@/lib/orb-strategy";
 import { SettingsRepository } from "@/lib/repositories/settings-repository";
 import { TradeRepository } from "@/lib/repositories/trade-repository";
 import { DailyStatsRepository } from "@/lib/repositories/daily-stats-repository";
@@ -79,10 +79,12 @@ export async function POST(request: Request) {
       (c) => c.timestamp > openingRange!.formedAt,
     );
 
-    const breakout = candlesAfterRange.reduce<ReturnType<typeof detectBreakout>>((found, c) => {
-      if (found) return found;
-      return detectBreakout(openingRange!, c.close, c.timestamp);
-    }, null);
+    const breakout = findQualifyingBreakout(
+      snapshot.todayCandles,
+      openingRange,
+      settings,
+      snapshot.levelContext,
+    );
 
     const entry = breakout ? getEntrySignal(breakout, candlesAfterRange, settings) : null;
 

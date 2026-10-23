@@ -1,0 +1,27 @@
+{
+  "_comment": "Hard ceilings for the self-editing strategy loop. Nothing in strategy/ may propose a value outside these bounds, and the loop must never touch this file itself — only an operator: commit may change it. Mirrors Phil's config/protected.json.",
+  "caps": {
+    "maxTradePerOrderUsd": 500,
+    "maxDailySpendUsd": 1500,
+    "maxOpenPositions": 3,
+    "maxConsecutiveLosses": 3,
+    "dailyLossLimitPctFloor": 1,
+    "dailyLossLimitPctCeiling": 5,
+    "riskPerTradePctCeiling": 2,
+    "minMinutesToClose": 20
+  },
+  "realExecution": {
+    "autoExecuteEnabled": false,
+    "note": "ORB has no automated order placement today (trade-log.md is discretionary, filled from alerts). This flag exists so it stays false unless an operator commit deliberately flips it, the same tripwire Phil's real_trading_enabled provides."
+  },
+  "agentOwnedPaths": ["strategy/"],
+  "protectedPaths": [
+    "config/protected.json",
+    "lib/risk-calculator.ts",
+    "lib/trade-executor.ts",
+    "lib/robinhood-client.ts",
+    "lib/db.ts",
+    "lib/repositories/",
+    "data/orb-trading.db"
+  ]
+}

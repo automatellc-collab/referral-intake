@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { PriceChart } from "@/components/Chart/PriceChart";
+import { aggregateCandles } from "@/lib/candle-aggregation";
 import { PositionCard } from "@/components/PositionCard/PositionCard";
 import { RiskLimitDisplay } from "@/components/RiskLimitDisplay/RiskLimitDisplay";
 import { TradeSignalAlert } from "@/components/TradeSignalAlert/TradeSignalAlert";
@@ -15,6 +16,17 @@ const ACCOUNT_EQUITY_FALLBACK = 10000;
 const PROFILES = [
   { id: "default", label: "Optimized (live)" },
   { id: "video-literal", label: "Video-literal" },
+];
+
+// Display-only chart aggregation — the underlying signal engine always
+// detects breakouts/entries on native 5-min bars (the validated timeframe,
+// see lib/orb-strategy.ts); this only changes how candles are visually
+// bucketed on the chart, via lib/candle-aggregation.ts.
+const TIMEFRAMES = [
+  { label: "5m", minutes: 5 },
+  { label: "10m", minutes: 10 },
+  { label: "15m", minutes: 15 },
+  { label: "30m", minutes: 30 },
 ];
 
 export default function DashboardPage() {
@@ -38,9 +50,15 @@ function DashboardContent() {
     reason: string | null;
   } | null>(null);
 
-  const symbol = settings?.symbols[0] ?? null;
+  const symbol = searchParams.get("symbol") ?? settings?.symbols[0] ?? null;
   const { data, error, isLoading } = useMarketData(symbol, profile);
   const { execute, closePosition, isSubmitting } = useTradeExecution();
+  const [timeframeMinutes, setTimeframeMinutes] = useState(5);
+
+  const chartCandles =
+    timeframeMinutes === 5
+      ? data?.candles ?? []
+      : aggregateCandles(data?.candles ?? [], timeframeMinutes * 60 * 1000);
 
   useEffect(() => {
     setSettings(null);
@@ -87,14 +105,22 @@ function DashboardContent() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-6 py-10">
+    <div className="mx-auto max-w-6xl px-6 py-10">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">Dashboard</h1>
-        {settings && (
-          <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-            Mode: {settings.mode}
-          </span>
-        )}
+        <div className="flex items-center gap-3">
+          <a
+            href={profile === "default" ? "/watchlist" : `/watchlist?profile=${profile}`}
+            className="text-xs text-zinc-500 underline"
+          >
+            ← Full ticker list
+          </a>
+          {settings && (
+            <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+              Mode: {settings.mode}
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="mt-4 flex gap-2">
@@ -155,8 +181,25 @@ function DashboardContent() {
           </div>
 
           <div className="mt-6">
+            <div className="mb-2 flex items-center gap-1">
+              <span className="mr-1 text-xs text-zinc-500">Timeframe:</span>
+              {TIMEFRAMES.map((tf) => (
+                <button
+                  key={tf.minutes}
+                  type="button"
+                  onClick={() => setTimeframeMinutes(tf.minutes)}
+                  className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                    timeframeMinutes === tf.minutes
+                      ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                      : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
+                  }`}
+                >
+                  {tf.label}
+                </button>
+              ))}
+            </div>
             <PriceChart
-              candles={data?.candles ?? []}
+              candles={chartCandles}
               openingRange={data?.openingRange ?? null}
               breakoutDirection={data?.breakout?.direction ?? null}
             />

@@ -17,6 +17,8 @@ interface SettingsRow {
   fibonacci_anchor_mode: string;
   entry_type_filter: string;
   max_hold_minutes: number | null;
+  use_eleven_am_switch: number;
+  require_high_quality_breakout: number;
 }
 
 function rowToSettings(row: SettingsRow): TradingSettings {
@@ -35,6 +37,8 @@ function rowToSettings(row: SettingsRow): TradingSettings {
     fibonacciAnchorMode: row.fibonacci_anchor_mode as TradingSettings["fibonacciAnchorMode"],
     entryTypeFilter: row.entry_type_filter as TradingSettings["entryTypeFilter"],
     maxHoldMinutes: row.max_hold_minutes,
+    useElevenAmSwitch: Boolean(row.use_eleven_am_switch),
+    requireHighQualityBreakout: Boolean(row.require_high_quality_breakout),
   };
 }
 
@@ -53,6 +57,7 @@ export const DEFAULT_SETTINGS: Omit<TradingSettings, "userId"> = {
   entryTypeFilter: "ANY",
   maxHoldMinutes: null,
   useElevenAmSwitch: false,
+  requireHighQualityBreakout: false,
 };
 
 export class SettingsRepository {
@@ -77,12 +82,14 @@ export class SettingsRepository {
            user_id, mode, symbols, daily_loss_limit_pct, risk_per_trade_pct,
            max_open_positions, risk_reward_ratio, stop_loss_buffer_pct,
            max_consecutive_losses, max_trade_per_order_usd, max_daily_spend_usd,
-           fibonacci_anchor_mode, entry_type_filter, max_hold_minutes, updated_at
+           fibonacci_anchor_mode, entry_type_filter, max_hold_minutes,
+           use_eleven_am_switch, require_high_quality_breakout, updated_at
          ) VALUES (
            @userId, @mode, @symbols, @dailyLossLimitPct, @riskPerTradePct,
            @maxOpenPositions, @riskRewardRatio, @stopLossBufferPct,
            @maxConsecutiveLosses, @maxTradePerOrderUsd, @maxDailySpendUsd,
-           @fibonacciAnchorMode, @entryTypeFilter, @maxHoldMinutes, datetime('now')
+           @fibonacciAnchorMode, @entryTypeFilter, @maxHoldMinutes,
+           @useElevenAmSwitch, @requireHighQualityBreakout, datetime('now')
          )
          ON CONFLICT(user_id) DO UPDATE SET
            mode = excluded.mode,
@@ -98,9 +105,16 @@ export class SettingsRepository {
            fibonacci_anchor_mode = excluded.fibonacci_anchor_mode,
            entry_type_filter = excluded.entry_type_filter,
            max_hold_minutes = excluded.max_hold_minutes,
+           use_eleven_am_switch = excluded.use_eleven_am_switch,
+           require_high_quality_breakout = excluded.require_high_quality_breakout,
            updated_at = datetime('now')`,
       )
-      .run({ ...settings, symbols: JSON.stringify(settings.symbols) });
+      .run({
+        ...settings,
+        symbols: JSON.stringify(settings.symbols),
+        useElevenAmSwitch: settings.useElevenAmSwitch ? 1 : 0,
+        requireHighQualityBreakout: settings.requireHighQualityBreakout ? 1 : 0,
+      });
 
     return this.get(settings.userId);
   }

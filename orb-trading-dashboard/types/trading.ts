@@ -6,7 +6,7 @@ export type TradeStatus = "OPEN" | "CLOSED" | "CANCELLED";
 
 export type ORBDirection = "BULLISH" | "BEARISH";
 
-export type EntryType = "RETEST" | "FIBONACCI";
+export type EntryType = "RETEST" | "FIBONACCI" | "CONTINUATION" | "FLAG" | "OPENING_TREND";
 
 /**
  * Which two price points the Fibonacci fallback entry retraces between.
@@ -17,8 +17,18 @@ export type EntryType = "RETEST" | "FIBONACCI";
 export type FibonacciAnchorMode = "OPENING_RANGE" | "BREAKOUT_LEG";
 
 /** Restrict which entry types are ever taken. Backtesting showed Fibonacci
- * entries outperforming retest entries — this lets that be enforced live. */
-export type EntryTypeFilter = "ANY" | "RETEST_ONLY" | "FIBONACCI_ONLY";
+ * entries outperforming retest entries — this lets that be enforced live.
+ * CONTINUATION_ONLY is exploratory (2026-09-22): a shallow pullback candle
+ * followed by a candle breaking that pullback's high/low, unvalidated until
+ * it's been backtested. */
+export type EntryTypeFilter =
+  | "ANY"
+  | "RETEST_ONLY"
+  | "FIBONACCI_ONLY"
+  | "FIBONACCI_CONFIRMED_ONLY"
+  | "CONTINUATION_ONLY"
+  | "CONTINUATION_VOL_ONLY"
+  | "FLAG_ONLY";
 
 export interface Candle {
   timestamp: number;
@@ -86,6 +96,11 @@ export interface TradingSettings {
   /** After 11am ET, merge 5-min candles into 10-min bars for signal detection.
    * Reduces false signals from midday chop. Default: false. */
   useElevenAmSwitch: boolean;
+  /** Gate the ORB breakout itself on relative volume (>=1.5x recent average)
+   * and intraday ATR (clears the OR level by >=0.25x recent ATR), skipping
+   * thin/low-conviction crosses instead of accepting the first price-level
+   * touch. Exploratory (2026-09-28), unvalidated — default: false. */
+  requireHighQualityBreakout: boolean;
 }
 
 export interface Trade {

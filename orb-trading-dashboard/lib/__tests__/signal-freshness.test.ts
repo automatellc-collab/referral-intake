@@ -90,8 +90,9 @@ describe('calculateSignalFreshness', () => {
   })
 
   it('returns a human-readable freshness label', () => {
+    // 0.1% separation — enough to clear the MARGINAL threshold.
     const freshEntry = makeEntry({ price: 172.5, direction: 'BULLISH' })
-    const fresh = calculateSignalFreshness(freshEntry, 172.51, Date.now())
+    const fresh = calculateSignalFreshness(freshEntry, 172.6725, Date.now())
     expect(fresh.label).toBe('FRESH')
 
     const chasingEntry = makeEntry({ price: 760.0, direction: 'BULLISH' })
@@ -101,5 +102,14 @@ describe('calculateSignalFreshness', () => {
     const staleEntry = makeEntry({ price: 357.49, direction: 'BEARISH' })
     const stale = calculateSignalFreshness(staleEntry, 363.72, Date.now())
     expect(stale.label).toBe('STALE')
+  })
+
+  it('labels a signal MARGINAL when separation from trigger is under 0.05% — real 2026-09-17 incident (alerts chased at $0.05-0.09 above trigger)', () => {
+    const entry = makeEntry({ price: 172.5, direction: 'BULLISH' })
+    const marginal = calculateSignalFreshness(entry, 172.51, Date.now())
+    expect(marginal.isMarginal).toBe(true)
+    expect(marginal.isStale).toBe(false)
+    expect(marginal.isChasing).toBe(false)
+    expect(marginal.label).toBe('MARGINAL')
   })
 })

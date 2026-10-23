@@ -25,11 +25,13 @@ Verified against actual Robinhood order history via connected MCP (accounts •�
 
 **Correction #2 (2026-09-15, later still):** The COIN $175P positions were NOT still open — I misread order state. Both closed via limit sell @ $5.00 that took hours to fill (placed ~10:57 AM, filled ~2:16 PM ET), not still pending. My "+$495/+$170 unrealized" was wrong — that valued an already-closed position off a stale later mark price. All positions from today are now closed; nothing open.
 
+**Correction #3 (2026-09-25, full ground-up audit):** Recomputed every single trade row in this file by hand rather than trusting the accumulated running-total line. Found two 09-16 positions (MSTR $125P ×10, QQQ $709C remainder ×4) that were logged as "open" and then never followed up — no closing row was ever added, so -$3,124 in real losses silently vanished from every total from 09-16 onward. Verified and closed out both via direct Robinhood order-history query (see the "09-16 positions — reconciliation gap" section below). Also fixed a same-day arithmetic slip that had overstated the 09-25 MSTR win as +$300 instead of the correct +$30. Numbers below are the corrected, fully-reconciled totals.
+
 | Account | Trades (closed) | Wins | Losses | Net P&L (closed) | Open positions |
 |---------|--------|------|--------|---------|---------|
-| **Investing (••••4232)** | 40 | 35 | 5 | **+$5,432** | MSTR $125P ×10 |
-| **Joint (••••0501)** | 13 | 10 | 3 | **-$436** | None |
-| **Combined** | 53 | 45 | 8 | **+$4,996** | MSTR $125P ×10 |
+| **Investing (••••4232)** | 52 | 41 | 11 | **+$2,048** | None |
+| **Joint (••••0501)** | 16 | 13 | 3 | **-$363** | None |
+| **Combined** | 68 | 54 | 14 | **+$1,685** | None |
 
 ### By day
 
@@ -41,14 +43,14 @@ Verified against actual Robinhood order history via connected MCP (accounts •�
 | 09-11 | +$165 | **-$608** | -$443 |
 | 09-14 | +$1,166 | +$146 | +$1,312 |
 | 09-15 | +$134 | **-$103** | +$31 |
-| 09-16 | -$1,628 | +$129 | -$1,499 |
+| 09-16/17 | -$4,904 | +$129 | -$4,775 |
 
 ### By week
 
 | Week | Investing | Joint | Combined |
 |------|-----------|-------|----------|
 | Week of 09-08 (Tue-Fri) | +$5,760 | **-$608** | +$5,152 |
-| Week of 09-14 (Mon-Wed, ongoing) | -$328 | +$172 | -$156 |
+| Week of 09-14 (Mon-Wed) | -$3,604 | +$172 | -$3,432 |
 
 *Update all three tables every time a new trade is logged. Re-verify joint account periodically — this correction shows conversation-only tracking misses trades in accounts that aren't discussed.*
 
@@ -208,14 +210,72 @@ QQQ $711C round total: +$20 (first half) + $45 (second half) = **+$65** on the f
 
 09-16 closed totals: -$1,499 (through the prior 16 trades) - $152 (QQQ 0DTE partial) = **-$1,651**, 13 wins - 4 losses across 17 closed trades.
 
-### Open positions (as of 09-16, ~2:57 PM ET)
+### 09-16 positions — RECONCILIATION GAP found and fixed (2026-09-25)
 
-| Account | Symbol | Contract | Entry | Contracts | Cost | Attribution |
-|---------|--------|----------|-------|-----------|------|--------------|
-| Investing (••••4232) | MSTR | $125P exp 9/18 | $3.05/contract | 10 | $3,050 | **TOOL** — matches FIBONACCI signal (default) at $125.32, bearish. Watch level: OR low $128.24 — a reclaim above it invalidates the thesis. Mark has jumped to $3.80 (+24.6% peak gain), approaching the 30% trailing-stop threshold. |
-| Investing (••••4232) | QQQ | $709C exp 9/16 (0DTE, remainder 4 of 5) | $2.17/contract | 4 | $868 | **DISCRETIONARY** — remaining 4 contracts. Mark now $0.365 (-83%). **TIME_STOP_CUT_LOSS still firing** — 0DTE, past the 2:30 PM ET cutoff, underwater. |
+These two positions were logged as "open" on 09-16 and never followed up — no closing trade was ever added to this log, so they silently dropped out of every running total for over a week. Found and closed out via direct Robinhood order-history query on 2026-09-25:
 
-Not 0DTE on MSTR (exp 9/18) — only the 30% trailing stop applies, currently HOLD but getting close. QQQ remainder is 0DTE and still flagged shouldExit: true. Both tracked in `exit-monitoring-state.json`.
+| Date | Account | Symbol | Contract | Entry | Exit | Contracts | P&L | Attribution |
+|------|---------|--------|----------|-------|------|-----------|-----|--------------|
+| 09-16 | Investing (••••4232) | QQQ | $709C exp 9/16 (0DTE, remainder 4 of 5) | $2.20/contract | $0.29/contract | 4 | **-$764** | DISCRETIONARY — remainder of the position partially cut earlier (see the -$152 partial-1-of-5 row above). TIME_STOP_CUT_LOSS had fired; this remainder decayed further before being sold same day. |
+| 09-17 | Investing (••••4232) | MSTR | $125P exp 9/18 | $3.05/contract | $0.69/contract | 10 | **-$2,360** | TOOL — matches FIBONACCI signal (default) at $125.32, bearish. Had peaked at +24.6% (mark $3.80) but reversed hard and was closed the next day for a large loss — biggest single loss in the log after the QQQ $712C -$2,190. |
+
+**Combined impact of this gap: -$3,124 that was missing from every lifetime total below until this correction.**
+
+## New trades (2026-09-22 onward)
+
+| Date | Account | Symbol | Contract | Entry | Exit | Contracts | P&L | Attribution |
+|------|---------|--------|----------|-------|------|-----------|-----|--------------|
+| 09-22/23 | Investing (••••4232) | QQQ | $748C exp 9/23 (0DTE) | $2.13/contract | $0.06/contract | 3 | **-$621** | Verified via Robinhood order history — original log entry mistakenly recorded quantity as ×10; actual fill was ×3 both on entry and exit. Closed 09-23. |
+| 09-23 | Investing (••••4232) | QQQ | $739P exp 9/23 (0DTE) | $1.66/contract | $1.00/contract (blended, both fills) | 10 | **-$660** | Sold in two fills: 1 contract at 14:45:35Z, remaining 9 at 14:47:40Z, both @ $1.00. Fully closed after HARD_STOP_LOSS fired (-28% threshold). Note: this closure wasn't caught until ~30 min later — position quantity wasn't re-verified via Robinhood between checks, only the option quote was polled, so several cycles kept reporting it as "9 contracts still open" after it was actually flat. |
+
+| 09-23 | Investing (••••4232) | NVDA | $225P exp 9/25 (2DTE) | $1.99/contract | $2.25 (1) / $2.21 (4), blended $2.218 | 5 | **+$114** | TOOL — matches FIBONACCI signal (default) at $225.89, BEARISH. Scored HIGH confidence at entry: max pain ($225) aligned, no opposing multi-strategy signal active. Closed same day for a win. An opposing VWAP+RSI2 bullish (oversold bounce) signal fired on NVDA right around the time of exit. |
+| 09-23 | Joint (••••0501) | NVDA | $225P exp 9/25 (2DTE) | $2.28/contract | $2.35/contract | 3 | **+$21** | TOOL — matches CONTINUATION signal (continuation profile) at $225.01, BEARISH. Scored HIGH confidence at entry: max pain aligned, no opposing signal. Closed same day for a small win. |
+| 09-23 | Investing (••••4232) | SPY | $768P exp 9/24 (1DTE) | $1.91/contract | $1.95/contract | 5 | **+$20** | TOOL — matches FIBONACCI signal (default) at $769.04-769.61, BEARISH, MEDIUM confidence. Closed 16:40Z for a small win. Note: closure wasn't caught until later — position wasn't re-verified via Robinhood between checks, only the quote was polled, so it was tracked as still-open and losing for ~2 hours after it had actually closed profitably. |
+| 09-23 | Joint (••••0501) | SPY | $768P exp 9/24 (1DTE) | $1.76/contract | $1.85/contract | 3 | **+$27** | TOOL — matches CONTINUATION signal (continuation profile) at $769.04, BEARISH, MEDIUM confidence. Closed same day for a small win. |
+| 09-23 | Investing (••••4232) | NVDA | $227.5P exp 9/25 (2DTE) | $3.35/contract | $3.40/contract | 3 | **+$15** | TOOL — matches FLAG signal at $225.49, BEARISH. Scored HIGH confidence: max pain ($225) aligned, no opposing multi-strategy signal at entry. Closed same day (15:32 ET) for a small win. Note: closure wasn't caught until the next trading day — several exit-monitoring cycles kept reporting it as open on stale/rolled quotes. |
+
+| 09-24 | Investing (••••4232) | COIN | $200C exp 9/25 (1DTE, partial 2 of 3) | $3.80/contract | $5.00 (1) / $5.25 (1) | 2 | **+$265** | DISCRETIONARY — sold near the session peak ($5.50 mark) right as TRAILING_STOP fired (peaked +44.7%, had started retreating). Good timing — exit landed right at the top before the pullback to $2.91. |
+| 09-23/24 | Investing (••••4232) | LLY | $1200C exp 10/30 | $42.00/contract | $53.00/contract | 1 | **+$1,100** | DISCRETIONARY — LLY not in ORB watchlist, unrelated to the tool's signal engine. Opened 9/23, closed 9/24. |
+| 09-25 | Investing (••••4232) | COIN | $200C exp 9/25 (0DTE, remainder 1 of 3) | $3.80/contract | $0.09/contract | 1 | **-$371** | DISCRETIONARY — final remaining contract, held through 0DTE decay after the peak $5.50 mark on 9/24 collapsed. HARD_STOP_LOSS/TRAILING_STOP fired repeatedly overnight and into 9/25 without user action; option decayed to near-worthless before closing same-day at $0.09. |
+| 09-25 | Joint (••••0501) | AMD | $625P exp 9/28 (3DTE) | $7.50/contract | $7.75/contract | 1 | **+$25** | TOOL — matches FIBONACCI signal (default) at $627.83, BEARISH. Scored HIGH confidence: max pain ($577.50) aligned, no opposing signal at entry. Round-tripped hard (peaked ~$7.58, dropped to ~$5.73 intraday) before closing for a small win. |
+| 09-25 | Investing (••••4232) | MSTR | $155P exp 9/25 (0DTE) | $0.25/contract | $0.35/contract | 3 | **+$30** | TOOL — matches FIBONACCI signal (default) at $157.74, BEARISH. Scored HIGH confidence: max pain ($142.00) aligned, no opposing signal at entry. Round-tripped hard (peaked +32% at $0.33, decayed to $0.085 HARD_STOP_LOSS territory) before closing for a solid win — good override of the stop signal given it was 0DTE and recovered. |
+| 09-25 | Investing (••••4232) | CRWD | $250C exp 10/02 (scalp) | $8.30/contract | $8.30/contract | 1 | **$0** | DISCRETIONARY — quick 24-second round trip, flat (no P&L before fees). |
+| 09-25 | Investing (••••4232) | CRWD | $250P exp 10/02 (7DTE) | $6.00/contract | $6.10/contract | 2 | **+$20** | TOOL — matches FIBONACCI signal (default) at $252.50, BEARISH. Scored HIGH confidence: max pain ($245.00) aligned, no opposing signal at entry. Quick scalp, closed same day for a small win. |
+| 09-25 | Investing (••••4232) | SPY | $772C exp 9/28 (3DTE) | $2.13/contract | $2.35/contract | 3 | **+$66** | DISCRETIONARY — different strike/expiration than the FRESH SPY 0DTE $771.27 default signal flagged around this time (which had a max-pain conflict and was not recommended); this is a 3DTE call, no clear signal match. |
+| 09-28 | Joint (••••0501) | QQQ | $732P exp 9/29 (1DTE, partial 1 of 2) | $2.97/contract | $3.20/contract | 1 | **+$23** | TOOL — matches FIBONACCI signal (default) at $733.37, BEARISH, FRESH. Scored MEDIUM confidence: max pain ($742.00) conflicted (pinning ~1.4% above price on 0DTE expiry), no other opposing signal at entry. Scaled out 1 of 2 contracts same session. |
+| 09-28 | Joint (••••0501) | QQQ | $732P exp 9/29 (1DTE, remainder 1 of 2) | $2.97/contract | $1.20/contract | 1 | **-$177** | TOOL, same signal as above. HARD_STOP_LOSS fired at -28% (~$2.14 mark) and was held through — position kept decaying, closed later at -59.6% instead. Net across both legs: **-$154**. |
+| 09-28 | Investing (••••4232) | TSLA | $357.50P exp 9/30 (2DTE) | $3.75/contract | $3.80/contract | 2 | **+$10** | TOOL — matches FIBONACCI signal (default) at $360.19, BEARISH, FRESH. Scored MEDIUM confidence: max pain ($372.50) conflicted (pinning ~3.5% above price at 0DTE expiry that same day), no other opposing signal at entry. Closed same session for a small win. |
+| 09-28 | Joint (••••0501) | COIN | $190P exp 10/02 (4DTE) | $4.70/contract | $3.25/contract | 1 | **-$145** | TOOL — matches FIBONACCI signal (default) at $192.03, BEARISH, FRESH. Scored HIGH confidence: max pain ($190.00) aligned (~1% below price), no opposing signal at entry. HARD_STOP_LOSS fired 09-29 (-29.8%) and was closed same day. |
+| 09-28 | Joint (••••0501) | CRWD | $260C exp 10/02 (4DTE) | $6.65/contract | $6.80/contract | 1 | **+$15** | TOOL — matches FIBONACCI signal (default) at $258.55, BULLISH, FRESH. Scored MEDIUM confidence: max pain ($250.00) conflicted (pinning ~3.5% below price), no other opposing signal at entry. Closed same session for a small win. |
+| 09-28 | Joint (••••0501) | CRWD | $257.50C exp 10/02 (4DTE) | $7.95/contract | $8.50/contract | 1 | **+$55** | TOOL — matches FIBONACCI signal (default) at $259.05, BULLISH, FRESH. Scored MEDIUM confidence: max pain ($250.00) conflicted, no other opposing signal at entry. Closed 09-29 for a win. |
+| 09-29 | Joint (••••0501) | LLY | $1170P exp 10/02 (3DTE) | $15.00/contract | $16.50/contract | 2 | **+$300** | TOOL — matches FIBONACCI signal (default) at $1173.16, BEARISH, FRESH. Scored HIGH confidence: max pain ($1,162.50) aligned (~0.8% below price), no opposing signal at entry. Closed same session for a solid win. |
+| 09-29 | Investing (••••4232) | IWM | $279P exp 9/29 (0DTE) | $0.58/contract | $0.65/contract | 10 | **+$70** | TOOL — matches FIBONACCI signal (default) at $279.10, BEARISH, FRESH. Scored MEDIUM confidence: max pain ($281.00) conflicted (~0.7% above price on 0DTE expiry), no other opposing signal at entry. Closed same session for a win. |
+| 09-29 | Joint (••••0501) | IWM | $279P exp 9/29 (0DTE) | $0.59/contract | $0.65/contract | 10 | **+$60** | TOOL — same signal as above. Closed same session for a win. |
+| 09-29 | Joint (••••0501) | LLY | $1165P exp 10/02 (3DTE, partial 1 of 2) | $13.50/contract | — | 1 | OPEN | DISCRETIONARY — different strike than the prior LLY $1170P/$1171.65 default signal (already closed); re-entered lower strike, no clean signal match logged at entry. |
+| 09-29 | Joint (••••0501) | LLY | $1165P exp 10/02 (3DTE, partial 2 of 2) | $12.20/contract | — | 1 | OPEN | Added a second contract, blended average now $12.85/contract across 2. |
+| 09-29 | Joint (••••0501) | COIN | $190P exp 10/02 (3DTE) | $4.60/contract | $4.75/contract | 1 | **+$15** | TOOL — matches FIBONACCI signal (default) at $191.10, BEARISH, FRESH. Scored HIGH confidence: max pain ($190.00) aligned (~0.5% below price), no opposing signal at entry. Closed same session for a small win. |
+| 09-29 | Joint (••••0501) | IWM | $278P exp 9/29 (0DTE, partial 9 of 10) | $0.49/contract | $0.60/contract | 9 | **+$99** | Matches IWM $278.47-278.73 FRESH default signals from this session; no clean single-entry match logged (level drifted across multiple checks). Scaled out 9 of 10 contracts same session. |
+| 09-29 | Joint (••••0501) | IWM | $278P exp 9/29 (0DTE, remainder 1 of 10) | $0.49/contract | $0.60/contract | 1 | **+$11** | Same signal as above. Net across all 10 contracts: **+$110**. |
+| 09-29 | Investing (••••4232) | COIN | $190P exp 10/02 (3DTE) | $4.85/contract | $5.10/contract | 2 | **+$50** | TOOL — matches FIBONACCI signal (default) at $190.48, BEARISH, FRESH. Scored HIGH confidence: max pain ($190.00) aligned (~0.2% below price), no opposing signal at entry. Closed same session for a win. |
+| 09-30 | Joint (••••0501) | LLY | $1165P exp 10/02 (3DTE) | $12.85/contract (blended avg) | $5.00/contract | 2 | **-$1,570** | DISCRETIONARY — placed directly in Robinhood, not caught by ORB polling until asked to reconcile. Closed 14:15:51 UTC, well past the -28% hard-stop threshold that had been flagged repeatedly across prior cycles. |
+| 09-30 | Joint (••••0501) | META | $737.50C exp 09/30 (0DTE) | $2.83/contract | $0.97/contract | 2 | **-$372** | DISCRETIONARY — opened 15:57 UTC, placed directly in Robinhood (not an ORB tool signal at that strike/time). Several closing limit orders cancelled at higher asks (4.00/3.50/3.00/2.90) before finally closing at 18:24 UTC for a loss. |
+
+**09-30 realized total so far: -$1,942**
+
+### Open positions (as of 09-30)
+
+| Account | Symbol | Contract | Entry | Contracts | Entry Time |
+|---------|--------|----------|-------|-----------|------------|
+| Joint (••••0501) | LLY | $1190C exp 10/02 | $16.00/contract | 1 | 2026-09-30 14:21 UTC |
+| Joint (••••0501) | MU | $1300C exp 10/02 | $2.02/contract | 1 | 2026-09-30 18:27 UTC |
+
+Both discretionary, not ORB tool signals. LLY $1190C has a stale unfilled closing limit order sitting at $23 (confirmed but pending as of last check) — mark was $6.30, well below that limit, so it won't fill at current prices.
+
+| 10-06/07 | Investing (••••4232) | IWM | $281P exp 10/07 (1DTE→0DTE) | $0.76/contract | TBD — expired/settled, exact fill unconfirmed | 5 | **TOOL, large win (details pending)** | TOOL — matches FIBONACCI signal (default) at $281.88, BEARISH, FRESH. Peaked at $3.30/contract (+334% from entry) on 10/07 as IWM dropped sharply; SCALE_OUT_FIRST_TARGET alert fired repeatedly (+30% to +48%+) across 10/06-10/07 without a confirmed scale-out action logged. Robinhood position check on 2026-10-08 confirmed quantity now 0 (closed/expired/settled) — exact exit price/fills could not be retrieved (repeated MCP timeouts on get_option_orders / get_pnl_trade_history). Update this row with the real exit price and P&L once confirmed.
+
+### Untracked account gap — Investing (••••4232) wheel/income positions
+
+As of 2026-09-30, the Investing account holds ~17 option positions (mostly short calls/puts) never reconciled into this log: ECHO, NOW (short+long), NVTS, VLO, CLS (×2 expirations), ORCL, HOOD (short+long), BBAI, LUMN, LAC, GOOGL, MRLN, TSLA, ACHR, BB — opened 2026-09-08 through 2026-09-29. This looks like a separate strategy running in parallel to ORB, outside monitoring scope. Flagged to user 2026-09-30; full reconciliation not yet done pending direction.
 
 ## Sizing rule
 

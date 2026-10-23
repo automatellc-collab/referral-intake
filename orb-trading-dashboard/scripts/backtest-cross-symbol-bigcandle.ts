@@ -1,0 +1,305 @@
+/**
+ * Exploratory (2026-09-23): today's biggest live-trade damage happened when
+ * SPY and QQQ threw a big-range candle in the SAME direction at the SAME
+ * time (10:50 AM ET) — a synchronized move against open bearish positions.
+ * This tests whether requiring cross-symbol confirmation (SPY's big candle
+ * confirmed by a same-direction big candle on QQQ within the same bar or
+ * the next one) makes the BIG_CANDLE_CONTINUATION pattern (tested solo
+ * earlier: SPY 60.7% WR / 28 trades/yr) more reliable, by filtering out
+ * single-symbol noise that isn't a real market-wide move.
+ *
+ * Entry symbol is fixed to SPY, confirming symbol to QQQ, both walked
+ * through their own ORB breakout/opening-range independently, then paired
+ * by timestamp proximity (same 5-min bar or ±1 bar).
+ *
+ * Usage: npx tsx scripts/backtest-cross-symbol-bigcandle.ts
+ */
+import { readFileSync } from "fs";
+import { join } from "path";
+import { buildOpeningRange, detectBreakout } from "../lib/orb-strategy";
+import { simulateExit } from "../lib/backtest-engine";
+import { calculatePositionSize } from "../lib/risk-calculator";
+import { getEasternDateString } from "../lib/market-hours";
+import type { Candle, ORBDirection, ORBSignal, TradingSettings } from "../types/trading";
+
+function loadEnvLocal(): void {
+  const envPath = join(__dirname, "..", ".env.local");
+  const content = readFileSync(envPath, "utf-8");
+  for (const line of content.split("\n")) {
+    const match = line.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/);
+    if (match && !process.env[match[1]]) process.env[match[1]] = match[2];
+  }
+}
+loadEnvLocal();
+
+const ENTRY_SYMBOL = "SPY";
+const CONFIRM_SYMBOL = "QQQ";
+const TARGET_DAYS = 365;
+const API_KEY = process.env.TWELVE_DATA_API_KEY;
+const HOLD_BAR_OPTIONS = [undefined, 1, 2, 3, 4, 6, 8, 10, 15, 20];
+const BIG_CANDLE_MULTIPLIER = 2.5;
+const CONFIRM_BAR_TOLERANCE_MS = 5 * 60 * 1000; // same bar or ±1 bar (5-min)
+
+interface RawValue {
+  datetime: string;
+  open: string;
+  high: string;
+  low: string;
+  close: string;
+  volume: string;
+}
+
+function toCandle(v: RawValue): Candle {
+  return {
+    timestamp: Date.parse(`${v.datetime.replace(" ", "T")}Z`),
+    open: parseFloat(v.open),
+    high: parseFloat(v.high),
+    low: parseFloat(v.low),
+    close: parseFloat(v.close),
+    volume: parseInt(v.volume, 10),
+  };
+}
+
+async function fetchChunk(symbol: string, endDate: string | null): Promise<RawValue[]> {
+  const url = new URL("https://api.twelvedata.com/time_series");
+  url.searchParams.set("symbol", symbol);
+  url.searchParams.set("interval", "5min");
+  url.searchParams.set("outputsize", "5000");
+  url.searchParams.set("timezone", "UTC");
+  url.searchParams.set("apikey", API_KEY as string);
+  if (endDate) url.searchParams.set("end_date", endDate);
+
+  const res = await fetch(url.toString());
+  const json = await res.json();
+  if (json.status === "error") throw new Error(`Twelve Data error: ${json.message}`);
+  return json.values ?? [];
+}
+
+async function fetchFullYear(symbol: string): Promise<Candle[]> {
+  const allValues: RawValue[] = [];
+  let endDate: string | null = null;
+  const cutoff = Date.now() - TARGET_DAYS * 24 * 60 * 60 * 1000;
+
+  for (let i = 0; i < 8; i++) {
+    console.log(`  [${symbol}] Fetching chunk ${i + 1} (end_date=${endDate ?? "latest"})...`);
+    const chunk = await fetchChunk(symbol, endDate);
+    if (chunk.length === 0) break;
+    allValues.push(...chunk);
+    const oldest = chunk[chunk.length - 1].datetime;
+    const oldestMs = Date.parse(`${oldest.replace(" ", "T")}Z`);
+    if (oldestMs <= cutoff) break;
+    endDate = new Date(oldestMs - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    await new Promise((r) => setTimeout(r, 8000));
+  }
+
+  const seen = new Set<number>();
+  const candles: Candle[] = [];
+  for (const v of allValues) {
+    const c = toCandle(v);
+    if (!seen.has(c.timestamp)) {
+      seen.add(c.timestamp);
+      candles.push(c);
+    }
+  }
+  return candles.sort((a, b) => a.timestamp - b.timestamp);
+}
+
+function groupByEasternDate(candles: Candle[]): Map<string, Candle[]> {
+  const sorted = [...candles].sort((a, b) => a.timestamp - b.timestamp);
+  const groups = new Map<string, Candle[]>();
+  for (const c of sorted) {
+    const date = getEasternDateString(c.timestamp);
+    const arr = groups.get(date) ?? [];
+    arr.push(c);
+    groups.set(date, arr);
+  }
+  return groups;
+}
+
+function findFirstBreakout(
+  postRangeCandles: Candle[],
+  openingRange: NonNullable<ReturnType<typeof buildOpeningRange>>,
+): { signal: ORBSignal; breakoutIndex: number } | null {
+  for (let i = 0; i < postRangeCandles.length; i++) {
+    const signal = detectBreakout(openingRange, postRangeCandles[i].close, postRangeCandles[i].timestamp);
+    if (signal) return { signal, breakoutIndex: i };
+  }
+  return null;
+}
+
+function median(values: number[]): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+}
+
+interface Bucket {
+  trades: number;
+  wins: number;
+  totalPnl: number;
+}
+function emptyBucket(): Bucket {
+  return { trades: 0, wins: 0, totalPnl: 0 };
+}
+
+// Does a same-direction big-range candle exist on the confirm symbol's
+// candle list within tolerance of the target timestamp?
+function hasConfirmation(
+  confirmCandles: Candle[],
+  targetTimestamp: number,
+  direction: ORBDirection,
+  confirmBaselineRange: number,
+): boolean {
+  return confirmCandles.some((c) => {
+    if (Math.abs(c.timestamp - targetTimestamp) > CONFIRM_BAR_TOLERANCE_MS) return false;
+    const range = c.high - c.low;
+    if (range < confirmBaselineRange * BIG_CANDLE_MULTIPLIER) return false;
+    const closesWithDirection = direction === "BULLISH" ? c.close > c.open : c.close < c.open;
+    return closesWithDirection;
+  });
+}
+
+async function main() {
+  const settingsRes = await fetch("http://localhost:3300/api/settings");
+  const baseSettings: TradingSettings = (await settingsRes.json()).data;
+
+  console.log(`Assembling ~${TARGET_DAYS} days of ${ENTRY_SYMBOL} and ${CONFIRM_SYMBOL} 5-min candles...\n`);
+  const entryCandles = await fetchFullYear(ENTRY_SYMBOL);
+  const confirmCandles = await fetchFullYear(CONFIRM_SYMBOL);
+  console.log(`\nAssembled ${entryCandles.length} ${ENTRY_SYMBOL} candles, ${confirmCandles.length} ${CONFIRM_SYMBOL} candles\n`);
+
+  const entryDayGroups = groupByEasternDate(entryCandles);
+  const confirmDayGroups = groupByEasternDate(confirmCandles);
+
+  const soloBuckets = new Map<string, Bucket>();
+  const confirmedBuckets = new Map<string, Bucket>();
+  for (const bars of HOLD_BAR_OPTIONS) {
+    soloBuckets.set(String(bars ?? "EOD"), emptyBucket());
+    confirmedBuckets.set(String(bars ?? "EOD"), emptyBucket());
+  }
+
+  let soloEvents = 0;
+  let confirmedEvents = 0;
+  let dayCount = 0;
+
+  for (const [date, dayCandles] of entryDayGroups) {
+    const confirmDay = confirmDayGroups.get(date);
+    if (!confirmDay) continue;
+
+    const openingRange = buildOpeningRange(ENTRY_SYMBOL, date, dayCandles);
+    if (!openingRange) continue;
+    const confirmOpeningRange = buildOpeningRange(CONFIRM_SYMBOL, date, confirmDay);
+    if (!confirmOpeningRange) continue;
+    dayCount++;
+
+    const openingRangeCandles = dayCandles.filter((c) => c.timestamp <= openingRange.formedAt);
+    const baselineRange = median(openingRangeCandles.map((c) => c.high - c.low)) || openingRange.high - openingRange.low;
+
+    const confirmOpeningRangeCandles = confirmDay.filter((c) => c.timestamp <= confirmOpeningRange.formedAt);
+    const confirmBaselineRange =
+      median(confirmOpeningRangeCandles.map((c) => c.high - c.low)) || confirmOpeningRange.high - confirmOpeningRange.low;
+
+    const postRangeCandles = dayCandles
+      .filter((c) => c.timestamp > openingRange.formedAt)
+      .sort((a, b) => a.timestamp - b.timestamp);
+    if (postRangeCandles.length === 0) continue;
+
+    const breakout = findFirstBreakout(postRangeCandles, openingRange);
+    if (!breakout) continue;
+
+    const postBreakoutCandles = postRangeCandles.filter((c) => c.timestamp > breakout.signal.breakoutAt);
+
+    let bigIndex = -1;
+    for (let i = 0; i < postBreakoutCandles.length; i++) {
+      const c = postBreakoutCandles[i];
+      const range = c.high - c.low;
+      const isBig = range >= baselineRange * BIG_CANDLE_MULTIPLIER;
+      const closesWithTrend =
+        breakout.signal.direction === "BULLISH" ? c.close > c.open : c.close < c.open;
+      if (isBig && closesWithTrend) {
+        bigIndex = i;
+        break;
+      }
+    }
+    if (bigIndex === -1) continue;
+    soloEvents++;
+
+    const entryCandle = postBreakoutCandles[bigIndex];
+    const direction = breakout.signal.direction;
+    const entryPrice = entryCandle.close;
+    const stopLoss = direction === "BULLISH" ? openingRange.low : openingRange.high;
+    const riskPerShare = Math.abs(entryPrice - stopLoss);
+    if (riskPerShare === 0) continue;
+    const takeProfit =
+      direction === "BULLISH"
+        ? entryPrice + riskPerShare * baseSettings.riskRewardRatio
+        : entryPrice - riskPerShare * baseSettings.riskRewardRatio;
+
+    const remainingCandles = postBreakoutCandles.slice(bigIndex + 1);
+    if (remainingCandles.length === 0) continue;
+
+    const positionSize = calculatePositionSize({ accountEquity: 10000, entryPrice, stopLoss, settings: baseSettings });
+    if (positionSize.quantity <= 0) continue;
+
+    const confirmed = hasConfirmation(confirmDay, entryCandle.timestamp, direction, confirmBaselineRange);
+    if (confirmed) confirmedEvents++;
+
+    for (const bars of HOLD_BAR_OPTIONS) {
+      const exit = simulateExit(direction, stopLoss, takeProfit, remainingCandles, bars);
+      const pnl =
+        direction === "BULLISH"
+          ? (exit.price - entryPrice) * positionSize.quantity
+          : (entryPrice - exit.price) * positionSize.quantity;
+
+      const soloBucket = soloBuckets.get(String(bars ?? "EOD"))!;
+      soloBucket.trades += 1;
+      soloBucket.totalPnl += pnl;
+      if (pnl > 0) soloBucket.wins += 1;
+
+      if (confirmed) {
+        const confirmedBucket = confirmedBuckets.get(String(bars ?? "EOD"))!;
+        confirmedBucket.trades += 1;
+        confirmedBucket.totalPnl += pnl;
+        if (pnl > 0) confirmedBucket.wins += 1;
+      }
+    }
+  }
+
+  function printTable(label: string, buckets: Map<string, Bucket>) {
+    console.log(`\n=== ${label} ===`);
+    console.log("holdBars".padEnd(10), "trades".padEnd(8), "winRate".padEnd(9), "totalPnl".padEnd(11), "avgPnl");
+    let best = { bars: "EOD", winRate: -1, totalPnl: -Infinity, trades: 0 };
+    for (const bars of HOLD_BAR_OPTIONS) {
+      const b = buckets.get(String(bars ?? "EOD"))!;
+      const wr = b.trades === 0 ? 0 : (b.wins / b.trades) * 100;
+      const avg = b.trades === 0 ? 0 : b.totalPnl / b.trades;
+      console.log(
+        String(bars ?? "EOD").padEnd(10),
+        String(b.trades).padEnd(8),
+        (wr.toFixed(1) + "%").padEnd(9),
+        ("$" + b.totalPnl.toFixed(2)).padEnd(11),
+        "$" + avg.toFixed(2),
+      );
+      if (b.trades >= 5 && b.totalPnl > best.totalPnl) {
+        best = { bars: String(bars ?? "EOD"), winRate: wr, totalPnl: b.totalPnl, trades: b.trades };
+      }
+    }
+    console.log(`Best: holdBars=${best.bars} -> ${best.winRate.toFixed(1)}% WR, $${best.totalPnl.toFixed(2)} total P&L over ${best.trades} trades`);
+    return best;
+  }
+
+  console.log(`\n${soloEvents} solo big-candle events on ${ENTRY_SYMBOL} across ${dayCount} days`);
+  console.log(`${confirmedEvents} of those also confirmed by a same-direction big candle on ${CONFIRM_SYMBOL} within ±5min`);
+
+  const solo = printTable(`${ENTRY_SYMBOL} SOLO (unconfirmed baseline)`, soloBuckets);
+  const confirmed = printTable(`${ENTRY_SYMBOL} CONFIRMED BY ${CONFIRM_SYMBOL}`, confirmedBuckets);
+
+  console.log(`\n=== Summary ===`);
+  console.log(`Solo:      ${solo.trades} trades, ${solo.winRate.toFixed(1)}% WR, $${solo.totalPnl.toFixed(2)}`);
+  console.log(`Confirmed: ${confirmed.trades} trades, ${confirmed.winRate.toFixed(1)}% WR, $${confirmed.totalPnl.toFixed(2)}`);
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

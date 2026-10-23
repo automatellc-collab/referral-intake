@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { checkApiAuth, resolveProfileId } from "@/lib/api-auth";
 import { createMarketDataClientFromEnv } from "@/lib/market-data-client";
 import { getSymbolSnapshot } from "@/lib/market-data";
-import { detectBreakout, getEntrySignal } from "@/lib/orb-strategy";
+import { findQualifyingBreakout, getEntrySignal } from "@/lib/orb-strategy";
 import { SettingsRepository } from "@/lib/repositories/settings-repository";
 
 export async function GET(request: Request) {
@@ -63,10 +63,12 @@ export async function GET(request: Request) {
       (c) => c.timestamp > snapshot.openingRange!.formedAt,
     );
 
-    const breakout = candlesAfterRange.reduce<ReturnType<typeof detectBreakout>>((found, c) => {
-      if (found) return found;
-      return detectBreakout(snapshot.openingRange!, c.close, c.timestamp);
-    }, null);
+    const breakout = findQualifyingBreakout(
+      snapshot.todayCandles,
+      snapshot.openingRange,
+      settings,
+      snapshot.levelContext,
+    );
 
     const entry = breakout ? getEntrySignal(breakout, candlesAfterRange, settings) : null;
 

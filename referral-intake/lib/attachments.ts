@@ -26,10 +26,10 @@ export const ALLOWED_ATTACHMENT_TYPES: AttachmentMediaType[] = [
 export const MAX_ATTACHMENTS = 10;
 
 // Attachments upload directly from the browser to Vercel Blob storage, bypassing
-// the 4.5MB request body limit that applies to Vercel Functions. Since blob URLs
-// are sent to Claude (not base64-encoded file bytes), storage is not constrained
-// by request size limits. Vercel Blob supports multi-GB files.
-export const MAX_TOTAL_ATTACHMENT_BYTES = 1024 * 1024 * 1024; // 1GB
+// the 4.5MB request body limit that applies to Vercel Functions. Files are then
+// uploaded to Claude's Files API, which supports multi-GB files without base64
+// encoding overhead. Combined limits: Vercel Blob (unlimited), Claude Files API (~100GB).
+export const MAX_TOTAL_ATTACHMENT_BYTES = 20 * 1024 * 1024 * 1024; // 20GB
 
 const PRIVATE_BLOB_HOST_SUFFIX = ".private.blob.vercel-storage.com";
 

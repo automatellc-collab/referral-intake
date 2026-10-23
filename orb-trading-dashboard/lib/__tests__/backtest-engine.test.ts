@@ -21,7 +21,7 @@ function candle(
 const settings: TradingSettings = {
   userId: "user-1",
   mode: "PAPER",
-  symbols: ["SPY"],
+  symbols: ["XYZ"],
   dailyLossLimitPct: 100, // disabled for backtest purposes
   riskPerTradePct: 1,
   maxOpenPositions: 1,
@@ -32,7 +32,7 @@ const settings: TradingSettings = {
   maxDailySpendUsd: 1000000,
   fibonacciAnchorMode: "OPENING_RANGE",
   entryTypeFilter: "ANY",
-  maxHoldMinutes: null,
+  maxHoldMinutes: null, useElevenAmSwitch: false, requireHighQualityBreakout: false,
 };
 
 describe("runBacktest", () => {
@@ -50,7 +50,7 @@ describe("runBacktest", () => {
     ];
 
     const result = runBacktest({
-      symbol: "SPY",
+      symbol: "XYZ",
       candles,
       settings,
       startingEquity: 10000,
@@ -73,7 +73,7 @@ describe("runBacktest", () => {
     ];
 
     const result = runBacktest({
-      symbol: "SPY",
+      symbol: "XYZ",
       candles,
       settings,
       startingEquity: 10000,
@@ -101,7 +101,7 @@ describe("runBacktest", () => {
     ];
 
     const result = runBacktest({
-      symbol: "SPY",
+      symbol: "XYZ",
       candles: [...winningDay, ...losingDay],
       settings,
       startingEquity: 10000,
@@ -116,7 +116,7 @@ describe("runBacktest", () => {
 
   test("skips a day with no opening range candles", () => {
     const candles: Candle[] = [candle(26, 12, 0, 100, 101, 99, 100)]; // midday only
-    const result = runBacktest({ symbol: "SPY", candles, settings, startingEquity: 10000 });
+    const result = runBacktest({ symbol: "XYZ", candles, settings, startingEquity: 10000 });
     expect(result.totalTrades).toBe(0);
   });
 
@@ -135,12 +135,12 @@ describe("runBacktest", () => {
       candle(26, 10, 5, 107, 107.1, 95, 96),
     ];
 
-    const withoutLimit = runBacktest({ symbol: "SPY", candles, settings, startingEquity: 10000 });
+    const withoutLimit = runBacktest({ symbol: "XYZ", candles, settings, startingEquity: 10000 });
     expect(withoutLimit.trades[0].exitReason).toBe("STOP_LOSS");
     expect(withoutLimit.trades[0].pnl).toBeLessThan(0);
 
     const withOneBarLimit = runBacktest({
-      symbol: "SPY",
+      symbol: "XYZ",
       candles,
       settings,
       startingEquity: 10000,

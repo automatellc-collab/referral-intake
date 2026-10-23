@@ -1,0 +1,118 @@
+{
+  "SPY__GAP_FILL_FADE": {
+    "date": "2026-09-28",
+    "price": 768.69
+  },
+  "SPY__RSI2_REVERSION": {
+    "date": "2026-09-28",
+    "price": 764.6199951171875
+  },
+  "QQQ__GAP_FILL_FADE": {
+    "date": "2026-09-28",
+    "price": 737.14
+  },
+  "QQQ__RSI2_REVERSION": {
+    "date": "2026-09-28",
+    "price": 733.7100219726562
+  },
+  "TSLA__GAP_FILL_FADE": {
+    "date": "2026-09-28",
+    "price": 369.25
+  },
+  "TSLA__RSI2_REVERSION": {
+    "date": "2026-09-28",
+    "price": 360.30999755859375
+  },
+  "CRWD__VWAP_REVERSION": {
+    "date": "2026-09-28",
+    "price": 255.1199951171875
+  },
+  "CRWD__GAP_FILL_FADE": {
+    "date": "2026-09-28",
+    "price": 252.93
+  },
+  "NVDA__GAP_FILL_FADE": {
+    "date": "2026-09-28",
+    "price": 224.15
+  },
+  "NVDA__RSI2_REVERSION": {
+    "date": "2026-09-28",
+    "price": 229.46270751953125
+  },
+  "AMD__VWAP_REVERSION": {
+    "date": "2026-09-28",
+    "price": 598.3300170898438
+  },
+  "AMD__GAP_FILL_FADE": {
+    "date": "2026-09-28",
+    "price": 615.25
+  },
+  "PLTR__GAP_FILL_FADE": {
+    "date": "2026-09-25",
+    "price": 193.2443
+  },
+  "PLTR__RSI2_REVERSION": {
+    "date": "2026-09-28",
+    "price": 187.38999938964844
+  },
+  "COIN__VWAP_REVERSION": {
+    "date": "2026-09-28",
+    "price": 191.60000610351562
+  },
+  "COIN__GAP_FILL_FADE": {
+    "date": "2026-09-28",
+    "price": 190.92
+  },
+  "COIN__RSI2_REVERSION": {
+    "date": "2026-09-28",
+    "price": 191.60000610351562
+  },
+  "META__VWAP_REVERSION": {
+    "date": "2026-09-28",
+    "price": 720.8400268554688
+  },
+  "META__GAP_FILL_FADE": {
+    "date": "2026-09-28",
+    "price": 734.2677
+  },
+  "META__RSI2_REVERSION": {
+    "date": "2026-09-28",
+    "price": 720.8400268554688
+  },
+  "AVGO__GAP_FILL_FADE": {
+    "date": "2026-09-28",
+    "price": 348.7
+  },
+  "CRWD__RSI2_REVERSION": {
+    "date": "2026-09-28",
+    "price": 255.1199951171875
+  },
+  "AMD__RSI2_REVERSION": {
+    "date": "2026-09-28",
+    "price": 598.3300170898438
+  },
+  "AVGO__RSI2_REVERSION": {
+    "date": "2026-09-28",
+    "price": 349.5050048828125
+  },
+  "PLTR__VWAP_REVERSION": {
+    "date": "2026-09-25",
+    "price": 189.68499755859375
+  },
+  "TSLA__VWAP_REVERSION": {
+    "date": "2026-09-28",
+    "price": 360.30999755859375
+  },
+  "AVGO__VWAP_REVERSION": {
+    "date": "2026-09-28",
+    "price": 349.5050048828125
+  },
+  "QQQ__VWAP_REVERSION": {
+    "date": "2026-09-24",
+    "price": 741.2849731445312
+  },
+  "NVDA__VWAP_REVERSION": {
+    "date": "2026-09-28",
+    "price": 229.46270751953125
+  }
+}

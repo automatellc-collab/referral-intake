@@ -19,6 +19,11 @@ export interface ExtractAttachment {
   base64: string;
 }
 
+interface UploadedFile {
+  fileId: string;
+  mediaType: AttachmentMediaType;
+}
+
 function systemPromptFor(specialty: string): string {
   return `You are a clinical intake assistant that drafts specialist pre-chart summaries for a ${specialty} practice. Given a raw referral packet (letter, imaging/lab reports, PCP notes — often combined, sometimes as attached PDFs or images), extract the fields in the schema into a consult-note-style structure so the specialist can review and continue directly into their own documentation.
 
@@ -40,47 +45,102 @@ export async function extractSummary(
   attachments: ExtractAttachment[] = [],
 ): Promise<unknown> {
   const client = new Anthropic();
+  const uploadedFiles: UploadedFile[] = [];
 
-  const content: Anthropic.ContentBlockParam[] = attachments.map(attachmentToContentBlock);
-  content.push({
-    type: "text",
-    text: `Extract the pre-chart summary for this referral packet.${
-      attachments.length > 0
-        ? ` The packet includes ${attachments.length} attached document(s) (${attachments
-            .map((a) => a.filename)
-            .join(", ")}) — read them directly for imaging/lab findings rather than relying only on the text below.`
-        : ""
-    }\n\nCover text:\n${referralText || "(no cover text — see attached documents)"}`,
-  });
+  try {
+    const content: Anthropic.ContentBlockParam[] = [];
 
-  const response = await client.messages.parse({
-    model: MODEL,
-    max_tokens: 4096,
-    system: systemPromptFor(specialty),
-    messages: [{ role: "user", content }],
-    output_config: {
-      format: zodOutputFormat(NoteSummarySchema),
-    },
-  });
+    for (const attachment of attachments) {
+      const uploaded = await uploadFileToFilesAPI(client, attachment);
+      uploadedFiles.push(uploaded);
+      content.push(attachmentToFileContentBlock(uploaded, attachment.filename));
+    }
 
-  if (!response.parsed_output) {
-    const content = response.content[0];
-    const message = content && "text" in content ? content.text : "unknown parsing error";
-    throw new Error(`Failed to parse extraction output: ${message}`);
+    content.push({
+      type: "text",
+      text: `Extract the pre-chart summary for this referral packet.${
+        attachments.length > 0
+          ? ` The packet includes ${attachments.length} attached document(s) (${attachments
+              .map((a) => a.filename)
+              .join(", ")}) — read them directly for imaging/lab findings rather than relying only on the text below.`
+          : ""
+      }\n\nCover text:\n${referralText || "(no cover text — see attached documents)"}`,
+    });
+
+    const response = await client.messages.parse({
+      model: MODEL,
+      max_tokens: 4096,
+      system: systemPromptFor(specialty),
+      messages: [{ role: "user", content }],
+      output_config: {
+        format: zodOutputFormat(NoteSummarySchema),
+      },
+    });
+
+    if (!response.parsed_output) {
+      const responseContent = response.content[0];
+      const message = responseContent && "text" in responseContent ? responseContent.text : "unknown parsing error";
+      throw new Error(`Failed to parse extraction output: ${message}`);
+    }
+
+    return response.parsed_output;
+  } finally {
+    await deleteUploadedFiles(client, uploadedFiles);
   }
-
-  return response.parsed_output;
 }
 
-function attachmentToContentBlock(attachment: ExtractAttachment): Anthropic.ContentBlockParam {
-  if (attachment.mediaType === "application/pdf") {
+async function uploadFileToFilesAPI(client: Anthropic, attachment: ExtractAttachment): Promise<UploadedFile> {
+  const binaryData = Buffer.from(attachment.base64, "base64");
+  const mediaTypeToMimeType: Record<AttachmentMediaType, string> = {
+    "application/pdf": "application/pdf",
+    "image/png": "image/png",
+    "image/jpeg": "image/jpeg",
+    "image/webp": "image/webp",
+    "image/gif": "image/gif",
+  };
+
+  const mimeType = mediaTypeToMimeType[attachment.mediaType] || attachment.mediaType;
+  const file = new File([binaryData], attachment.filename, { type: mimeType });
+
+  const response = await client.beta.files.upload({
+    file,
+  });
+
+  return {
+    fileId: response.id,
+    mediaType: attachment.mediaType,
+  };
+}
+
+function attachmentToFileContentBlock(
+  uploaded: UploadedFile,
+  filename: string,
+): Anthropic.ContentBlockParam {
+  if (uploaded.mediaType === "application/pdf") {
     return {
       type: "document",
-      source: { type: "base64", media_type: "application/pdf", data: attachment.base64 },
+      source: {
+        type: "file",
+        file_id: uploaded.fileId,
+      },
     };
   }
+
   return {
     type: "image",
-    source: { type: "base64", media_type: attachment.mediaType, data: attachment.base64 },
+    source: {
+      type: "file",
+      file_id: uploaded.fileId,
+    },
   };
+}
+
+async function deleteUploadedFiles(client: Anthropic, uploadedFiles: UploadedFile[]): Promise<void> {
+  for (const file of uploadedFiles) {
+    try {
+      await client.beta.files.delete(file.fileId);
+    } catch {
+      // Best-effort cleanup; a failed delete doesn't break extraction
+    }
+  }
 }

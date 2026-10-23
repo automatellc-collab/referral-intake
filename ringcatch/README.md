@@ -1,3 +1,17 @@
+# RingCatch
+
+> **Now multi-tenant.** `slice2_5.js` is the one deployed engine — it looks up
+> which business owns the dialed number (via `lib/tenants.js` + Supabase) and
+> compiles that business's own system prompt (via `lib/brain.js`) instead of
+> hardcoding one plumber. Non-technical owners configure their receptionist
+> through **[`studio/`](studio/)** — a Next.js wizard + dashboard (industry
+> template picker, hours/services/FAQs/toggles, call log + bookings view).
+> Supabase project: `ringcatch-studio` (schema: `tenants`, `industry_templates`,
+> `call_logs`, `bookings`). `server.js` and `slice2.js` below are the original
+> single-tenant slices, kept for reference — not what ships.
+
+---
+
 # RingCatch — Slice 1
 
 **What it does:** gives you a phone number that answers when you can't, asks the

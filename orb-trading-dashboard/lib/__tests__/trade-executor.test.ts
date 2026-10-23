@@ -24,7 +24,7 @@ const settings: TradingSettings = {
   maxDailySpendUsd: 20000,
   fibonacciAnchorMode: "OPENING_RANGE",
   entryTypeFilter: "ANY",
-  maxHoldMinutes: null,
+  maxHoldMinutes: null, useElevenAmSwitch: false, requireHighQualityBreakout: false,
 };
 
 const entry: EntrySignal = {

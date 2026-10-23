@@ -18,6 +18,34 @@ function makePosition(overrides: Partial<PositionState> = {}): PositionState {
   }
 }
 
+describe('checkExitSignal — hard stop-loss', () => {
+  it('exits a straight-line decline mid-day that never set a peak — the trailing stop cannot catch this (real 2026-09-17 TSLA incident: 2.27 -> 1.01, -55%, never flagged)', () => {
+    const position = makePosition({
+      entryPrice: 2.27,
+      currentMark: 1.6,
+      peakMarkSinceEntry: 2.27,
+      isZeroDTE: false,
+      now: etTimestamp(11, 30),
+    })
+    const decision = checkExitSignal(position)
+    expect(decision.shouldExit).toBe(true)
+    expect(decision.action).toBe('HARD_STOP_LOSS')
+  })
+
+  it('holds when the loss is under the -28% hard-stop threshold', () => {
+    const position = makePosition({
+      entryPrice: 2.27,
+      currentMark: 1.7,
+      peakMarkSinceEntry: 2.27,
+      isZeroDTE: false,
+      now: etTimestamp(11, 30),
+    })
+    const decision = checkExitSignal(position)
+    expect(decision.shouldExit).toBe(false)
+    expect(decision.action).toBe('HOLD')
+  })
+})
+
 describe('checkExitSignal — 0DTE positions', () => {
   it('holds early in the day when position is flat', () => {
     const position = makePosition({ now: etTimestamp(11, 0) })
@@ -82,7 +110,9 @@ describe('checkExitSignal — 0DTE positions', () => {
     })
     const decision = checkExitSignal(position)
     expect(decision.shouldExit).toBe(true)
-    expect(decision.action).toBe('TIME_STOP_CUT_LOSS')
+    // -49% breaches the hard stop before the time-stop even applies — a
+    // strictly earlier/stronger catch than TIME_STOP_CUT_LOSS would be.
+    expect(decision.action).toBe('HARD_STOP_LOSS')
   })
 
   it('forces exit after 2:30 PM ET even if exactly at breakeven', () => {
@@ -107,7 +137,8 @@ describe('checkExitSignal — 0DTE positions', () => {
     })
     const decision = checkExitSignal(position)
     expect(decision.shouldExit).toBe(true)
-    expect(decision.action).toBe('TIME_STOP_CUT_LOSS')
+    // -70% breaches the hard stop well before 2:30 PM would have.
+    expect(decision.action).toBe('HARD_STOP_LOSS')
   })
 })
 
@@ -165,5 +196,131 @@ describe('checkExitSignal — edge cases', () => {
     const position = makePosition({ entryPrice: 0, currentMark: 0.5, peakMarkSinceEntry: 0.5 })
     const decision = checkExitSignal(position)
     expect(Number.isNaN(decision.peakGainPct)).toBe(false)
+  })
+
+  it('every decision carries a portion (1 unless explicitly scaling out)', () => {
+    const decision = checkExitSignal(makePosition())
+    expect(decision.portion).toBe(1)
+  })
+})
+
+describe('checkExitSignal — scale-out+trail (opted-in symbols only)', () => {
+  it('ignores the scale-out behavior for a symbol not in SCALE_OUT_TRAIL_SYMBOLS (e.g. LLY), using the original trailing-stop rule instead', () => {
+    const position = makePosition({
+      symbol: 'LLY',
+      isZeroDTE: false,
+      entryPrice: 1.0,
+      currentMark: 1.3, // +30%, would hit SCALE_OUT_FIRST_TARGET if opted in
+      peakMarkSinceEntry: 1.3,
+      now: etTimestamp(12, 0),
+    })
+    const decision = checkExitSignal(position)
+    expect(decision.action).not.toBe('SCALE_OUT_FIRST_TARGET')
+    expect(decision.shouldExit).toBe(false)
+  })
+
+  it('fires SCALE_OUT_FIRST_TARGET at +28% for an opted-in symbol not yet scaled out, portion 0.5', () => {
+    const position = makePosition({
+      symbol: 'SPY',
+      isZeroDTE: false,
+      entryPrice: 1.0,
+      currentMark: 1.28,
+      peakMarkSinceEntry: 1.28,
+      scaledOut: false,
+      now: etTimestamp(12, 0),
+    })
+    const decision = checkExitSignal(position)
+    expect(decision.shouldExit).toBe(true)
+    expect(decision.action).toBe('SCALE_OUT_FIRST_TARGET')
+    expect(decision.portion).toBe(0.5)
+  })
+
+  it('holds an opted-in symbol below the +28% first target, same as before scale-out exists', () => {
+    const position = makePosition({
+      symbol: 'TSLA',
+      isZeroDTE: false,
+      entryPrice: 1.0,
+      currentMark: 1.1,
+      peakMarkSinceEntry: 1.1,
+      scaledOut: false,
+      now: etTimestamp(12, 0),
+    })
+    const decision = checkExitSignal(position)
+    expect(decision.shouldExit).toBe(false)
+  })
+
+  it('hard stop still fires for an opted-in symbol even before any scale-out', () => {
+    const position = makePosition({
+      symbol: 'IWM',
+      isZeroDTE: false,
+      entryPrice: 1.0,
+      currentMark: 0.7, // -30%, past the -28% hard stop
+      peakMarkSinceEntry: 1.0,
+      scaledOut: false,
+      now: etTimestamp(12, 0),
+    })
+    const decision = checkExitSignal(position)
+    expect(decision.shouldExit).toBe(true)
+    expect(decision.action).toBe('HARD_STOP_LOSS')
+    expect(decision.portion).toBe(1)
+  })
+
+  it('exits the runner at BREAKEVEN_STOP once scaled out and the mark retreats to entry', () => {
+    const position = makePosition({
+      symbol: 'CRWD',
+      isZeroDTE: false,
+      entryPrice: 1.0,
+      currentMark: 1.0,
+      peakMarkSinceEntry: 1.5,
+      scaledOut: true,
+      now: etTimestamp(12, 0),
+    })
+    const decision = checkExitSignal(position)
+    expect(decision.shouldExit).toBe(true)
+    expect(decision.action).toBe('BREAKEVEN_STOP')
+    expect(decision.portion).toBe(1)
+  })
+
+  it('exits the runner at RUNNER_TRAIL_STOP after a 20%+ giveback off its peak, even while still above breakeven', () => {
+    const position = makePosition({
+      symbol: 'META',
+      isZeroDTE: false,
+      entryPrice: 1.0,
+      currentMark: 1.4, // peaked at 1.8, now down 22.2% from peak but still +40% from entry
+      peakMarkSinceEntry: 1.8,
+      scaledOut: true,
+      now: etTimestamp(12, 0),
+    })
+    const decision = checkExitSignal(position)
+    expect(decision.shouldExit).toBe(true)
+    expect(decision.action).toBe('RUNNER_TRAIL_STOP')
+  })
+
+  it('holds the runner when giveback off peak is under 20% and still above breakeven', () => {
+    const position = makePosition({
+      symbol: 'AVGO',
+      isZeroDTE: false,
+      entryPrice: 1.0,
+      currentMark: 1.6, // peaked at 1.8, only an 11% giveback
+      peakMarkSinceEntry: 1.8,
+      scaledOut: true,
+      now: etTimestamp(12, 0),
+    })
+    const decision = checkExitSignal(position)
+    expect(decision.shouldExit).toBe(false)
+  })
+
+  it('once scaled out, never re-fires SCALE_OUT_FIRST_TARGET even if the mark climbs further', () => {
+    const position = makePosition({
+      symbol: 'PLTR',
+      isZeroDTE: false,
+      entryPrice: 1.0,
+      currentMark: 1.5,
+      peakMarkSinceEntry: 1.5,
+      scaledOut: true,
+      now: etTimestamp(12, 0),
+    })
+    const decision = checkExitSignal(position)
+    expect(decision.action).not.toBe('SCALE_OUT_FIRST_TARGET')
   })
 })

@@ -28,6 +28,20 @@
       "runtimeArgs": ["run", "dev", "--", "-p", "3300"],
       "cwd": "${workspaceFolder}/orb-trading-dashboard",
       "port": 3300
+    },
+    {
+      "name": "RingCatch Studio",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "-p", "3400"],
+      "cwd": "${workspaceFolder}/ringcatch/studio",
+      "port": 3400
+    },
+    {
+      "name": "Card Grader",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "-p", "3401"],
+      "cwd": "${workspaceFolder}/card-grader",
+      "port": 3401
     }
   ]
 }

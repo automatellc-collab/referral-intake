@@ -43,7 +43,7 @@ const PROFILES: Record<string, TradingSettings> = {
     maxDailySpendUsd: 8000,
     fibonacciAnchorMode: "BREAKOUT_LEG",
     entryTypeFilter: "FIBONACCI_ONLY",
-    maxHoldMinutes: 40,
+    maxHoldMinutes: 40, useElevenAmSwitch: false, requireHighQualityBreakout: false,
   },
   "video-literal": {
     userId: "video-literal",
@@ -59,7 +59,7 @@ const PROFILES: Record<string, TradingSettings> = {
     maxDailySpendUsd: 8000,
     fibonacciAnchorMode: "OPENING_RANGE",
     entryTypeFilter: "ANY",
-    maxHoldMinutes: 40,
+    maxHoldMinutes: 40, useElevenAmSwitch: false, requireHighQualityBreakout: false,
   },
 };
 

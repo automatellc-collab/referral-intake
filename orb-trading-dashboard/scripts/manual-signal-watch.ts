@@ -40,13 +40,13 @@ const PROFILES: Record<string, TradingSettings> = {
     userId: "default", mode: "ALERTS", symbols: [symbol], dailyLossLimitPct: 2, riskPerTradePct: 1,
     maxOpenPositions: 1, riskRewardRatio: 3, stopLossBufferPct: 0, maxConsecutiveLosses: 3,
     maxTradePerOrderUsd: 8000, maxDailySpendUsd: 8000,
-    fibonacciAnchorMode: "BREAKOUT_LEG", entryTypeFilter: "FIBONACCI_ONLY", maxHoldMinutes: 40,
+    fibonacciAnchorMode: "BREAKOUT_LEG", entryTypeFilter: "FIBONACCI_ONLY", maxHoldMinutes: 40, useElevenAmSwitch: false, requireHighQualityBreakout: false,
   },
   "video-literal": {
     userId: "video-literal", mode: "ALERTS", symbols: [symbol], dailyLossLimitPct: 2, riskPerTradePct: 1,
     maxOpenPositions: 1, riskRewardRatio: 3, stopLossBufferPct: 0, maxConsecutiveLosses: 3,
     maxTradePerOrderUsd: 8000, maxDailySpendUsd: 8000,
-    fibonacciAnchorMode: "OPENING_RANGE", entryTypeFilter: "ANY", maxHoldMinutes: 40,
+    fibonacciAnchorMode: "OPENING_RANGE", entryTypeFilter: "ANY", maxHoldMinutes: 40, useElevenAmSwitch: false, requireHighQualityBreakout: false,
   },
 };
 

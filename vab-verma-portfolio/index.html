@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vab Verma</title>
+<meta name="description" content="Web design and AI product work, presented as a stack of completed job tickets — eight real, live builds for real businesses.">
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; }
+  img { max-width: 100%; }
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --surface-page: #ede7d8;
+    --surface-card: #faf7ee;
+    --ink: #262220;
+    --ink-soft: #5b5346;
+    --accent: #233e66;
+    --tag-bg: #e8ce6e;
+    --tag-ink: #4a3200;
+    --stamp: #96362a;
+    --line: #c9bfa8;
+    --shadow: rgba(38, 34, 32, 0.12);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --surface-page: #17130f;
+      --surface-card: #231d16;
+      --ink: #ede6d6;
+      --ink-soft: #b6aa93;
+      --accent: #93b4e2;
+      --tag-bg: #4a3f1e;
+      --tag-ink: #e8ce6e;
+      --stamp: #d97a68;
+      --line: #3a3327;
+      --shadow: rgba(0, 0, 0, 0.45);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --surface-page: #17130f;
+    --surface-card: #231d16;
+    --ink: #ede6d6;
+    --ink-soft: #b6aa93;
+    --accent: #93b4e2;
+    --tag-bg: #4a3f1e;
+    --tag-ink: #e8ce6e;
+    --stamp: #d97a68;
+    --line: #3a3327;
+    --shadow: rgba(0, 0, 0, 0.45);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--surface-page);
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px);
+    background-size: 100% 2.1em;
+    background-position: 0 7.2em;
+    color: var(--ink);
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--accent); }
+
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 4.5rem 1.5rem 6rem;
+  }
+
+  .mono {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+  }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  /* ---------- Letterhead ---------- */
+
+  header.letterhead {
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 1.8rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .masthead-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .shop-mark {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .shop-mark strong { color: var(--ink); }
+
+  .open-sign {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1.5px solid var(--stamp);
+    color: var(--stamp);
+    padding: 0.25em 0.7em;
+    border-radius: 2px;
+    transform: rotate(-2deg);
+    white-space: nowrap;
+  }
+
+  h1.name {
+    font-family: "Fraunces", serif;
+    font-weight: 600;
+    font-size: clamp(2.6rem, 7vw, 4.2rem);
+    line-height: 0.98;
+    margin: 0.6em 0 0.3em;
+    text-wrap: balance;
+  }
+
+  h1.name em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--accent);
+  }
+
+  .role-line {
+    font-size: 1.1rem;
+    color: var(--ink-soft);
+    max-width: 34em;
+    margin: 0 0 1.4rem;
+  }
+
+  .ticket-meta {
+    display: flex;
+    gap: 1.6rem 2.2rem;
+    flex-wrap: wrap;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.74rem;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+  }
+
+  .ticket-meta span strong {
+    display: block;
+    color: var(--ink);
+    font-size: 0.8rem;
+    letter-spacing: normal;
+  }
+
+  /* ---------- Section labels ---------- */
+
+  .section-label {
+    display: flex;
+    align-items: baseline;
+    gap: 0.9rem;
+    margin: 3.6rem 0 1.6rem;
+  }
+
+  .section-label h2 {
+    font-family: "Fraunces", serif;
+    font-weight: 600;
+    font-size: 1.5rem;
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  .section-label .rule {
+    flex: 1;
+    border-top: 1px dashed var(--line);
+    transform: translateY(-0.4em);
+  }
+
+  .section-note {
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+    margin: -0.8rem 0 1.6rem;
+    max-width: 38em;
+  }
+
+  /* ---------- Ticket cards ---------- */
+
+  .docket { display: flex; flex-direction: column; gap: 1.9rem; }
+
+  .ticket {
+    position: relative;
+    background: var(--surface-card);
+    border: 1px solid var(--line);
+    box-shadow: 0 10px 24px -14px var(--shadow);
+    padding: 1.9rem 1.8rem 1.6rem;
+  }
+
+  /* perforated top edge */
+  .ticket::before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: 0;
+    right: 0;
+    height: 11px;
+    background-image: radial-gradient(circle 6px at 10px 0px, var(--surface-page) 99%, transparent 100%);
+    background-size: 22px 11px;
+    background-repeat: repeat-x;
+    background-position: 8px -6px;
+  }
+
+  .ticket-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .ticket-no {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+  }
+
+  .stamp {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--stamp);
+    border: 1.5px solid var(--stamp);
+    padding: 0.2em 0.6em;
+    border-radius: 2px;
+    transform: rotate(-3deg);
+    white-space: nowrap;
+  }
+
+  .ticket h3 {
+    font-family: "Fraunces", serif;
+    font-weight: 600;
+    font-size: 1.55rem;
+    margin: 0.2rem 0 0.15rem;
+    text-wrap: balance;
+  }
+
+  .ticket .loc-line {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+    margin-bottom: 0.9rem;
+  }
+
+  .ticket p.desc {
+    margin: 0 0 1rem;
+    max-width: 42em;
+  }
+
+  .footnote {
+    font-size: 0.86rem;
+    color: var(--ink-soft);
+    border-left: 2px solid var(--line);
+    padding-left: 0.7rem;
+    margin: 0 0 1.1rem;
+    max-width: 38em;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.1rem;
+  }
+
+  .tag {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+    background: var(--tag-bg);
+    color: var(--tag-ink);
+    padding: 0.22em 0.6em;
+    border-radius: 1px;
+  }
+
+  .ticket-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px dashed var(--line);
+    padding-top: 0.8rem;
+    margin-top: 0.3rem;
+  }
+
+  .visit-link {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.82rem;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .visit-link:hover { text-decoration: underline; }
+
+  .ticket-foot .issued {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.7rem;
+    color: var(--ink-soft);
+  }
+
+  /* ---------- Footer ---------- */
+
+  footer.terms {
+    margin-top: 4.5rem;
+    border-top: 2px solid var(--ink);
+    padding-top: 1.6rem;
+  }
+
+  footer.terms h2 {
+    font-family: "Fraunces", serif;
+    font-weight: 600;
+    font-size: 1.4rem;
+    margin: 0 0 0.7rem;
+  }
+
+  footer.terms p {
+    max-width: 42em;
+    color: var(--ink-soft);
+    margin: 0 0 1.2rem;
+  }
+
+  .contact-row {
+    display: flex;
+    gap: 1.6rem;
+    flex-wrap: wrap;
+    align-items: baseline;
+  }
+
+  .contact-row a.cta {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1.5px solid var(--accent);
+    padding-bottom: 0.1em;
+  }
+
+  .contact-row .stub {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+    letter-spacing: 0.04em;
+  }
+
+  @media (max-width: 560px) {
+    .wrap { padding: 2.6rem 1.1rem 4rem; }
+    .ticket { padding: 1.5rem 1.2rem 1.3rem; }
+    .ticket-foot { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="letterhead">
+    <div class="masthead-row">
+      <div class="shop-mark"><strong>Automate LLC</strong> · Web &amp; Product Studio</div>
+      <div class="open-sign">Open for new tickets</div>
+    </div>
+    <h1 class="name">Vab Verma<br><em>builds the thing, ships the thing.</em></h1>
+    <p class="role-line">Freelance web design &amp; AI product development out of Atlanta, GA — restaurant sites, service businesses, and small AI tools, each one taken from a blank page to a live URL.</p>
+    <div class="ticket-meta">
+      <span>Docket printed<strong>Oct 2026</strong></span>
+      <span>Based in<strong>Atlanta, GA</strong></span>
+      <span>Jobs on file<strong>8 closed</strong></span>
+      <span>Stack<strong>Next.js · Claude API · Vercel</strong></span>
+    </div>
+  </header>
+
+  <!-- THE SHOP -->
+  <div class="section-label"><h2>The shop</h2><div class="rule"></div></div>
+
+  <div class="docket">
+    <article class="ticket">
+      <div class="ticket-top">
+        <span class="ticket-no mono">No. 01</span>
+        <span class="stamp">Delivered</span>
+      </div>
+      <h3>Auto-Mate Web Studio</h3>
+      <div class="loc-line">Atlanta, GA · Jul 2026 · Studio flagship site</div>
+      <p class="desc">The studio's own storefront — built to be the proof, not the pitch. Every scroll, hover, and load time on the page is the demo: custom Next.js builds with Framer Motion transitions, SEO foundations, and a 0% "pages ready the moment you click" number that it then backs up.</p>
+      <div class="tags">
+        <span class="tag">Next.js</span>
+        <span class="tag">Framer Motion</span>
+        <span class="tag">Vercel</span>
+      </div>
+      <div class="ticket-foot">
+        <a class="visit-link" href="https://auto-mate-web-studio.vercel.app" target="_blank" rel="noopener">Visit site →</a>
+        <span class="issued mono">auto-mate-web-studio.vercel.app</span>
+      </div>
+    </article>
+  </div>
+
+  <!-- CLIENT TICKETS -->
+  <div class="section-label"><h2>Client tickets</h2><div class="rule"></div></div>
+  <p class="section-note">Local restaurants and service businesses, each one commissioned, built, and handed over.</p>
+
+  <div class="docket">
+
+    <article class="ticket">
+      <div class="ticket-top">
+        <span class="ticket-no mono">No. 02</span>
+        <span class="stamp">Delivered</span>
+      </div>
+      <h3>Verandah Indian Kitchen &amp; Bar</h3>
+      <div class="loc-line">Marietta, GA · Jul 2026 · Restaurant</div>
+      <p class="desc">First client ticket on the docket. A full-service Indian restaurant site built around reservations and the menu: tandoori classics, slow-simmered curries, and weekend biryani, paired with a full wine &amp; beer bar — the site had to feel as warm as the dining room.</p>
+      <div class="tags">
+        <span class="tag">Next.js</span>
+        <span class="tag">Online Reservations</span>
+      </div>
+      <div class="ticket-foot">
+        <a class="visit-link" href="https://verandah-restaurant.vercel.app" target="_blank" rel="noopener">Visit site →</a>
+        <span class="issued mono">verandah-restaurant.vercel.app</span>
+      </div>
+    </article>
+
+    <article class="ticket">
+      <div class="ticket-top">
+        <span class="ticket-no mono">No. 03</span>
+        <span class="stamp">Delivered</span>
+      </div>
+      <h3>Ducks Burger Bar</h3>
+      <div class="loc-line">Marietta, GA · Jul 2026 · Burger bar</div>
+      <p class="desc">Hand-pressed patties with a Brazilian flair, wings in nine flavors, and a pool table for the wait. Online ordering front and center, menu built for big appetites and faster decisions.</p>
+      <p class="footnote">The owner liked the site enough to buy it outright — contract and pricing docs went from "built for" to "sold to" in one meeting.</p>
+      <div class="tags">
+        <span class="tag">Next.js</span>
+        <span class="tag">Online Ordering</span>
+      </div>
+      <div class="ticket-foot">
+        <a class="visit-link" href="https://ducks-burger-bar.vercel.app" target="_blank" rel="noopener">Visit site →</a>
+        <span class="issued mono">ducks-burger-bar.vercel.app</span>
+      </div>
+    </article>
+
+    <article class="ticket">
+      <div class="ticket-top">
+        <span class="ticket-no mono">No. 04</span>
+        <span class="stamp">Delivered</span>
+      </div>
+      <h3>Casita Dolce</h3>
+      <div class="loc-line">Atlanta, GA · Jul 2026 · Luxury snack carts</div>
+      <p class="desc">A bilingual (EN/ES) booking site for a luxury snack-cart rental business — weddings, quinceañeras, corporate events, baby showers. Built around a "little house on wheels" visual identity, with direct booking and a gallery doing the selling.</p>
+      <div class="tags">
+        <span class="tag">HTML/CSS</span>
+        <span class="tag">Bilingual EN/ES</span>
+      </div>
+      <div class="ticket-foot">
+        <a class="visit-link" href="https://casita-dolce.vercel.app" target="_blank" rel="noopener">Visit site →</a>
+        <span class="issued mono">casita-dolce.vercel.app</span>
+      </div>
+    </article>
+
+    <article class="ticket">
+      <div class="ticket-top">
+        <span class="ticket-no mono">No. 05</span>
+        <span class="stamp">Delivered</span>
+      </div>
+      <h3>Business Operations Lab</h3>
+      <div class="loc-line">Atlanta, GA · Jul 2026 · Fractional COO consultancy</div>
+      <p class="desc">A full rebuild for an existing operations consultancy with 15+ years of operational leadership behind it. Kept the client's real content and credentials, rebuilt the site around a precision "lab" concept — audits, partnership, and workshops laid out as the three real services they sell.</p>
+      <div class="tags">
+        <span class="tag">HTML/CSS</span>
+        <span class="tag">Content Rebuild</span>
+      </div>
+      <div class="ticket-foot">
+        <a class="visit-link" href="https://business-operations-lab.vercel.app" target="_blank" rel="noopener">Visit site →</a>
+        <span class="issued mono">businessoperationslab.com</span>
+      </div>
+    </article>
+
+    <article class="ticket">
+      <div class="ticket-top">
+        <span class="ticket-no mono">No. 06</span>
+        <span class="stamp">Concept pitch</span>
+      </div>
+      <h3>St. Joseph's/Candler — "Line of Care"</h3>
+      <div class="loc-line">Savannah, GA · Jul 2026 · Hospital system redesign</div>
+      <p class="desc">An unsolicited concept redesign of a real hospital system's homepage, built to show what the site could be rather than wait to be asked. A scroll-drawn EKG line runs the length of the page as the spine connecting patient care, appointments, and physician search.</p>
+      <p class="footnote">Speculative pitch piece — not a commissioned rebuild.</p>
+      <div class="tags">
+        <span class="tag">Scroll-driven SVG</span>
+        <span class="tag">Concept Design</span>
+      </div>
+      <div class="ticket-foot">
+        <a class="visit-link" href="https://sjchs-redesign.vercel.app" target="_blank" rel="noopener">Visit site →</a>
+        <span class="issued mono">sjchs-redesign.vercel.app</span>
+      </div>
+    </article>
+
+  </div>
+
+  <!-- SHOP-BUILT TOOLS -->
+  <div class="section-label"><h2>Shop-built tools</h2><div class="rule"></div></div>
+  <p class="section-note">No client brief — these two were built because the problem was worth solving. Both run live, both run on Claude.</p>
+
+  <div class="docket">
+
+    <article class="ticket">
+      <div class="ticket-top">
+        <span class="ticket-no mono">No. 07</span>
+        <span class="stamp">Live</span>
+      </div>
+      <h3>Referral Intake</h3>
+      <div class="loc-line">Self-initiated · Oct 2026 · Clinical triage tool</div>
+      <p class="desc">Extracts a nine-field pre-chart summary from a raw referral letter, so a specialist can review a case before the visit instead of reading the full packet cold. Every field carries a status — extracted, inferred, or not found — with a verbatim quote back to the source text.</p>
+      <p class="footnote">Runs on Claude Opus 5 against a fixed extraction schema. Stateless — no database, no storage of submitted text.</p>
+      <div class="tags">
+        <span class="tag">Next.js</span>
+        <span class="tag">Claude Opus 5</span>
+        <span class="tag">E2E Tested</span>
+      </div>
+      <div class="ticket-foot">
+        <a class="visit-link" href="https://referral-intake.vercel.app" target="_blank" rel="noopener">Visit site →</a>
+        <span class="issued mono">referral-intake.vercel.app</span>
+      </div>
+    </article>
+
+    <article class="ticket">
+      <div class="ticket-top">
+        <span class="ticket-no mono">No. 08</span>
+        <span class="stamp">Live</span>
+      </div>
+      <h3>CareerTailor</h3>
+      <div class="loc-line">Self-initiated · Jun 2026 · AI resume tool</div>
+      <p class="desc">Paste a job post and a resume, get a tailored cover letter and optimized resume bullets back in under thirty seconds. A three-step wizard — job, resume, results — with one free generation and a $9 lifetime unlock past that.</p>
+      <div class="tags">
+        <span class="tag">Next.js</span>
+        <span class="tag">AI-Generated Copy</span>
+        <span class="tag">Micro-SaaS</span>
+      </div>
+      <div class="ticket-foot">
+        <a class="visit-link" href="https://career-tailor-xz15.vercel.app" target="_blank" rel="noopener">Visit site →</a>
+        <span class="issued mono">career-tailor-xz15.vercel.app</span>
+      </div>
+    </article>
+
+  </div>
+
+  <footer class="terms">
+    <h2>Terms of service</h2>
+    <p>Every ticket on this docket is a live, working site — click through and use the real thing, not a screenshot of it. Available for new web builds and small AI tools, same as the eight above.</p>
+    <div class="contact-row">
+      <a class="cta" href="mailto:vabverma1988@gmail.com">Start a ticket →</a>
+      <span class="stub mono">Automate LLC · Atlanta, GA</span>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
