@@ -20,9 +20,25 @@ interface SummaryPanelProps {
   specialty: string;
   isLoading: boolean;
   error: string | null;
+  confidence?: number;
+  documentType?: string;
+  requiresReview?: boolean;
+  reviewReason?: string;
 }
 
-export function SummaryPanel({ summary, specialty, isLoading, error }: SummaryPanelProps) {
+export function SummaryPanel({
+  summary,
+  specialty,
+  isLoading,
+  error,
+  confidence = 1,
+  documentType,
+  requiresReview,
+  reviewReason,
+}: SummaryPanelProps) {
+  const confidencePercent = Math.round(confidence * 100);
+  const confidenceTone = confidence >= 0.8 ? "ok" : confidence >= 0.65 ? "warn" : "critical";
+
   return (
     <section className="panel">
       <div className="panel-head">
@@ -39,6 +55,16 @@ export function SummaryPanel({ summary, specialty, isLoading, error }: SummaryPa
               {summary.urgency.level}
             </span>
             <span className="pill neutral">{specialty}</span>
+            {documentType && <span className="pill neutral text-sm">{documentType}</span>}
+            <span className={`pill ${confidenceTone}`}>{confidencePercent}% confidence</span>
+            {requiresReview && (
+              <span className="pill critical">
+                <span className="icon">
+                  <Warning weight="bold" size={12} />
+                </span>
+                Review needed
+              </span>
+            )}
           </div>
         )}
       </div>

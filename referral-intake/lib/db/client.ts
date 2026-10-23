@@ -6,11 +6,31 @@ import * as schema from "./schema";
 
 const connectionString = process.env.DATABASE_URL;
 
-if (!connectionString) {
-  throw new Error("DATABASE_URL environment variable is not set");
+let db: any = null;
+
+if (connectionString) {
+  const sql = neon(connectionString);
+  db = drizzle(sql, { schema });
+} else {
+  console.warn(
+    "DATABASE_URL not configured. Database features will be unavailable. Set DATABASE_URL to enable caching, audit logging, and review queue."
+  );
+  db = createMockDatabase();
 }
 
-const sql = neon(connectionString);
-export const db = drizzle(sql, { schema });
+export { db };
 
 export type Database = typeof db;
+
+function createMockDatabase() {
+  return {
+    query: {
+      auditLog: { findMany: async () => [] },
+      extractionFeedback: { findMany: async () => [] },
+      reviewQueue: { findMany: async () => [] },
+    },
+    insert: () => ({ values: async () => {} }),
+    update: () => ({ set: () => ({ where: async () => {} }) }),
+    delete: () => ({ where: async () => {} }),
+  };
+}

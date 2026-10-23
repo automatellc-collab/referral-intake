@@ -22,6 +22,10 @@ import {
 interface ExtractResponse {
   summary?: NoteSummary;
   specialty?: string;
+  confidence?: number;
+  documentType?: string;
+  requiresReview?: boolean;
+  reviewReason?: string;
   error?: string;
 }
 
@@ -34,6 +38,10 @@ export default function Home() {
   const [isUploadingAttachments, setIsUploadingAttachments] = useState(false);
   const [summary, setSummary] = useState<NoteSummary | null>(null);
   const [summarySpecialty, setSummarySpecialty] = useState("");
+  const [confidence, setConfidence] = useState(1);
+  const [documentType, setDocumentType] = useState<string>();
+  const [requiresReview, setRequiresReview] = useState(false);
+  const [reviewReason, setReviewReason] = useState<string>();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,6 +65,10 @@ export default function Home() {
       withViewTransition(() => {
         setSummary(body.summary as NoteSummary);
         setSummarySpecialty(body.specialty as string);
+        setConfidence(body.confidence ?? 1);
+        setDocumentType(body.documentType);
+        setRequiresReview(body.requiresReview ?? false);
+        setReviewReason(body.reviewReason);
         // The server deletes attachments once it has successfully read them —
         // clear them here too so a spent attachment can't be resubmitted.
         setAttachments([]);
@@ -124,12 +136,20 @@ export default function Home() {
     setAttachmentError(null);
     setSummary(null);
     setError(null);
+    setConfidence(1);
+    setDocumentType(undefined);
+    setRequiresReview(false);
+    setReviewReason(undefined);
   }
 
   function handleSpecialtyChange(next: string) {
     setSpecialty(next);
     setSummary(null);
     setError(null);
+    setConfidence(1);
+    setDocumentType(undefined);
+    setRequiresReview(false);
+    setReviewReason(undefined);
   }
 
   function handleClear() {
@@ -141,6 +161,10 @@ export default function Home() {
     setAttachmentError(null);
     setSummary(null);
     setError(null);
+    setConfidence(1);
+    setDocumentType(undefined);
+    setRequiresReview(false);
+    setReviewReason(undefined);
   }
 
   return (
@@ -193,7 +217,16 @@ export default function Home() {
           onExtract={handleExtract}
           onClear={handleClear}
         />
-        <SummaryPanel summary={summary} specialty={summarySpecialty} isLoading={isLoading} error={error} />
+        <SummaryPanel
+          summary={summary}
+          specialty={summarySpecialty}
+          isLoading={isLoading}
+          error={error}
+          confidence={confidence}
+          documentType={documentType}
+          requiresReview={requiresReview}
+          reviewReason={reviewReason}
+        />
       </div>
 
       <div className="legend">

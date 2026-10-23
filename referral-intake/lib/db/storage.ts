@@ -43,7 +43,7 @@ export async function getCachedExtraction(content: string): Promise<{
   const contentHash = createHash("sha256").update(content).digest("hex");
 
   try {
-    const result = await db.query.extractionCache.findFirst({
+    const result: any = await db.query.extractionCache.findFirst({
       where: eq(extractionCache.contentHash, contentHash),
     });
 
@@ -125,9 +125,9 @@ export async function getReviewQueueStats(): Promise<{
     const results = await db.query.reviewQueue.findMany();
 
     return {
-      pending: results.filter((r) => r.status === "pending").length,
-      inReview: results.filter((r) => r.status === "in_review").length,
-      critical: results.filter((r) => r.priority === "critical").length,
+      pending: results.filter((r: any) => r.status === "pending").length,
+      inReview: results.filter((r: any) => r.status === "in_review").length,
+      critical: results.filter((r: any) => r.priority === "critical").length,
     };
   } catch (error) {
     console.error("Failed to get review queue stats:", error);

@@ -60,26 +60,26 @@ export async function getExtractionMetrics(
       };
     }
 
-    const successCount = logs.filter((l) => l.success).length;
-    const totalCost = logs.reduce((sum, l) => sum + (parseFloat(l.estimatedCost || "0") || 0), 0);
+    const successCount = logs.filter((l: any) => l.success).length;
+    const totalCost = logs.reduce((sum: number, l: any) => sum + (parseFloat(l.estimatedCost || "0") || 0), 0);
     const avgLatency =
-      logs.reduce((sum, l) => sum + (l.latencyMs || 0), 0) / logs.length;
+      logs.reduce((sum: number, l: any) => sum + (l.latencyMs || 0), 0) / logs.length;
     const avgConfidence =
-      logs.reduce((sum, l) => sum + (l.confidence ? parseFloat(l.confidence) : 0), 0) /
-      logs.filter((l) => l.confidence).length;
+      logs.reduce((sum: number, l: any) => sum + (l.confidence ? parseFloat(l.confidence) : 0), 0) /
+      logs.filter((l: any) => l.confidence).length;
 
     // Failure reasons
     const failureReasons: Record<string, number> = {};
     logs
-      .filter((l) => !l.success && l.errorMessage)
-      .forEach((l) => {
+      .filter((l: any) => !l.success && l.errorMessage)
+      .forEach((l: any) => {
         const reason = l.errorMessage!.split(":")[0];
         failureReasons[reason] = (failureReasons[reason] || 0) + 1;
       });
 
     // By specialty
     const bySpecialty: Record<string, SpecialtyMetrics> = {};
-    logs.forEach((log) => {
+    logs.forEach((log: any) => {
       if (!bySpecialty[log.specialty]) {
         bySpecialty[log.specialty] = {
           count: 0,
@@ -104,7 +104,7 @@ export async function getExtractionMetrics(
 
     // By model
     const byModel: Record<string, ModelStats> = {};
-    logs.forEach((log) => {
+    logs.forEach((log: any) => {
       if (!byModel[log.model]) {
         byModel[log.model] = {
           successRate: 0,
@@ -134,7 +134,7 @@ export async function getExtractionMetrics(
 
     // By format
     const byFormat: Record<string, FormatStats> = {};
-    logs.forEach((log) => {
+    logs.forEach((log: any) => {
       const format = log.documentType || "unknown";
       if (!byFormat[format]) {
         byFormat[format] = { count: 0, successRate: 0, avgConfidence: 0 };
