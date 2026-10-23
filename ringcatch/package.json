@@ -1,0 +1,20 @@
+{
+  "name": "ringcatch-slice1",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Slice 1 — a phone number that answers, captures the caller's need, and texts the owner a clean summary.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "twilio": "^5.3.0",
+    "ws": "^8.21.1"
+  }
+}

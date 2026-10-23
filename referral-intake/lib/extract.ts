@@ -64,7 +64,9 @@ export async function extractSummary(
   });
 
   if (!response.parsed_output) {
-    throw new Error("Claude did not return a parseable structured summary.");
+    const content = response.content[0];
+    const message = content && "text" in content ? content.text : "unknown parsing error";
+    throw new Error(`Failed to parse extraction output: ${message}`);
   }
 
   return response.parsed_output;

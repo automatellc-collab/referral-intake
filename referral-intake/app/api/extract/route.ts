@@ -172,7 +172,12 @@ function describeError(error: unknown): string {
     return "Could not reach the extraction service. Check your connection and try again.";
   }
   if (error instanceof Anthropic.APIError) {
-    return "The extraction service returned an error. Please try again.";
+    const message = error.message || "Unknown API error";
+    const status = "status" in error ? ` (HTTP ${error.status})` : "";
+    return `Extraction failed: ${message}${status}. This may be a PDF parsing issue — try a different PDF or contact support.`;
+  }
+  if (error instanceof Error) {
+    return `Extraction failed: ${error.message}`;
   }
   return "Something went wrong while extracting the referral. Please try again.";
 }
