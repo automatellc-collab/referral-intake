@@ -6,7 +6,7 @@ import { NoteSummarySchema } from "@/lib/schema";
 import type { AttachmentMediaType } from "@/lib/attachments";
 
 const MODEL = "claude-opus-5";
-const FILES_API_BINARY_LIMIT = 28 * 1024 * 1024; // 28MB binary (32MB base64 = ~24MB binary, add margin)
+const BASE64_DIRECT_LIMIT = 20 * 1024 * 1024; // 20MB: use base64 for small files (faster)
 
 /**
  * A document's actual bytes, ready to send to Claude. Distinct from
@@ -46,28 +46,30 @@ export async function extractSummary(
   const uploadedFileIds: string[] = [];
 
   try {
-    // Process attachments: use Files API for large PDFs, base64 for small ones
+    // Process attachments: use Files API for large files, base64 for small ones
     for (const attachment of attachments) {
-      // Calculate binary size from base64: base64 is ~133% of binary size
-      const binarySize = Math.ceil((attachment.base64.length * 3) / 4);
-
-      if (attachment.mediaType === "application/pdf" && binarySize > FILES_API_BINARY_LIMIT) {
-        // Large PDF: upload via Files API (supports up to ~32MB binary)
+      if (attachment.base64.length > BASE64_DIRECT_LIMIT) {
+        // Large file: upload via Files API (supports multi-GB files)
         try {
           const fileId = await uploadToFilesAPI(client, attachment);
           uploadedFileIds.push(fileId);
-          content.push({
-            type: "document",
-            source: { type: "file", file_id: fileId },
-          });
+          if (attachment.mediaType === "application/pdf") {
+            content.push({
+              type: "document",
+              source: { type: "file", file_id: fileId },
+            });
+          } else {
+            content.push({
+              type: "image",
+              source: { type: "file", file_id: fileId },
+            });
+          }
         } catch (fileApiError) {
-          // Files API failed - don't fall back to base64 for large files, throw error
-          throw new Error(
-            `Large PDF upload failed and cannot fall back: ${fileApiError instanceof Error ? fileApiError.message : String(fileApiError)}`,
-          );
+          console.error("Files API upload failed:", fileApiError);
+          throw new Error(`Failed to process large file: ${fileApiError instanceof Error ? fileApiError.message : String(fileApiError)}`);
         }
       } else {
-        // Small file or image: use base64 (faster, simpler)
+        // Small file: use base64 (faster, simpler)
         content.push(attachmentToContentBlock(attachment));
       }
     }
@@ -106,7 +108,6 @@ export async function extractSummary(
       try {
         await client.beta.files.delete(fileId);
       } catch (error) {
-        // Best-effort cleanup; don't fail extraction if cleanup fails
         console.error("Failed to delete uploaded file:", error);
       }
     }
@@ -114,9 +115,13 @@ export async function extractSummary(
 }
 
 async function uploadToFilesAPI(client: Anthropic, attachment: ExtractAttachment): Promise<string> {
+  // Convert base64 to binary buffer
   const binaryData = Buffer.from(attachment.base64, "base64");
+
+  // Create File object with correct MIME type
   const file = new File([binaryData], attachment.filename, { type: attachment.mediaType });
 
+  // Upload via Files API (supports multi-GB files)
   const response = await client.beta.files.upload({ file });
   return response.id;
 }
