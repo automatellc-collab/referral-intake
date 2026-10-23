@@ -97,7 +97,16 @@ export async function extractSummary(
 
     if (!response.parsed_output) {
       const responseContent = response.content[0];
-      const message = responseContent && "text" in responseContent ? responseContent.text : "unknown parsing error";
+      let message = "unknown parsing error";
+
+      if (responseContent && "text" in responseContent) {
+        message = responseContent.text;
+        // If Claude returned text but parsing failed, it might be raw content instead of JSON
+        if (!message.startsWith("{")) {
+          message = `Claude returned non-JSON response (likely raw text from PDF). First 300 chars: ${message.substring(0, 300)}`;
+        }
+      }
+
       throw new Error(`Failed to parse extraction output: ${message}`);
     }
 
