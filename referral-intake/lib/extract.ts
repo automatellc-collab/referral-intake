@@ -6,6 +6,7 @@ import { NoteSummarySchema } from "@/lib/schema";
 import type { AttachmentMediaType } from "@/lib/attachments";
 
 const MODEL = "claude-opus-5";
+const BASE64_SIZE_LIMIT = 40 * 1024 * 1024; // 40MB: safe threshold with base64 overhead
 
 /**
  * A document's actual bytes, ready to send to Claude. Distinct from
@@ -18,7 +19,6 @@ export interface ExtractAttachment {
   mediaType: AttachmentMediaType;
   base64: string;
 }
-
 
 function systemPromptFor(specialty: string): string {
   return `You are a clinical intake assistant that drafts specialist pre-chart summaries for a ${specialty} practice. Given a raw referral packet (letter, imaging/lab reports, PCP notes — often combined, sometimes as attached PDFs or images), extract the fields in the schema into a consult-note-style structure so the specialist can review and continue directly into their own documentation.
@@ -42,35 +42,79 @@ export async function extractSummary(
 ): Promise<unknown> {
   const client = new Anthropic();
 
-  const content: Anthropic.ContentBlockParam[] = attachments.map(attachmentToContentBlock);
-  content.push({
-    type: "text",
-    text: `Extract the pre-chart summary for this referral packet.${
-      attachments.length > 0
-        ? ` The packet includes ${attachments.length} attached document(s) (${attachments
-            .map((a) => a.filename)
-            .join(", ")}) — read them directly for imaging/lab findings rather than relying only on the text below.`
-        : ""
-    }\n\nCover text:\n${referralText || "(no cover text — see attached documents)"}`,
-  });
+  const content: Anthropic.ContentBlockParam[] = [];
+  const uploadedFileIds: string[] = [];
 
-  const response = await client.messages.parse({
-    model: MODEL,
-    max_tokens: 4096,
-    system: systemPromptFor(specialty),
-    messages: [{ role: "user", content }],
-    output_config: {
-      format: zodOutputFormat(NoteSummarySchema),
-    },
-  });
+  try {
+    // Process attachments: use Files API for large PDFs, base64 for small ones
+    for (const attachment of attachments) {
+      if (attachment.mediaType === "application/pdf" && attachment.base64.length > BASE64_SIZE_LIMIT) {
+        // Large PDF: upload via Files API to bypass request body limit
+        try {
+          const fileId = await uploadToFilesAPI(client, attachment);
+          uploadedFileIds.push(fileId);
+          content.push({
+            type: "document",
+            source: { type: "file", file_id: fileId },
+          });
+        } catch (fileApiError) {
+          // Fall back to base64 if Files API fails (will fail if >64MB but handles most cases)
+          console.error("Files API upload failed, falling back to base64:", fileApiError);
+          content.push(attachmentToContentBlock(attachment));
+        }
+      } else {
+        // Small file or image: use base64 (faster, simpler)
+        content.push(attachmentToContentBlock(attachment));
+      }
+    }
 
-  if (!response.parsed_output) {
-    const responseContent = response.content[0];
-    const message = responseContent && "text" in responseContent ? responseContent.text : "unknown parsing error";
-    throw new Error(`Failed to parse extraction output: ${message}`);
+    content.push({
+      type: "text",
+      text: `Extract the pre-chart summary for this referral packet.${
+        attachments.length > 0
+          ? ` The packet includes ${attachments.length} attached document(s) (${attachments
+              .map((a) => a.filename)
+              .join(", ")}) — read them directly for imaging/lab findings rather than relying only on the text below.`
+          : ""
+      }\n\nCover text:\n${referralText || "(no cover text — see attached documents)"}`,
+    });
+
+    const response = await client.messages.parse({
+      model: MODEL,
+      max_tokens: 4096,
+      system: systemPromptFor(specialty),
+      messages: [{ role: "user", content }],
+      output_config: {
+        format: zodOutputFormat(NoteSummarySchema),
+      },
+    });
+
+    if (!response.parsed_output) {
+      const responseContent = response.content[0];
+      const message = responseContent && "text" in responseContent ? responseContent.text : "unknown parsing error";
+      throw new Error(`Failed to parse extraction output: ${message}`);
+    }
+
+    return response.parsed_output;
+  } finally {
+    // Clean up uploaded files
+    for (const fileId of uploadedFileIds) {
+      try {
+        await client.beta.files.delete(fileId);
+      } catch (error) {
+        // Best-effort cleanup; don't fail extraction if cleanup fails
+        console.error("Failed to delete uploaded file:", error);
+      }
+    }
   }
+}
 
-  return response.parsed_output;
+async function uploadToFilesAPI(client: Anthropic, attachment: ExtractAttachment): Promise<string> {
+  const binaryData = Buffer.from(attachment.base64, "base64");
+  const file = new File([binaryData], attachment.filename, { type: attachment.mediaType });
+
+  const response = await client.beta.files.upload({ file });
+  return response.id;
 }
 
 function attachmentToContentBlock(attachment: ExtractAttachment): Anthropic.ContentBlockParam {
