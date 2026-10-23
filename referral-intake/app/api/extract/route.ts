@@ -177,7 +177,11 @@ function describeError(error: unknown): string {
     return `Extraction failed: ${message}${status}. This may be a PDF parsing issue — try a different PDF or contact support.`;
   }
   if (error instanceof Error) {
-    return `Extraction failed: ${error.message}`;
+    const message = error.message;
+    if (message.includes("Large PDF upload failed")) {
+      return "This PDF is too large to process (max ~30MB). Try a smaller or compressed version.";
+    }
+    return `Extraction failed: ${message}`;
   }
   return "Something went wrong while extracting the referral. Please try again.";
 }

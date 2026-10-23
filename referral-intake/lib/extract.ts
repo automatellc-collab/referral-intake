@@ -6,7 +6,7 @@ import { NoteSummarySchema } from "@/lib/schema";
 import type { AttachmentMediaType } from "@/lib/attachments";
 
 const MODEL = "claude-opus-5";
-const BASE64_SIZE_LIMIT = 40 * 1024 * 1024; // 40MB: safe threshold with base64 overhead
+const FILES_API_BINARY_LIMIT = 28 * 1024 * 1024; // 28MB binary (32MB base64 = ~24MB binary, add margin)
 
 /**
  * A document's actual bytes, ready to send to Claude. Distinct from
@@ -48,8 +48,11 @@ export async function extractSummary(
   try {
     // Process attachments: use Files API for large PDFs, base64 for small ones
     for (const attachment of attachments) {
-      if (attachment.mediaType === "application/pdf" && attachment.base64.length > BASE64_SIZE_LIMIT) {
-        // Large PDF: upload via Files API to bypass request body limit
+      // Calculate binary size from base64: base64 is ~133% of binary size
+      const binarySize = Math.ceil((attachment.base64.length * 3) / 4);
+
+      if (attachment.mediaType === "application/pdf" && binarySize > FILES_API_BINARY_LIMIT) {
+        // Large PDF: upload via Files API (supports up to ~32MB binary)
         try {
           const fileId = await uploadToFilesAPI(client, attachment);
           uploadedFileIds.push(fileId);
@@ -58,9 +61,10 @@ export async function extractSummary(
             source: { type: "file", file_id: fileId },
           });
         } catch (fileApiError) {
-          // Fall back to base64 if Files API fails (will fail if >64MB but handles most cases)
-          console.error("Files API upload failed, falling back to base64:", fileApiError);
-          content.push(attachmentToContentBlock(attachment));
+          // Files API failed - don't fall back to base64 for large files, throw error
+          throw new Error(
+            `Large PDF upload failed and cannot fall back: ${fileApiError instanceof Error ? fileApiError.message : String(fileApiError)}`,
+          );
         }
       } else {
         // Small file or image: use base64 (faster, simpler)
