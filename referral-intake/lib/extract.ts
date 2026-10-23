@@ -1,15 +1,23 @@
 import "server-only";
 
 import Anthropic from "@anthropic-ai/sdk";
-import { NoteSummarySchema, type NoteSummary } from "@/lib/schema";
+import { type NoteSummary } from "@/lib/schema";
 import type { AttachmentMediaType } from "@/lib/attachments";
-
-const MODEL = "claude-opus-5";
+import { orchestrateExtraction } from "@/lib/extraction-orchestrator";
+import { classifyDocument } from "@/lib/document-classifier";
 
 export interface ExtractAttachment {
   filename: string;
   mediaType: AttachmentMediaType;
   base64: string;
+}
+
+export interface EnrichedExtractionResult {
+  summary: NoteSummary;
+  confidence: number;
+  documentType: string;
+  requiresReview: boolean;
+  reviewReason?: string;
 }
 
 function systemPromptFor(specialty: string): string {
@@ -55,18 +63,31 @@ export async function extractSummary(
   specialty: string,
   referralText: string,
   attachments: ExtractAttachment[] = [],
-): Promise<NoteSummary> {
+): Promise<EnrichedExtractionResult> {
   const client = new Anthropic();
-
-  const content: Anthropic.ContentBlockParam[] = [];
   const uploadedFileIds: string[] = [];
+  let pdfBase64: string | undefined;
 
   try {
-    // Add attachments to message
+    // Step 1: Classify document type
+    console.log("[Extraction] Step 1: Classifying document...");
+    const primaryPDF = attachments.find((a) => a.mediaType === "application/pdf");
+    const classificationText = primaryPDF ? referralText.substring(0, 2000) : referralText;
+    const classification = await classifyDocument(
+      classificationText,
+      primaryPDF?.filename || "referral",
+    );
+    console.log(`[Extraction] Document type: ${classification.type} (confidence: ${classification.confidence})`);
+
+    // Step 2: Prepare multimodal content (vision + text)
+    console.log("[Extraction] Step 2: Preparing content...");
+    const content: Anthropic.ContentBlockParam[] = [];
+
+    // Use PDF with vision if available
     for (const attachment of attachments) {
-      if (attachment.mediaType === "application/pdf") {
-        // Large files use Files API
+      if (attachment.mediaType === "application/pdf" && !pdfBase64) {
         if (attachment.base64.length > 10 * 1024 * 1024) {
+          // Large file: use Files API
           try {
             const fileId = await uploadToFilesAPI(client, attachment);
             uploadedFileIds.push(fileId);
@@ -75,69 +96,35 @@ export async function extractSummary(
               source: { type: "file", file_id: fileId },
             });
           } catch (error) {
-            console.error("Files API failed, using base64:", error);
-            content.push(attachmentToContentBlock(attachment));
+            console.warn("Files API failed, falling back to base64");
+            pdfBase64 = attachment.base64;
           }
         } else {
-          // Small files use base64 (faster)
-          content.push(attachmentToContentBlock(attachment));
+          // Small file: use base64 (faster)
+          pdfBase64 = attachment.base64;
         }
-      } else {
-        // Images always use base64
-        content.push(attachmentToContentBlock(attachment));
       }
     }
 
-    // Add the extraction request
-    content.push({
-      type: "text",
-      text: `Extract the pre-chart summary for this referral packet.${
-        attachments.length > 0
-          ? ` The packet includes ${attachments.length} attached document(s) (${attachments
-              .map((a) => a.filename)
-              .join(", ")}) — read them directly for findings rather than relying only on the text below.`
-          : ""
-      }\n\nCover text:\n${referralText || "(no cover text — see attached documents)"}`,
-    });
+    // Step 3: Orchestrated extraction with 4 fallback controls
+    console.log("[Extraction] Step 3: Running orchestrated extraction...");
+    const orchestrationResult = await orchestrateExtraction(specialty, referralText, pdfBase64);
 
-    // Simple, reliable extraction: just ask Claude to return JSON
-    const response = await client.messages.create({
-      model: MODEL,
-      max_tokens: 4096,
-      system: systemPromptFor(specialty),
-      messages: [{ role: "user", content }],
-    });
-
-    // Extract text response
-    const textContent = response.content.find((block) => block.type === "text");
-    if (!textContent || textContent.type !== "text") {
-      throw new Error("Claude did not return a text response");
-    }
-
-    const text = textContent.text;
-
-    // Find and parse JSON
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error(`No JSON found in response. Got: ${text.substring(0, 300)}`);
-    }
-
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(jsonMatch[0]);
-    } catch (parseError) {
+    if (!orchestrationResult.summary) {
       throw new Error(
-        `Invalid JSON from Claude: ${parseError instanceof Error ? parseError.message : String(parseError)}. Raw: ${jsonMatch[0].substring(0, 300)}`,
+        `Extraction failed after ${orchestrationResult.totalAttempts} attempts: ${orchestrationResult.controls
+          .flatMap((c) => c.errors)
+          .join("; ")}`,
       );
     }
 
-    // Validate against NoteSummary schema
-    try {
-      return NoteSummarySchema.parse(parsed);
-    } catch (validationError) {
-      const details = validationError instanceof Error ? validationError.message : String(validationError);
-      throw new Error(`Validation failed: ${details}`);
-    }
+    return {
+      summary: orchestrationResult.summary,
+      confidence: orchestrationResult.confidence,
+      documentType: classification.type,
+      requiresReview: orchestrationResult.requiresReview,
+      reviewReason: orchestrationResult.reviewReason,
+    };
   } finally {
     // Clean up uploaded files
     for (const fileId of uploadedFileIds) {

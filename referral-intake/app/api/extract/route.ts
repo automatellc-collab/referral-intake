@@ -74,9 +74,16 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   try {
-    const summary = await extractSummary(specialty.trim(), referralText, attachmentsResult.attachments);
+    const result = await extractSummary(specialty.trim(), referralText, attachmentsResult.attachments);
     await deleteBlobs(refs.map((ref) => ref.url));
-    return NextResponse.json({ summary, specialty: specialty.trim() });
+    return NextResponse.json({
+      summary: result.summary,
+      specialty: specialty.trim(),
+      confidence: result.confidence,
+      documentType: result.documentType,
+      requiresReview: result.requiresReview,
+      reviewReason: result.reviewReason,
+    });
   } catch (error: unknown) {
     // Leave the blobs in place: a rate limit or API hiccup is usually transient, and this
     // lets the client retry the same referral without re-uploading its attachments.
