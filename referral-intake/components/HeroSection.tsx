@@ -4,19 +4,18 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 
 export function HeroSection() {
-  const [confidence, setConfidence] = useState(76);
+  const [confidence, setConfidence] = useState<number | null>(null);
 
   useEffect(() => {
     fetch("/api/stats/confidence")
       .then((res) => res.json())
       .then((data) => {
-        if (data.success && data.confidence) {
+        if (data.success && data.confidence && data.count > 0) {
           setConfidence(data.confidence);
         }
       })
       .catch((err) => {
         console.error("Failed to fetch confidence:", err);
-        // Keep default 76%
       });
   }, []);
 
@@ -50,8 +49,18 @@ export function HeroSection() {
 
           <div className="hero-stats">
             <div className="stat-item">
-              <div className="stat-number">{confidence}%</div>
-              <div className="stat-label">Live Avg Confidence</div>
+              {confidence !== null ? (
+                <>
+                  <div className="stat-number">{confidence}%</div>
+                  <div className="stat-label">Avg Confidence</div>
+                </>
+              ) : (
+                <div className="stat-label" style={{ fontSize: "14px", marginTop: "8px" }}>
+                  LIVE<br />
+                  Confidence<br />
+                  Calculator
+                </div>
+              )}
             </div>
             <div className="stat-item">
               <div className="stat-number">7</div>

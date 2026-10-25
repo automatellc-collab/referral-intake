@@ -1,7 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/auth/callback"];
+// Stripe calls /api/stripe-webhook directly with no user session — it's
+// authenticated by its own cryptographic signature inside the route handler,
+// not by a login cookie, so it can't sit behind this gate like everything else.
+const PUBLIC_PATHS = ["/login", "/auth/callback", "/api/stripe-webhook"];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
