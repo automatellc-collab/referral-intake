@@ -13,13 +13,29 @@ interface CreateResponse {
 }
 
 const SPECIALTIES = [
+  "Allergy & Immunology",
+  "Anesthesiology",
   "Cardiology",
   "Dermatology",
+  "Emergency Medicine",
   "Endocrinology",
   "Gastroenterology",
+  "General Surgery",
+  "Hematology",
+  "Infectious Disease",
+  "Nephrology",
   "Neurology",
-  "Orthopedics",
+  "Oncology",
+  "Ophthalmology",
+  "Orthopedic Surgery",
+  "Otolaryngology",
+  "Pathology",
+  "Pediatrics",
+  "Psychiatry",
+  "Pulmonology",
+  "Radiology",
   "Rheumatology",
+  "Urology",
 ];
 
 export default function NewTemplatePage() {

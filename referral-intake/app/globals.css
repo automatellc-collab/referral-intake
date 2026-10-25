@@ -716,6 +716,29 @@ button.chip-btn:hover {
 }
 
 /* Stats */
+.hero-cta {
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+.cta-button {
+  display: inline-block;
+  padding: 12px 28px;
+  background: linear-gradient(135deg, var(--primary) 0%, #0052cc 100%);
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 82, 204, 0.3);
+}
+
+.cta-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 82, 204, 0.4);
+}
+
 .hero-stats {
   display: flex;
   gap: 40px;

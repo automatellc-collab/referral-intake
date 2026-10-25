@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 export function HeroSection() {
   return (
     <section className="hero-section">
@@ -22,6 +24,12 @@ export function HeroSection() {
             <br />
             Every extracted field is traceable. Every uncertainty is flagged.
           </p>
+
+          <div className="hero-cta">
+            <Link href="/templates" className="cta-button">
+              Customize Templates
+            </Link>
+          </div>
 
           <div className="hero-stats">
             <div className="stat-item">
