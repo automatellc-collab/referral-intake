@@ -27,6 +27,7 @@ export default function WizardForm({ templates, tenant, ownerEmail }: Props) {
   const [businessName, setBusinessName] = useState(tenant?.business_name || "");
   const [ownerPhone, setOwnerPhone] = useState(tenant?.owner_phone || "");
   const [phoneNumber, setPhoneNumber] = useState(tenant?.phone_number || "");
+  const [provisioning, setProvisioning] = useState(false);
   const [hours, setHours] = useState<Hours>(tenant?.hours || {});
   const [services, setServices] = useState<ServiceItem[]>(tenant?.services || []);
   const [faqs, setFaqs] = useState<FaqItem[]>(tenant?.faqs || []);
@@ -59,6 +60,10 @@ export default function WizardForm({ templates, tenant, ownerEmail }: Props) {
     setError("");
     const supabase = createClient();
 
+    // Going live provisions a real phone number — the API route sets status
+    // itself once that succeeds, so don't claim "live" here before it's true.
+    const goingLive = nextStatus === "live";
+
     const payload = {
       owner_email: ownerEmail,
       business_name: businessName,
@@ -79,20 +84,52 @@ export default function WizardForm({ templates, tenant, ownerEmail }: Props) {
       transfer_keywords: transferKeywords.split(",").map((s) => s.trim()).filter(Boolean),
       recording_consent_enabled: recordingConsentEnabled,
       notification_channels: { sms: smsNotifications },
-      ...(nextStatus ? { status: nextStatus } : {}),
+      ...(nextStatus && !goingLive ? { status: nextStatus } : {}),
     };
 
-    const { error: saveError } = tenant
-      ? await supabase.from("tenants").update(payload).eq("id", tenant.id)
-      : await supabase.from("tenants").insert(payload);
+    const query = tenant
+      ? supabase.from("tenants").update(payload).eq("id", tenant.id).select().single()
+      : supabase.from("tenants").insert(payload).select().single();
+    const { data: savedTenant, error: saveError } = await query;
 
-    setSaving(false);
     if (saveError) {
+      setSaving(false);
       setError(saveError.message);
       return;
     }
-    router.push("/dashboard");
-    router.refresh();
+
+    if (!goingLive) {
+      setSaving(false);
+      router.push("/dashboard");
+      router.refresh();
+      return;
+    }
+
+    if (savedTenant?.phone_number) {
+      // Already provisioned (editing a live tenant) — nothing more to do.
+      setSaving(false);
+      router.push("/dashboard");
+      router.refresh();
+      return;
+    }
+
+    setProvisioning(true);
+    try {
+      const resp = await fetch("/api/provision-number", { method: "POST" });
+      const data = await resp.json();
+      if (!resp.ok) {
+        setError(data.error || "Couldn't assign a phone number — try again in a moment.");
+        return;
+      }
+      setPhoneNumber(data.phoneNumber);
+      router.push("/dashboard");
+      router.refresh();
+    } catch {
+      setError("Couldn't reach the provisioning service — try again in a moment.");
+    } finally {
+      setSaving(false);
+      setProvisioning(false);
+    }
   }
 
   const canSave = businessName.trim() && templateSlug;
@@ -122,12 +159,11 @@ export default function WizardForm({ templates, tenant, ownerEmail }: Props) {
           placeholder="Your cell, for call summaries (e.g. +14045551234)"
           className="rounded-md border border-neutral-300 px-3 py-2 text-sm"
         />
-        <input
-          value={phoneNumber}
-          onChange={(e) => setPhoneNumber(e.target.value)}
-          placeholder="RingCatch phone number, once you have one (e.g. +17705550184)"
-          className="rounded-md border border-neutral-300 px-3 py-2 text-sm"
-        />
+        <div className="rounded-md border border-dashed border-neutral-300 px-3 py-2 text-sm text-neutral-500">
+          {phoneNumber
+            ? <span className="text-neutral-900">Phone number: {phoneNumber}</span>
+            : "Phone number: assigned automatically when you go live"}
+        </div>
         <input
           value={serviceArea}
           onChange={(e) => setServiceArea(e.target.value)}
@@ -232,7 +268,7 @@ export default function WizardForm({ templates, tenant, ownerEmail }: Props) {
           onClick={() => save("live")}
           className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
         >
-          Save & go live
+          {provisioning ? "Assigning your phone number…" : "Save & go live"}
         </button>
       </div>
     </div>

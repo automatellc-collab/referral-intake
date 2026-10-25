@@ -21,25 +21,34 @@ export default function StatusHeader({ tenant }: { tenant: Tenant }) {
   }
 
   return (
-    <header className="flex items-center justify-between border-b border-neutral-200 pb-4">
-      <div>
-        <h1 className="text-2xl font-semibold">{tenant.business_name}</h1>
-        <div className="mt-1 flex items-center gap-2 text-sm text-neutral-500">
-          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[tenant.status]}`}>
-            {tenant.status}
-          </span>
-          <span>{PLAN_LABELS[tenant.plan]}</span>
-          {tenant.phone_number && <span>· {tenant.phone_number}</span>}
+    <header className="flex flex-col gap-3 border-b border-neutral-200 pb-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">{tenant.business_name}</h1>
+          <div className="mt-1 flex items-center gap-2 text-sm text-neutral-500">
+            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[tenant.status]}`}>
+              {tenant.status}
+            </span>
+            <span>{PLAN_LABELS[tenant.plan]}</span>
+            {tenant.phone_number && <span>· {tenant.phone_number}</span>}
+          </div>
+        </div>
+        <div className="flex gap-3">
+          <Link href="/wizard" className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium">
+            Edit configuration
+          </Link>
+          <button onClick={signOut} className="text-sm text-neutral-500 underline">
+            Sign out
+          </button>
         </div>
       </div>
-      <div className="flex gap-3">
-        <Link href="/wizard" className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium">
-          Edit configuration
-        </Link>
-        <button onClick={signOut} className="text-sm text-neutral-500 underline">
-          Sign out
-        </button>
-      </div>
+
+      {tenant.provisioning_status === "failed" && (
+        <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">
+          Couldn&apos;t assign a phone number{tenant.provisioning_error ? `: ${tenant.provisioning_error}` : "."}{" "}
+          <Link href="/wizard" className="underline">Go back and try again</Link>.
+        </div>
+      )}
     </header>
   );
 }

@@ -80,55 +80,67 @@ function escapeXml(s) {
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server, path: "/relay" });
 
-wss.on("connection", async (ws, req) => {
+// Twilio sends "setup" the instant the socket opens, often before the tenant
+// lookup below resolves. Register listeners synchronously and queue anything
+// that arrives early, or those first frames get silently dropped.
+wss.on("connection", (ws, req) => {
   const tenantId = new URL(req.url, "http://internal").searchParams.get("tenantId");
-  const tenant = await getTenantById(tenantId);
-  if (!tenant) {
-    ws.close();
-    return;
-  }
+  const queue = [];
+  let state = null;
 
-  const state = {
-    tenant,
-    caller: null,
-    callLogId: null,
-    messages: [],
-    slots: tenant.booking_enabled ? getAvailableSlots(new Date(), 3) : [],
-    turns: 0,
-    gen: 0, // bumped on barge-in to abort in-flight token streaming
-    booked: false,
-    ended: false,
-  };
-  state.messages.push({ role: "system", content: buildSystemPrompt(tenant, state.slots) });
-
-  ws.on("message", async (raw) => {
-    let msg;
-    try { msg = JSON.parse(raw.toString()); } catch { return; }
-
-    switch (msg.type) {
-      case "setup":
-        state.caller = msg.from || "unknown";
-        state.callLogId = (await createCallLog(tenant.id, state.caller))?.id || null;
-        // Twilio speaks welcomeGreeting itself; seed it so the model has context.
-        state.messages.push({ role: "assistant", content: greetingFor(tenant) });
-        break;
-
-      case "prompt": // a completed caller utterance (transcribed)
-        await handleUtterance(ws, state, (msg.voicePrompt || "").trim());
-        break;
-
-      case "interrupt": // caller talked over the AI — stop the current reply
-        state.gen++;
-        break;
-
-      case "error":
-        console.error("ConversationRelay error:", msg.description || msg);
-        break;
-    }
+  ws.on("message", (raw) => {
+    if (state) handleRelayMessage(ws, state, raw);
+    else queue.push(raw);
   });
 
-  ws.on("close", () => endCall(state)); // caller hung up -> summarize + notify owner
+  ws.on("close", () => { if (state) endCall(state); }); // caller hung up -> summarize + notify owner
+
+  getTenantById(tenantId).then((tenant) => {
+    if (!tenant) {
+      ws.close();
+      return;
+    }
+    state = {
+      tenant,
+      caller: null,
+      callLogId: null,
+      messages: [],
+      slots: tenant.booking_enabled ? getAvailableSlots(new Date(), 3) : [],
+      turns: 0,
+      gen: 0, // bumped on barge-in to abort in-flight token streaming
+      booked: false,
+      ended: false,
+    };
+    state.messages.push({ role: "system", content: buildSystemPrompt(tenant, state.slots) });
+    queue.splice(0).forEach((raw) => handleRelayMessage(ws, state, raw));
+  });
 });
+
+async function handleRelayMessage(ws, state, raw) {
+  let msg;
+  try { msg = JSON.parse(raw.toString()); } catch { return; }
+
+  switch (msg.type) {
+    case "setup":
+      state.caller = msg.from || "unknown";
+      state.callLogId = (await createCallLog(state.tenant.id, state.caller))?.id || null;
+      // Twilio speaks welcomeGreeting itself; seed it so the model has context.
+      state.messages.push({ role: "assistant", content: greetingFor(state.tenant) });
+      break;
+
+    case "prompt": // a completed caller utterance (transcribed)
+      await handleUtterance(ws, state, (msg.voicePrompt || "").trim());
+      break;
+
+    case "interrupt": // caller talked over the AI — stop the current reply
+      state.gen++;
+      break;
+
+    case "error":
+      console.error("ConversationRelay error:", msg.description || msg);
+      break;
+  }
+}
 
 async function handleUtterance(ws, state, heard) {
   if (!heard) return;

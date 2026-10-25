@@ -51,6 +51,9 @@ export interface Tenant {
   transfer_keywords: string[];
   recording_consent_enabled: boolean;
   notification_channels: { sms?: boolean };
+  twilio_number_sid: string | null;
+  provisioning_status: "idle" | "provisioning" | "active" | "failed";
+  provisioning_error: string | null;
   created_at: string;
   updated_at: string;
 }
