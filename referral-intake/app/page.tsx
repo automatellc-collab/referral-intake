@@ -9,6 +9,8 @@ import { SummaryPanel } from "@/components/SummaryPanel";
 import { HeroSection } from "@/components/HeroSection";
 import type { NoteSummary } from "@/lib/schema";
 import type { Sample } from "@/lib/samples";
+import type { FormattedOutput } from "@/lib/template-orchestrator";
+import type { AppliedTemplate, TemplateOption } from "@/types/template";
 import { withViewTransition } from "@/lib/viewTransition";
 import { parseJsonResponse } from "@/lib/parseJsonResponse";
 import {
@@ -27,6 +29,8 @@ interface ExtractResponse {
   documentType?: string;
   requiresReview?: boolean;
   reviewReason?: string;
+  appliedTemplate?: AppliedTemplate;
+  formattedOutput?: FormattedOutput;
   error?: string;
 }
 
@@ -45,6 +49,32 @@ export default function Home() {
   const [reviewReason, setReviewReason] = useState<string>();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [templates, setTemplates] = useState<TemplateOption[]>([]);
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const [formattedOutput, setFormattedOutput] = useState<FormattedOutput | null>(null);
+  const [appliedTemplate, setAppliedTemplate] = useState<AppliedTemplate | null>(null);
+
+  async function loadTemplates(selectedSpecialty: string) {
+    if (!selectedSpecialty) {
+      setTemplates([]);
+      return;
+    }
+
+    setIsLoadingTemplates(true);
+    try {
+      const response = await fetch(`/api/templates?specialty=${encodeURIComponent(selectedSpecialty)}`);
+      const data = await parseJsonResponse<{ data: TemplateOption[] }>(response);
+      if (response.ok) {
+        setTemplates(data.data ?? []);
+      }
+    } catch (err) {
+      // Silently fail template loading
+      setTemplates([]);
+    } finally {
+      setIsLoadingTemplates(false);
+    }
+  }
 
   async function handleExtract() {
     setIsLoading(true);
@@ -57,6 +87,7 @@ export default function Home() {
           referralText,
           specialty,
           attachments: attachments.map((a) => ({ filename: a.filename, mediaType: a.mediaType, url: a.url })),
+          templateId: selectedTemplateId,
         }),
       });
       const body = await parseJsonResponse<ExtractResponse>(response);
@@ -70,6 +101,8 @@ export default function Home() {
         setDocumentType(body.documentType);
         setRequiresReview(body.requiresReview ?? false);
         setReviewReason(body.reviewReason);
+        setFormattedOutput(body.formattedOutput ?? null);
+        setAppliedTemplate(body.appliedTemplate ?? null);
         // The server deletes attachments once it has successfully read them —
         // clear them here too so a spent attachment can't be resubmitted.
         setAttachments([]);
@@ -81,6 +114,8 @@ export default function Home() {
       withViewTransition(() => {
         setError(err instanceof Error ? err.message : "Extraction failed.");
         setSummary(null);
+        setFormattedOutput(null);
+        setAppliedTemplate(null);
         setIsLoading(false);
       });
     }
@@ -141,6 +176,10 @@ export default function Home() {
     setDocumentType(undefined);
     setRequiresReview(false);
     setReviewReason(undefined);
+    setSelectedTemplateId(null);
+    setFormattedOutput(null);
+    setAppliedTemplate(null);
+    void loadTemplates(sample.specialty);
   }
 
   function handleSpecialtyChange(next: string) {
@@ -151,6 +190,10 @@ export default function Home() {
     setDocumentType(undefined);
     setRequiresReview(false);
     setReviewReason(undefined);
+    setSelectedTemplateId(null);
+    setFormattedOutput(null);
+    setAppliedTemplate(null);
+    void loadTemplates(next);
   }
 
   function handleClear() {
@@ -166,6 +209,10 @@ export default function Home() {
     setDocumentType(undefined);
     setRequiresReview(false);
     setReviewReason(undefined);
+    setTemplates([]);
+    setSelectedTemplateId(null);
+    setFormattedOutput(null);
+    setAppliedTemplate(null);
   }
 
   return (
@@ -220,6 +267,30 @@ export default function Home() {
           onExtract={handleExtract}
           onClear={handleClear}
         />
+
+        {templates.length > 0 && specialty && (
+          <div className="template-selector-section">
+            <div className="template-selector-label">
+              <label htmlFor="template-select">Output Template</label>
+              <span className="optional">(optional)</span>
+            </div>
+            <select
+              id="template-select"
+              value={selectedTemplateId || ""}
+              onChange={(e) => setSelectedTemplateId(e.target.value || null)}
+              disabled={isLoadingTemplates || isLoading}
+              className="template-select"
+            >
+              <option value="">Use default format</option>
+              {templates.map((template) => (
+                <option key={template.id} value={template.id}>
+                  {template.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <SummaryPanel
           summary={summary}
           specialty={summarySpecialty}
@@ -229,6 +300,8 @@ export default function Home() {
           documentType={documentType}
           requiresReview={requiresReview}
           reviewReason={reviewReason}
+          formattedOutput={formattedOutput || undefined}
+          appliedTemplate={appliedTemplate || undefined}
         />
       </div>
 
@@ -247,6 +320,60 @@ export default function Home() {
           </span>
         </div>
       </div>
+
+      <style jsx>{`
+        .template-selector-section {
+          margin: 12px 0;
+          padding: 12px;
+          background: var(--bg-soft);
+          border-radius: 6px;
+          border: 1px solid var(--border-soft);
+        }
+
+        .template-selector-label {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 8px;
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--ink);
+        }
+
+        .template-selector-label .optional {
+          font-size: 12px;
+          color: var(--ink-soft);
+          font-weight: 400;
+        }
+
+        .template-select {
+          width: 100%;
+          padding: 8px 12px;
+          border: 1px solid var(--border-soft);
+          border-radius: 4px;
+          background: var(--bg);
+          color: var(--ink);
+          font-size: 13px;
+          font-family: inherit;
+          cursor: pointer;
+          transition: border-color 0.2s ease;
+        }
+
+        .template-select:hover:not(:disabled) {
+          border-color: var(--border);
+        }
+
+        .template-select:focus {
+          outline: none;
+          border-color: var(--accent-strong);
+          box-shadow: 0 0 0 2px var(--accent-soft);
+        }
+
+        .template-select:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      `}</style>
     </>
   );
 }

@@ -1,7 +1,10 @@
 import { ClipboardText, FileMagnifyingGlass, FileText, Siren, Warning, WarningCircle } from "@phosphor-icons/react/dist/ssr";
 import type { NoteSummary, UrgencyLevel } from "@/lib/schema";
+import type { FormattedOutput } from "@/lib/template-orchestrator";
+import type { AppliedTemplate } from "@/types/template";
 import { NoteSummaryPanel } from "./NoteSummaryPanel";
 import { SkeletonSummary } from "./SkeletonSummary";
+import { OutputFormatSelector } from "./OutputFormatSelector";
 
 const URGENCY_TONE: Record<UrgencyLevel, string> = {
   Routine: "ok",
@@ -24,6 +27,8 @@ interface SummaryPanelProps {
   documentType?: string;
   requiresReview?: boolean;
   reviewReason?: string;
+  formattedOutput?: FormattedOutput;
+  appliedTemplate?: AppliedTemplate;
 }
 
 export function SummaryPanel({
@@ -35,6 +40,8 @@ export function SummaryPanel({
   documentType,
   requiresReview,
   reviewReason,
+  formattedOutput,
+  appliedTemplate,
 }: SummaryPanelProps) {
   const confidencePercent = Math.round(confidence * 100);
   const confidenceTone = confidence >= 0.8 ? "ok" : confidence >= 0.65 ? "warn" : "critical";
@@ -57,6 +64,11 @@ export function SummaryPanel({
             <span className="pill neutral">{specialty}</span>
             {documentType && <span className="pill neutral text-sm">{documentType}</span>}
             <span className={`pill ${confidenceTone}`}>{confidencePercent}% confidence</span>
+            {appliedTemplate && (
+              <span className="pill neutral">
+                Template: {appliedTemplate.name}
+              </span>
+            )}
             {requiresReview && (
               <span className="pill critical">
                 <span className="icon">
@@ -89,7 +101,11 @@ export function SummaryPanel({
           </div>
         )}
 
-        {!isLoading && !error && summary && <NoteSummaryPanel summary={summary} />}
+        {!isLoading && !error && summary && formattedOutput ? (
+          <OutputFormatSelector formattedOutput={formattedOutput} />
+        ) : (
+          !isLoading && !error && summary && <NoteSummaryPanel summary={summary} />
+        )}
       </div>
     </section>
   );

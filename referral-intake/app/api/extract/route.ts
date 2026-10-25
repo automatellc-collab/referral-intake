@@ -3,6 +3,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { extractSummary, type ExtractAttachment } from "@/lib/extract";
 import { isAllowedAttachmentType, isOwnedBlobUrl, MAX_ATTACHMENTS, MAX_TOTAL_ATTACHMENT_BYTES } from "@/lib/attachments";
+import { templateService } from "@/lib/services/template-service";
+import { templateOrchestrator } from "@/lib/template-orchestrator";
 
 const MAX_REFERRAL_LENGTH = 20_000;
 const MAX_SPECIALTY_LENGTH = 100;
@@ -31,7 +33,8 @@ export async function POST(request: Request): Promise<Response> {
     referralText,
     specialty,
     attachments: rawAttachments,
-  } = (body as { referralText?: unknown; specialty?: unknown; attachments?: unknown } | null) ?? {};
+    templateId,
+  } = (body as { referralText?: unknown; specialty?: unknown; attachments?: unknown; templateId?: unknown } | null) ?? {};
 
   if (typeof referralText !== "string") {
     return NextResponse.json({ error: "referralText must be a string." }, { status: 400 });
@@ -76,6 +79,30 @@ export async function POST(request: Request): Promise<Response> {
   try {
     const result = await extractSummary(specialty.trim(), referralText, attachmentsResult.attachments);
     await deleteBlobs(refs.map((ref) => ref.url));
+
+    // Apply template if provided
+    let appliedTemplate = null;
+    let formattedOutput = null;
+
+    if (templateId && typeof templateId === "string") {
+      const template = await templateService.getTemplate(templateId);
+      if (template) {
+        appliedTemplate = {
+          id: template.id,
+          name: template.name,
+          specialty: template.specialty,
+        };
+
+        // Format output using the template
+        const output = templateOrchestrator.formatOutput(
+          result.summary,
+          template.config,
+          template.defaultOutputFormat
+        );
+        formattedOutput = output;
+      }
+    }
+
     return NextResponse.json({
       summary: result.summary,
       specialty: specialty.trim(),
@@ -83,6 +110,8 @@ export async function POST(request: Request): Promise<Response> {
       documentType: result.documentType,
       requiresReview: result.requiresReview,
       reviewReason: result.reviewReason,
+      appliedTemplate,
+      formattedOutput,
     });
   } catch (error: unknown) {
     // Leave the blobs in place: a rate limit or API hiccup is usually transient, and this

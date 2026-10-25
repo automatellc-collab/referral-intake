@@ -83,11 +83,11 @@ export class TemplateOrchestrator {
     }
 
     if (visibilityMap["currentMedications"] === false) {
-      filtered.currentMedications = { items: [] };
+      filtered.currentMedications = { status: "missing", items: [] };
     }
 
     if (visibilityMap["allergies"] === false) {
-      filtered.allergies = { items: [] };
+      filtered.allergies = { status: "missing", items: [] };
     }
 
     if (visibilityMap["redFlags"] === false) {
