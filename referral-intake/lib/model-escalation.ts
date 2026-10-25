@@ -33,8 +33,8 @@ interface ModelConfig {
 }
 
 const MODEL_ESCALATION: ModelConfig[] = [
-  { model: "claude-3-5-haiku-20241022", name: "haiku", cost: 0.8, threshold: 0.7 },
-  { model: "claude-3-5-sonnet-20241022", name: "sonnet", cost: 3.0, threshold: 0.5 },
+  { model: "claude-haiku-4-5-20251001", name: "haiku", cost: 0.8, threshold: 0.7 },
+  { model: "claude-sonnet-5", name: "sonnet", cost: 3.0, threshold: 0.5 },
   { model: "claude-opus-5", name: "opus", cost: 15.0, threshold: 0 },
 ];
 

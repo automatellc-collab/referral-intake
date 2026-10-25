@@ -6,6 +6,7 @@ import { Microphone, Stethoscope } from "@phosphor-icons/react/dist/ssr";
 import { Disclaimer } from "@/components/Disclaimer";
 import { ReferralForm } from "@/components/ReferralForm";
 import { SummaryPanel } from "@/components/SummaryPanel";
+import { HeroSection } from "@/components/HeroSection";
 import type { NoteSummary } from "@/lib/schema";
 import type { Sample } from "@/lib/samples";
 import { withViewTransition } from "@/lib/viewTransition";
@@ -168,8 +169,10 @@ export default function Home() {
   }
 
   return (
-    <div className="wrap">
-      <Disclaimer />
+    <>
+      <HeroSection />
+      <div className="wrap">
+        <Disclaimer />
 
       <header className="top">
         <div className="brand">
@@ -229,20 +232,21 @@ export default function Home() {
         />
       </div>
 
-      <div className="legend">
-        <span className="item">
-          <span className="dot" style={{ background: "var(--accent-strong)" }} />
-          Extracted — direct quote from the referral
-        </span>
-        <span className="item">
-          <span className="dot" style={{ background: "var(--warn)" }} />
-          Inferred — derived from context, confirm before charting
-        </span>
-        <span className="item">
-          <span className="dot" style={{ background: "var(--ink-faint)" }} />
-          Not found — flagged as a gap
-        </span>
+        <div className="legend">
+          <span className="item">
+            <span className="dot" style={{ background: "var(--accent-strong)" }} />
+            Extracted — direct quote from the referral
+          </span>
+          <span className="item">
+            <span className="dot" style={{ background: "var(--warn)" }} />
+            Inferred — derived from context, confirm before charting
+          </span>
+          <span className="item">
+            <span className="dot" style={{ background: "var(--ink-faint)" }} />
+            Not found — flagged as a gap
+          </span>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
