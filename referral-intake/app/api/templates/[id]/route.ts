@@ -1,16 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { templateService, type TemplateConfig } from "@/lib/services/template-service";
 
+interface RouteParams {
+  id: string;
+}
+
 /**
  * GET /api/templates/:id
  * Get a specific template
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<RouteParams> }
 ) {
   try {
-    const template = await templateService.getTemplate(params.id);
+    const { id } = await params;
+    const template = await templateService.getTemplate(id);
 
     if (!template) {
       return NextResponse.json(
@@ -35,9 +40,10 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<RouteParams> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const { config, changelog } = body;
 
@@ -49,7 +55,7 @@ export async function PUT(
     }
 
     const template = await templateService.updateTemplateConfig(
-      params.id,
+      id,
       config as TemplateConfig,
       changelog
     );
@@ -70,10 +76,11 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<RouteParams> }
 ) {
   try {
-    await templateService.deleteTemplate(params.id, true); // soft delete
+    const { id } = await params;
+    await templateService.deleteTemplate(id, true); // soft delete
 
     return NextResponse.json({ success: true });
   } catch (error) {
