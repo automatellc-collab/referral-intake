@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Clock, Samples } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft, Clock, FileText } from "@phosphor-icons/react/dist/ssr";
 import type { Template, TemplateConfig } from "@/lib/services/template-service";
 
 interface TemplateResponse {
@@ -186,7 +186,7 @@ export default function TemplateEditorPage() {
               Versions
             </Link>
             <Link href={`/templates/${templateId}/samples`} className="secondary-icon-button">
-              <Samples weight="bold" size={16} />
+              <FileText weight="bold" size={16} />
               Samples
             </Link>
           </div>

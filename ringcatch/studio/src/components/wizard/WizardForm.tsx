@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import TemplatePicker from "./TemplatePicker";
 import HoursEditor from "./HoursEditor";
@@ -20,6 +20,7 @@ interface Props {
 
 export default function WizardForm({ templates, tenant, ownerEmail }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -43,6 +44,35 @@ export default function WizardForm({ templates, tenant, ownerEmail }: Props) {
   const [transferKeywords, setTransferKeywords] = useState((tenant?.transfer_keywords || []).join(", "));
   const [recordingConsentEnabled, setRecordingConsentEnabled] = useState(tenant?.recording_consent_enabled ?? true);
   const [smsNotifications, setSmsNotifications] = useState(tenant?.notification_channels?.sms ?? true);
+
+  async function goLive() {
+    setProvisioning(true);
+    setError("");
+    try {
+      const resp = await fetch("/api/provision-number", { method: "POST" });
+      const data = await resp.json();
+      if (!resp.ok) {
+        setError(data.error || "Couldn't assign a phone number — try again in a moment.");
+        return;
+      }
+      setPhoneNumber(data.phoneNumber);
+      router.push("/dashboard");
+      router.refresh();
+    } catch {
+      setError("Couldn't reach the provisioning service — try again in a moment.");
+    } finally {
+      setProvisioning(false);
+    }
+  }
+
+  // Returning from Stripe — fields were already saved before the redirect,
+  // so just finish assigning the phone number now that billing is active.
+  useEffect(() => {
+    const checkout = searchParams.get("checkout");
+    if (checkout === "success") goLive();
+    else if (checkout === "cancelled") setError("Checkout was cancelled — your profile is saved as a draft.");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function handleTemplateChange(slug: string) {
     setTemplateSlug(slug);
@@ -113,23 +143,26 @@ export default function WizardForm({ templates, tenant, ownerEmail }: Props) {
       return;
     }
 
-    setProvisioning(true);
-    try {
-      const resp = await fetch("/api/provision-number", { method: "POST" });
-      const data = await resp.json();
-      if (!resp.ok) {
-        setError(data.error || "Couldn't assign a phone number — try again in a moment.");
+    if (savedTenant?.subscription_status !== "active") {
+      try {
+        const resp = await fetch("/api/create-checkout-session", { method: "POST" });
+        const data = await resp.json();
+        if (!resp.ok) {
+          setError(data.error || "Couldn't start checkout — try again.");
+          setSaving(false);
+          return;
+        }
+        window.location.href = data.url; // leaving the page to pay
+        return;
+      } catch {
+        setError("Couldn't reach the billing service — try again in a moment.");
+        setSaving(false);
         return;
       }
-      setPhoneNumber(data.phoneNumber);
-      router.push("/dashboard");
-      router.refresh();
-    } catch {
-      setError("Couldn't reach the provisioning service — try again in a moment.");
-    } finally {
-      setSaving(false);
-      setProvisioning(false);
     }
+
+    await goLive();
+    setSaving(false);
   }
 
   const canSave = businessName.trim() && templateSlug;
@@ -268,7 +301,13 @@ export default function WizardForm({ templates, tenant, ownerEmail }: Props) {
           onClick={() => save("live")}
           className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
         >
-          {provisioning ? "Assigning your phone number…" : "Save & go live"}
+          {provisioning
+            ? "Assigning your phone number…"
+            : saving
+              ? "Redirecting to payment…"
+              : tenant?.subscription_status === "active"
+                ? "Save & go live"
+                : "Save & subscribe to go live"}
         </button>
       </div>
     </div>

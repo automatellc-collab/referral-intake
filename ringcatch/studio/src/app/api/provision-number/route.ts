@@ -11,12 +11,16 @@ export async function POST() {
 
   const { data: tenant, error: fetchError } = await supabase
     .from("tenants")
-    .select("id, phone_number, provisioning_status")
+    .select("id, phone_number, provisioning_status, subscription_status")
     .eq("owner_email", user.email)
     .maybeSingle();
 
   if (fetchError || !tenant) {
     return NextResponse.json({ error: "No business profile found" }, { status: 404 });
+  }
+
+  if (tenant.subscription_status !== "active") {
+    return NextResponse.json({ error: "An active subscription is required before going live" }, { status: 402 });
   }
 
   if (tenant.phone_number) {

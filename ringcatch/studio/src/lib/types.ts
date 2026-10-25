@@ -54,6 +54,9 @@ export interface Tenant {
   twilio_number_sid: string | null;
   provisioning_status: "idle" | "provisioning" | "active" | "failed";
   provisioning_error: string | null;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  subscription_status: "inactive" | "active" | "past_due" | "canceled";
   created_at: string;
   updated_at: string;
 }
