@@ -120,8 +120,8 @@ export default function WizardForm({ templates, tenant, ownerEmail }: Props) {
       ...(nextStatus && !goingLive ? { status: nextStatus } : {}),
     };
 
-    const query = tenant
-      ? supabase.from("tenants").update(payload).eq("id", tenant.id).select().single()
+    const query = tenantId
+      ? supabase.from("tenants").update(payload).eq("id", tenantId).select().single()
       : supabase.from("tenants").insert(payload).select().single();
     const { data: savedTenant, error: saveError } = await query;
 
@@ -130,6 +130,8 @@ export default function WizardForm({ templates, tenant, ownerEmail }: Props) {
       setError(saveError.message);
       return;
     }
+
+    if (savedTenant?.id) setTenantId(savedTenant.id);
 
     if (!goingLive) {
       setSaving(false);

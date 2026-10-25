@@ -23,8 +23,8 @@ export async function GET() {
     }
 
     const confidences = results
-      .map((r) => (r.confidence ? parseFloat(r.confidence.toString()) : null))
-      .filter((c) => c !== null) as number[];
+      .map((r: any) => (r.confidence ? parseFloat(r.confidence.toString()) : null))
+      .filter((c: any) => c !== null) as number[];
 
     if (confidences.length === 0) {
       return NextResponse.json({
