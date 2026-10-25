@@ -826,6 +826,12 @@ button.chip-btn:hover {
   align-items: center;
   justify-content: center;
   border: 1px solid var(--border-light);
+  overflow: hidden;
+}
+
+.output-stage .stage-content {
+  height: 100px;
+  padding: 12px 8px;
 }
 
 .document-lines {
