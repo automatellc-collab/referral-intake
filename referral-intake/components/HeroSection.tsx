@@ -1,8 +1,25 @@
 "use client";
 
 import Link from "next/link";
+import { useState, useEffect } from "react";
 
 export function HeroSection() {
+  const [confidence, setConfidence] = useState(76);
+
+  useEffect(() => {
+    fetch("/api/stats/confidence")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.confidence) {
+          setConfidence(data.confidence);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to fetch confidence:", err);
+        // Keep default 76%
+      });
+  }, []);
+
   return (
     <section className="hero-section">
       {/* Animated background elements */}
@@ -33,7 +50,7 @@ export function HeroSection() {
 
           <div className="hero-stats">
             <div className="stat-item">
-              <div className="stat-number">76%</div>
+              <div className="stat-number">{confidence}%</div>
               <div className="stat-label">Avg Confidence</div>
             </div>
             <div className="stat-item">

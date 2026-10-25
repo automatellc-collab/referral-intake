@@ -23,6 +23,11 @@ export default function WizardForm({ templates, tenant, ownerEmail }: Props) {
   const searchParams = useSearchParams();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  // Tracks which row to update across retries in this session. The `tenant`
+  // prop only reflects the page's initial load — once a save creates a row,
+  // every save after that (even after a failed Checkout/provisioning step)
+  // must update that same row, never insert another one.
+  const [tenantId, setTenantId] = useState(tenant?.id || null);
 
   const [templateSlug, setTemplateSlug] = useState(tenant?.industry_template || "");
   const [businessName, setBusinessName] = useState(tenant?.business_name || "");
