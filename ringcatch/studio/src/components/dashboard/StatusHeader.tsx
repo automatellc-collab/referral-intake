@@ -49,6 +49,19 @@ export default function StatusHeader({ tenant }: { tenant: Tenant }) {
           <Link href="/wizard" className="underline">Go back and try again</Link>.
         </div>
       )}
+
+      {tenant.subscription_status === "past_due" && (
+        <div className="rounded-lg bg-yellow-50 px-3 py-2 text-sm text-yellow-800">
+          Your last payment failed — update your card to keep the receptionist running.
+        </div>
+      )}
+
+      {tenant.subscription_status === "canceled" && (
+        <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">
+          Your subscription is canceled — calls may stop being answered.{" "}
+          <Link href="/wizard" className="underline">Resubscribe</Link>.
+        </div>
+      )}
     </header>
   );
 }

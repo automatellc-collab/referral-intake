@@ -28,9 +28,20 @@ function createMockDatabase() {
       auditLog: { findMany: async () => [] },
       extractionFeedback: { findMany: async () => [] },
       reviewQueue: { findMany: async () => [] },
+      templates: { findMany: async () => [], findFirst: async () => null },
+      templateVersions: { findMany: async () => [], findFirst: async () => null },
+      extractionSamples: { findMany: async () => [], findFirst: async () => null },
     },
-    insert: () => ({ values: async () => {} }),
-    update: () => ({ set: () => ({ where: async () => {} }) }),
+    insert: () => ({
+      values: (data: any) => ({
+        returning: async () => [{ id: 'mock-id', ...data, createdAt: new Date(), updatedAt: new Date() }],
+      }),
+    }),
+    update: () => ({
+      set: (data: any) => ({
+        where: async () => [{ id: 'mock-id', ...data, updatedAt: new Date() }],
+      }),
+    }),
     delete: () => ({ where: async () => {} }),
   };
 }
