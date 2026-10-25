@@ -51,7 +51,7 @@ export function HeroSection() {
           <div className="hero-stats">
             <div className="stat-item">
               <div className="stat-number">{confidence}%</div>
-              <div className="stat-label">Avg Confidence</div>
+              <div className="stat-label">Live Avg Confidence</div>
             </div>
             <div className="stat-item">
               <div className="stat-number">7</div>
