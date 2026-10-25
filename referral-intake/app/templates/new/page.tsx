@@ -45,6 +45,8 @@ export default function NewTemplatePage() {
 
   const [name, setName] = useState("");
   const [specialty, setSpecialty] = useState("");
+  const [customSpecialty, setCustomSpecialty] = useState("");
+  const [useCustom, setUseCustom] = useState(false);
   const [description, setDescription] = useState("");
   const [preset, setPreset] = useState<"default" | "copy" | "blank">("default");
 
@@ -59,12 +61,14 @@ export default function NewTemplatePage() {
 
     setIsLoading(true);
     try {
+      const finalSpecialty = useCustom ? customSpecialty.trim() : specialty;
+
       const response = await fetch("/api/templates", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: name.trim(),
-          specialty: specialty || null,
+          specialty: finalSpecialty || null,
           description: description.trim() || null,
         }),
       });
@@ -126,20 +130,54 @@ export default function NewTemplatePage() {
 
               <div className="form-group">
                 <label htmlFor="specialty">Specialty (optional)</label>
-                <select
-                  id="specialty"
-                  value={specialty}
-                  onChange={(e) => setSpecialty(e.target.value)}
-                  disabled={isLoading}
-                  className="specialty-select"
-                >
-                  <option value="">Select a specialty...</option>
-                  {SPECIALTIES.map((spec) => (
-                    <option key={spec} value={spec}>
-                      {spec}
-                    </option>
-                  ))}
-                </select>
+                {!useCustom ? (
+                  <select
+                    id="specialty"
+                    value={specialty}
+                    onChange={(e) => {
+                      if (e.target.value === "custom") {
+                        setUseCustom(true);
+                        setSpecialty("");
+                      } else {
+                        setSpecialty(e.target.value);
+                      }
+                    }}
+                    disabled={isLoading}
+                    className="specialty-select"
+                  >
+                    <option value="">Select a specialty...</option>
+                    {SPECIALTIES.map((spec) => (
+                      <option key={spec} value={spec}>
+                        {spec}
+                      </option>
+                    ))}
+                    <option value="custom">Other (enter your own)</option>
+                  </select>
+                ) : (
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <input
+                      type="text"
+                      placeholder="Enter custom specialty..."
+                      value={customSpecialty}
+                      onChange={(e) => setCustomSpecialty(e.target.value)}
+                      disabled={isLoading}
+                      className="text-input"
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUseCustom(false);
+                        setCustomSpecialty("");
+                      }}
+                      disabled={isLoading}
+                      className="secondary-button"
+                      style={{ whiteSpace: "nowrap" }}
+                    >
+                      Change
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="form-group">
