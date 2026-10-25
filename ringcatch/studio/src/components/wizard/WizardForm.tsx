@@ -76,12 +76,10 @@ export default function WizardForm({ templates, tenant, ownerEmail }: Props) {
 
   function handleTemplateChange(slug: string) {
     setTemplateSlug(slug);
-    if (services.length === 0 || faqs.length === 0) {
-      const t = templates.find((tpl) => tpl.slug === slug);
-      if (t) {
-        if (services.length === 0) setServices(t.default_services);
-        if (faqs.length === 0) setFaqs(t.default_faqs);
-      }
+    const t = templates.find((tpl) => tpl.slug === slug);
+    if (t) {
+      setServices(t.default_services);
+      setFaqs(t.default_faqs);
     }
   }
 

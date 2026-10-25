@@ -113,7 +113,7 @@ export class TemplateService {
     }
 
     const results = await query;
-    return results.map((t) => this.formatTemplate(t));
+    return results.map((t: any) => this.formatTemplate(t));
   }
 
   async updateTemplateConfig(
@@ -130,7 +130,7 @@ export class TemplateService {
     // Get current version number
     const latestVersion = await db.query.templateVersions.findFirst({
       where: eq(templateVersions.templateId, id),
-      orderBy: (v) => [v.version],
+      orderBy: (v: any) => [v.version],
     });
 
     const nextVersion = (latestVersion?.version ?? 0) + 1;
@@ -172,10 +172,10 @@ export class TemplateService {
   async getTemplateVersions(templateId: string): Promise<TemplateVersion[]> {
     const results = await db.query.templateVersions.findMany({
       where: eq(templateVersions.templateId, templateId),
-      orderBy: (v) => [v.version],
+      orderBy: (v: any) => [v.version],
     });
 
-    return results.map((v) => ({
+    return results.map((v: any) => ({
       id: v.id,
       templateId: v.templateId,
       version: v.version,

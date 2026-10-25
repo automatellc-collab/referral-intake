@@ -63,7 +63,7 @@ export class SampleService {
       where: eq(extractionSamples.templateId, templateId),
     });
 
-    return results.map((s) => this.formatSample(s));
+    return results.map((s: any) => this.formatSample(s));
   }
 
   async updateSampleExpectedOutput(
